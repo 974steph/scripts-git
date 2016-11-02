@@ -1,0 +1,18 @@
+#!/bin/sh
+
+#--------------
+# Where,View,URL,Latitude,Longitude,Timezone,Zipcode
+
+WHERE="Chinco"
+
+ALL_THESE_CAMS=" \
+	${WHERE},Wallops,http://www.weatherwatchers.org/wxcam/898184.jpg,37.9299400,-75.3624300,US/Eastern,23336 \
+	${WHERE},PonyCentre,http://www.chincoteague.com/webcam/camera1.jpg,37.9299400,-75.3624300,US/Eastern,23336 \
+	${WHERE},Assateague,http://icons.wunderground.com/webcamramdisk/f/i/FishChaser/1/current.jpg,37.9299400,-75.3624300,US/Eastern,23336 \
+	${WHERE},River,http://www.weatherwatchers.org/wxcam/893573.jpg,37.9299400,-75.3624300,US/Eastern,23336 \
+	${WHERE},Maddox,http://www.weatherwatchers.org/wxcam/757380.jpg,37.9299400,-75.3624300,US/Eastern,23336 \
+	${WHERE},EasyDoesItVacations,http://www.easydoesitvacations.com/images/netcam.jpg,37.9299400,-75.3624300,US/Eastern,23336 \
+	${WHERE},DaiseysIslandCruises,http://www.chincoteague.com/webcam/camera0.jpg,37.9299400,-75.3624300,US/Eastern,23336"
+#--------------
+
+source $HOME/Sources/scripts-git/GetWebcamFunctions

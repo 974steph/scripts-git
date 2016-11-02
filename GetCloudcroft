@@ -1,0 +1,14 @@
+#!/bin/sh
+
+#--------------
+# Where,View,URL,Latitude,Longitude,Timezone,Zipcode
+
+WHERE="Cloudcroft"
+
+ALL_THESE_CAMS=" \
+	${WHERE},BurroAve1,http://cloudcroftwebcam.com/camera1.jpg,32.958209,-105.745033,US/Mountain,88317 \
+	${WHERE},BurroAve2,http://cloudcroftwebcam.com/camera2.jpg,32.958751,-105.744212,US/Mountain,88317 \
+	${WHERE},Highway82,http://cloudcroftwebcam.com/camera0.jpg,32.957858,-105.735243,US/Mountain,88317"
+#--------------
+
+source $HOME/Sources/scripts-git/GetWebcamFunctions

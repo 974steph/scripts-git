@@ -1,0 +1,56 @@
+{
+    "jsonrpc": "2.0",
+    "method": "host.massupdate",
+    "params": {
+        "hosts": [
+            {
+                "hostid": "69665"
+            },
+            {
+                "hostid": "69666"
+            }
+        ],
+        "status": 0
+    },
+    "auth": "038e1d7b1735c6a5436ee9eae095879e",
+    "id": 1
+}
+
+
+{"jsonrpc": "2.0","method": "host.massupdate","params": {"hosts": [{"hostid": "11008"],"status": 0},"auth": "","id": 1}
+
+
+
+
+{
+    "jsonrpc": "2.0",
+    "method": "host.update",
+    "params": {
+        "hostid": "10092",
+        "status": 0
+    },
+    "auth": "038e1d7b1735c6a5436ee9eae095879e",
+    "id": 1
+}
+
+
+{"jsonrpc": "2.0","method": "host.update","params": {"hostid": "11008","status": 0},"auth": "c395cb8cc3add9f8733a479948fc81b6","id": 1}
+
+{"jsonrpc": "2.0","method": "host.update","params": {"hostid": "11008","inventory_mode": 0},"auth": "c395cb8cc3add9f8733a479948fc81b6","id": 1}
+
+
+
+curl -m3 -i -X POST -H 'Content-Type: application/json-rpc": {"hostid": "11008","inventory_mode": 0},"auth": "c395cb8cc3add9f8733a479948fc81b6","id": 1}' http://devzabbix.use1dev1.zonoff.io/zabbix/api_jsonrpc.php
+HTTP/1.1 200 OK
+Date: Mon, 29 Jun 2015 21:17:58 GMT
+Server: Apache/2.4.7 (Ubuntu)
+X-Powered-By: PHP/5.5.9-1ubuntu4.6
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Headers: Content-Type
+Access-Control-Allow-Methods: POST
+Access-Control-Max-Age: 1000
+Content-Length: 55
+Content-Type: application/json
+
+{"jsonrpc":"2.0","result":{"hostids":["11008"]},"id":1}
+

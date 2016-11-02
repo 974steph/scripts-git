@@ -1,0 +1,17 @@
+#!/bin/sh
+
+#--------------
+# Where,View,URL,Latitude,Longitude,Timezone,Zipcode
+
+WHERE="Tucson"
+
+ALL_THESE_CAMS=" \
+	${WHERE},ConnectCamera,http://www.instacam.com/instacamimg/TCSPM/TCSPM_l.jpg,32.221819,-110.966899,US/Mountain,85701 \
+	${WHERE},CasinoDelSol,http://www.instacam.com/instacamimg/TCSNW/TCSNW_l.jpg,32.307720,-110.887347,US/Mountain,85701 \
+	${WHERE},SetonSchool,http://www.instacam.com/instacamimg/TCSNS/TCSNS_l.jpg,32.363553,-111.028316,US/Mountain,85701 \
+	${WHERE},UoA_CS,http://www.cs.arizona.edu/camera/view.jpg,32.2313814,-110.9521425,US/Mountain,85701 \
+	${WHERE},UoA_AS,http://www.atmo.arizona.edu/gifs/webcam.jpg,32.229848,-110.9548785,US/Mountain,85701 \
+	${WHERE},OroValley,http://icons.wunderground.com/webcamramdisk/k/6/K6NC/2/current.jpg,32.4054691,-110.9888615,US/Mountain,85701"
+#--------------
+
+source $HOME/Sources/scripts-git/GetWebcamFunctions

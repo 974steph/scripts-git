@@ -1,0 +1,92 @@
+#!/bin/sh
+
+##########################################
+# Just quick syntax checks.
+#
+	if [ -z "$1" ] ; then
+		echo -e "\\vSyntax: $0 [cover file]\\v"
+		exit 1
+	fi
+
+	if [ ! -f "$1" ] ; then
+		echo -e \\vCover Art file missing.  Check what you are typing...\\v
+		exit 1
+	fi
+
+
+##########################################
+# CLEAN FILES
+#
+function CleanFiles() {
+#		--no-tagging-time-frame \
+#		--text-frame="TXXX:" \
+	eyeD3 -Q \
+		--text-frame="TDTG:" \
+		--text-frame="TPOS:" \
+		--remove-all-images \
+		*.mp3
+}
+
+
+##########################################
+# MAKE ART
+#
+function MakeArt() {
+#	EXT=$(echo $(basename "$1") | sed -e 's/.*\././g')
+	EXT=".jpg"
+
+# 	ALBUM=$(eyeD3 "$(ls -1 | grep -m1 .)" | grep -m1 album | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//' -e 's/year.*//g' | cut -d' ' -f2-)
+	ALBUM=$(id3info "$(ls -1 | head -n1)" | grep TALB | cut -d':' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//' -e 's/:/ -/g')
+
+	QUALITY=100
+	QUALITY_TMP="quality_tmp${EXT}"
+
+	convert -resize 500x500! "$1" "${QUALITY_TMP}"
+
+	ART_SIZE=$(ls -sk "${QUALITY_TMP}" | awk '{print $1}')
+
+# 	while [ "${ART_SIZE}" -gt 70 ] ; do
+		convert -resize 600x600! -quality ${QUALITY} "${QUALITY_TMP}" "${QUALITY_TMP}"
+# 		QUALITY=$(( ${QUALITY} - 2 ))
+# 		ART_SIZE=$(ls -sk "${QUALITY_TMP}" | awk '{print $1}')
+# 		echo ${QUALITY} - ${ART_SIZE}
+# 	done
+
+	if [ "${ALBUM}" ] ; then
+		ART="${ALBUM}${EXT}"
+		mv -fv "${QUALITY_TMP}" "${ART}"
+		rm -f "$1"
+	else
+		ART="Album Art${EXT}"
+		mv -fv "${QUALITY_TMP}" "${ART}"
+		rm -f "$1"
+	fi
+}
+
+
+##########################################
+# DO IT
+#
+function doit {
+HERE=$(basename "$(pwd)" | sed 's/_/\ /g')
+
+#	--no-tagging-time-frame \
+
+eyeD3 -Q --add-image="./${ART}":FRONT_COVER:"${HERE}" "${FILE}"
+# > /dev/null
+}
+
+
+##########################################
+# START HERE
+#
+
+CleanFiles
+
+MakeArt "$1"
+
+for FILE in *.mp3 ; do doit "$1" ; done
+
+mv -f "${ART}" .folder${EXT}
+echo "[Desktop Entry]" > ./.directory
+echo "Icon=./.folder${EXT}" >> ./.directory

@@ -1,0 +1,345 @@
+Array
+(
+    [id] => 199592
+    [isActive] => 1
+    [name] => Lionville Self Storage
+    [location] => Array
+        (
+            [id] => 21973070
+            [streetAddress] => 371 Gordon Drive
+            [city] => Exton
+            [subLocality] => 
+            [state] => PA
+            [fullState] => Pennsylvania
+            [zip] => 19341
+            [latitude] => 40.06404
+            [longitude] => -75.65383
+            [text] => 371 Gordon Drive Exton, PA 19341
+            [streetView] => 
+        )
+
+    [website] => 
+    [showLocalPhones] => 1
+    [phone] => (484) 879-6224
+    [sparephoneTag] => 
+    [promotion] => 
+    [serviceArea] => 
+    [description] => Opening February 20, 2016!
+    [account] => Array
+        (
+            [id] => 462
+            [earliestReservationDay] => 0
+        )
+
+    [corporation] => Array
+        (
+            [id] => 688
+            [sourceId] => 7
+            [type] => self-storage
+        )
+
+    [reviews] => Array
+        (
+            [count] => 1
+            [average] => 5
+        )
+
+    [fees] => Array
+        (
+            [admin] => Array
+                (
+                    [value] => 20
+                    [text] => $20.00
+                )
+
+        )
+
+    [messaging] => Array
+        (
+            [isAaaEligible] => 
+            [isOpenNow] => 1
+            [isOpenOnMoveIn] => 1
+            [isUrgent] => 
+            [amexActive] => 1
+        )
+
+    [hours] => Array
+        (
+            [office] => Array
+                (
+                    [text] => Array
+                        (
+                        )
+
+                    [meta] => 
+                )
+
+            [access] => Array
+                (
+                    [text] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+    [closures] => Array
+        (
+        )
+
+    [images] => Array
+        (
+            [0] => 19959256c360e6a36ec.jpg
+            [1] => 19959256c360e7bf9bd.jpg
+            [2] => 19959256c3612ca8dd4.jpg
+        )
+
+    [imageDetails] => Array
+        (
+        )
+
+    [isOutOfNetwork] => 
+    [isFullServiceStandalone] => 
+    [url] => Array
+        (
+            [state] => /Pennsylvania-storage
+            [city] => /Exton-PA-self-storage
+            [facility] => /Exton-PA-self-storage/Lionville-Self-Storage-199592
+            [website] => 
+        )
+
+    [tos] => No obligation to rent. Leasing this space is month-to-month, with no long term commitment. By clicking to reserve this unit, you agree to our <a href="/legal/consumer" target="_blank">Terms of Service.</a>
+    [distance] => 2
+    [unitCount] => 13
+    [units] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 17730167
+                    [facilityId] => 199592
+                    [quantity] => 23
+                    [unitTypeText] => unit
+                    [maxBookingDate] => Array
+                        (
+                            [isValidDate] => 1
+                            [isValidTime] => 1
+                            [year] => 2016
+                            [month] => 10
+                            [monthText] => November
+                            [day] => 5
+                            [dayOfWeek] => 6
+                            [dayOfWeekText] => Saturday
+                            [hour] => 11
+                            [minute] => 16
+                            [second] => 57
+                            [utcOffset] => +0000
+                            [format] => Array
+                                (
+                                    [iso] => 2016-11-05T11:16:57.000Z
+                                    [timestamp] => 1478344617
+                                    [human] => Array
+                                        (
+                                            [time] => 11:16 AM
+                                            [date] => November 5th, 2016
+                                        )
+
+                                    [ymd] => 2016-11-05
+                                    [mdy] => 11-05-2016
+                                )
+
+                        )
+
+                    [price] => Array
+                        (
+                            [value] => 59
+                            [text] => 59.00
+                        )
+
+                    [regularPrice] => Array
+                        (
+                            [value] => 59
+                            [text] => 59.00
+                        )
+
+                    [squareFootage] => 25
+                    [sizeText] => 5' x 5'
+                    [promotion] => 1st Mo. Free - SF
+                    [isAvailableToBook] => 1
+                    [url] => /Exton-PA-self-storage/Lionville-Self-Storage-199592/reserve/17730167
+                )
+
+            [1] => Array
+                (
+                    [id] => 17732617
+                    [facilityId] => 199592
+                    [quantity] => 6
+                    [unitTypeText] => unit
+                    [maxBookingDate] => Array
+                        (
+                            [isValidDate] => 1
+                            [isValidTime] => 1
+                            [year] => 2016
+                            [month] => 10
+                            [monthText] => November
+                            [day] => 5
+                            [dayOfWeek] => 6
+                            [dayOfWeekText] => Saturday
+                            [hour] => 11
+                            [minute] => 16
+                            [second] => 57
+                            [utcOffset] => +0000
+                            [format] => Array
+                                (
+                                    [iso] => 2016-11-05T11:16:57.000Z
+                                    [timestamp] => 1478344617
+                                    [human] => Array
+                                        (
+                                            [time] => 11:16 AM
+                                            [date] => November 5th, 2016
+                                        )
+
+                                    [ymd] => 2016-11-05
+                                    [mdy] => 11-05-2016
+                                )
+
+                        )
+
+                    [price] => Array
+                        (
+                            [value] => 69
+                            [text] => 69.00
+                        )
+
+                    [regularPrice] => Array
+                        (
+                            [value] => 69
+                            [text] => 69.00
+                        )
+
+                    [squareFootage] => 50
+                    [sizeText] => 5' x 10'
+                    [promotion] => 1st Mo. Free - SF
+                    [isAvailableToBook] => 1
+                    [url] => /Exton-PA-self-storage/Lionville-Self-Storage-199592/reserve/17732617
+                )
+
+            [2] => Array
+                (
+                    [id] => 18007729
+                    [facilityId] => 199592
+                    [quantity] => 10
+                    [unitTypeText] => unit
+                    [maxBookingDate] => Array
+                        (
+                            [isValidDate] => 1
+                            [isValidTime] => 1
+                            [year] => 2016
+                            [month] => 10
+                            [monthText] => November
+                            [day] => 5
+                            [dayOfWeek] => 6
+                            [dayOfWeekText] => Saturday
+                            [hour] => 11
+                            [minute] => 16
+                            [second] => 57
+                            [utcOffset] => +0000
+                            [format] => Array
+                                (
+                                    [iso] => 2016-11-05T11:16:57.000Z
+                                    [timestamp] => 1478344617
+                                    [human] => Array
+                                        (
+                                            [time] => 11:16 AM
+                                            [date] => November 5th, 2016
+                                        )
+
+                                    [ymd] => 2016-11-05
+                                    [mdy] => 11-05-2016
+                                )
+
+                        )
+
+                    [price] => Array
+                        (
+                            [value] => 239
+                            [text] => 239.00
+                        )
+
+                    [regularPrice] => Array
+                        (
+                            [value] => 239
+                            [text] => 239.00
+                        )
+
+                    [squareFootage] => 300
+                    [sizeText] => 10' x 30'
+                    [promotion] => 1st Mo. Free - SF
+                    [isAvailableToBook] => 1
+                    [url] => /Exton-PA-self-storage/Lionville-Self-Storage-199592/reserve/18007729
+                )
+
+        )
+
+    [recommendedUnit] => Array
+        (
+            [id] => 17732617
+            [facilityId] => 199592
+            [quantity] => 6
+            [unitTypeText] => unit
+            [maxBookingDate] => Array
+                (
+                    [isValidDate] => 1
+                    [isValidTime] => 1
+                    [year] => 2016
+                    [month] => 10
+                    [monthText] => November
+                    [day] => 5
+                    [dayOfWeek] => 6
+                    [dayOfWeekText] => Saturday
+                    [hour] => 11
+                    [minute] => 16
+                    [second] => 57
+                    [utcOffset] => +0000
+                    [format] => Array
+                        (
+                            [iso] => 2016-11-05T11:16:57.000Z
+                            [timestamp] => 1478344617
+                            [human] => Array
+                                (
+                                    [time] => 11:16 AM
+                                    [date] => November 5th, 2016
+                                )
+
+                            [ymd] => 2016-11-05
+                            [mdy] => 11-05-2016
+                        )
+
+                )
+
+            [price] => Array
+                (
+                    [value] => 69
+                    [text] => 69.00
+                )
+
+            [regularPrice] => Array
+                (
+                    [value] => 69
+                    [text] => 69.00
+                )
+
+            [squareFootage] => 50
+            [sizeText] => 5' x 10'
+            [promotion] => 1st Mo. Free - SF
+            [isAvailableToBook] => 1
+            [url] => /Exton-PA-self-storage/Lionville-Self-Storage-199592/reserve/17732617
+        )
+
+    [cheapestPrice] => Array
+        (
+            [value] => 59
+            [text] => 59.00
+        )
+
+)

@@ -1,0 +1,444 @@
+#!/bin/sh
+
+source $HOME/Sources/scripts-git/secret_stuff.sh
+
+############################
+# Check for something to work on
+#
+function CheckGmail {
+
+	if [ ! ${DEBUG} ] ; then
+#		$HOME/Scripts/Grades_FetchLexGrades.py
+#		$HOME/Scripts/Grades_FetchLexGrades.php > /dev/null
+		$HOME/Sources/scripts-git/Grades_FetchLexGrades.php > /dev/null
+		wait
+	fi
+
+# 	FILE_DATE="$(date -d "$(ls -t1 ${RAWDIR} | head -n1)" +%-d%b%Y)"
+# 	FILE_DATE="$(ls -t1 ${RAWDIR} | grep $(date -d "${TODAY}" +%Y) | grep -v html | head -n1)"
+	FILE_DATE="$(ls -t1 ${RAWDIR} | grep -v html | head -n1)"
+# 	echo ${FILE_DATE}
+
+	THIS_AS_OF_DATE=$(date -d "$(head -n1 "${RAWDIR}/${FILE_DATE}" | sed -e 's/.*as of //g')" +%Y-%m-%d)
+
+
+	case ${FILE_DATE} in
+		${TODAY})
+			[ ${DEBUG} ] && echo "TODAY: ${TODAY} - ${FILE_DATE} - ${THIS_AS_OF_DATE}"
+			THIS_FILE=${TODAY}
+			UpdateGrades
+			;;
+		${YESTERDAY})
+			[ ${DEBUG} ] && echo "YESTERDAY: ${YESTERDAY} - ${FILE_DATE} - ${THIS_AS_OF_DATE}"
+			THIS_FILE=${YESTERDAY}
+			UpdateGrades
+			;;
+		${TODAY_ZERO})
+			[ ${DEBUG} ] && echo "TODAY_ZERO: ${TODAY_ZERO} - ${FILE_DATE} - ${THIS_AS_OF_DATE}"
+			THIS_FILE=${TODAY_ZERO}
+			UpdateGrades
+			;;
+		${YESTERDAY_ZERO})
+			[ ${DEBUG} ] && echo "YESTERDAY_ZERO: ${YESTERDAY_ZERO} - ${FILE_DATE} - ${THIS_AS_OF_DATE}"
+			THIS_FILE=${YESTERDAY_ZERO}
+			UpdateGrades
+			;;
+		*)
+# 			echo SLEEPING
+# 			echo DEBUG: ${DEBUG}
+# 			echo THIS_HOUR: ${THIS_HOUR}
+# 			echo STOPTIME: ${STOPTIME}
+			exit
+			;;
+	esac
+}
+
+
+############################
+# New School Year
+#
+function NewYearFile {
+	THIS_YEAR=$(date -d ${TODAY} +%Y)
+	THIS_MONTH=$(date -d ${TODAY} +%m)
+
+	if [ ${DEBUG} ] ; then 
+		echo TODAY: ${TODAY}
+		echo THIS_YEAR: ${THIS_YEAR}
+		echo THIS_MONTH: ${THIS_MONTH}
+	fi
+
+	if [ ${THIS_MONTH} -gt 07 -a ${THIS_MONTH} -lt 13 ] ; then
+# 		[ ${DEBUG} ] && echo IF
+		SCHOOL_YEAR_START=$(date -d ${TODAY} +%Y)
+		SCHOOL_YEAR_END=$(( ${SCHOOL_YEAR_START} + 1 ))
+	elif [ ${THIS_MONTH} -lt 07 ] ; then
+# 		[ ${DEBUG} ] && echo ELIF
+		SCHOOL_YEAR_END=$(date -d ${TODAY} +%Y)
+		SCHOOL_YEAR_START=$(( ${SCHOOL_YEAR_END} - 1 ))
+# 	else
+# 		echo NO CLUE WHAT YEAR
+	fi
+
+	[ ${DEBUG} ] && echo SCHOOL_YEAR_START: ${SCHOOL_YEAR_START}
+	[ ${DEBUG} ] && echo SCHOOL_YEAR_END: ${SCHOOL_YEAR_END}
+
+# 	exit
+
+
+# 	THIS_MONTH=$(date -d "${TODAY}" +%-m)
+# 	THIS_YEAR=$(date -d "${TODAY}" +%Y)
+# 	NEXT_YEAR=$(date -d "next year" +%Y)
+
+
+	if [ ! ${THIS_MONTH} -eq 07 -o ! ${THIS_MONTH} -eq 08 ] ; then
+
+		case ${SCHOOL_YEAR_START} in
+			2012)
+				SYEARFILE="${SCHOOL_YEAR_START}-${SCHOOL_YEAR_END}_8th"
+				SYEARHEADER="8th Grade";;
+			2013)
+				SYEARFILE="${SCHOOL_YEAR_START}-${SCHOOL_YEAR_END}_9th"
+				SYEARHEADER="9th Grade";;
+			2014)
+				SYEARFILE="${SCHOOL_YEAR_START}-${SCHOOL_YEAR_END}_10th"
+				SYEARHEADER="10th Grade";;
+			2015)
+				SYEARFILE="${SCHOOL_YEAR_START}-${SCHOOL_YEAR_END}_11th"
+				SYEARHEADER="11th Grade";;
+			2016)
+				SYEARFILE="${SCHOOL_YEAR_START}-${SCHOOL_YEAR_END}_12th"
+				SYEARHEADER="12th Grade";;
+			*)
+				echo UNKNOWN GRADE AND YEAR
+				exit 1;;
+		esac
+
+		if [ ${DEBUG} ] ; then 
+			echo IN SCHOOL YEAR
+			echo SYEARFILE: ${SYEARFILE}
+			echo SYEARHEADER: ${SYEARHEADER}
+		fi
+	else
+		echo SUMMER
+	fi
+}
+
+
+
+############################
+# Build Chart
+#
+function MakeChart {
+	CHART_DIR="${GPATH}/Chart"
+	[ ! -d "${CHART_DIR}" ] && mkdir -p "${CHART_DIR}"
+	CHART_VALUES="${CHART_DIR}/plot.grades"
+	CHART_NAMES="${CHART_DIR}/plot.names"
+	CHART_SCRIPT="${CHART_DIR}/plot.script"
+	CHART_PLOT_NAME="${THIS_AS_OF_DATE}_plot.png"
+
+	if [ ${DEBUG} ] ; then
+		echo CHART_VALUES: ${CHART_VALUES}
+		echo CHART_NAMES: ${CHART_NAMES}
+		echo CHART_SCRIPT: ${CHART_SCRIPT}
+		echo CHART_PLOT_NAME: ${CHART_PLOT_NAME}
+		echo CHART_FULL_PATH: ${CHART_DIR}/${CHART_PLOT_NAME}
+	fi
+
+
+	cat "${GFILE}" | sed -e 's/,,/,0,0/g' -e 's/,$/,0/g' -e 's/,/ /g' -e '1,1d' -e 's/--//g' > "${CHART_VALUES}"
+	grep -A1 PERIOD "${RAWDIR}/${THIS_FILE}" | tr '\r\n' ' ' | sed -e 's/PERIOD/\nPERIOD/g' | egrep -v 'Homeroom|Lunch|Guidance|Study Hall' | cut -d: -f2  | sed -e '/^$/d' -e 's/^[ \t]*//' -e 's/ (.*//g' -e 's/ [0-9]$//g' | sed -e 's/,$/\n/' > "${CHART_NAMES}"
+
+	X_START_DATE=$(cat "${CHART_VALUES}" | head -n1 | awk '{print $1}')
+	X_END_DATE=$(cat "${CHART_VALUES}" | tail -n1 | awk '{print $1}')
+
+	if [ ${DEBUG} ] ; then
+		echo X_START_DATE: ${X_START_DATE}
+		echo X_END_DATE: ${X_END_DATE}
+	fi
+
+	echo "set output '${CHART_DIR}/${CHART_PLOT_NAME}'" > "${CHART_SCRIPT}"
+
+#	Not sure why "set datafile missing '0'" worked last year...
+#	echo "set datafile missing '0'" >> "${CHART_SCRIPT}"
+
+# 	echo "set term pngcairo size 320,600" >> "${CHART_SCRIPT}"
+	echo "set term pngcairo size 360,500" >> "${CHART_SCRIPT}"
+	echo "set object 1 rectangle from screen 0,0 to screen 1,1 fillcolor rgb\"#FFFFFF\" behind" >> "${CHART_SCRIPT}"
+	echo "set grid" >> "${CHART_SCRIPT}"
+	echo "set lmargin 4.0" >> "${CHART_SCRIPT}"
+	echo "set rmargin 1" >> "${CHART_SCRIPT}"
+	echo "set tmargin 0.5" >> "${CHART_SCRIPT}"
+	echo "set bmargin 2" >> "${CHART_SCRIPT}"
+
+	echo "set key opaque" >> "${CHART_SCRIPT}"
+	echo "set key right bottom box" >> "${CHART_SCRIPT}"
+	echo "set key font \",8\"" >> "${CHART_SCRIPT}"
+	echo "set key width 0" >> "${CHART_SCRIPT}"
+	echo "set key spacing 0.8" >> "${CHART_SCRIPT}"
+
+	echo "set ylabel offset 4,0 \"Percent\"" >> "${CHART_SCRIPT}"
+	echo "set ylabel font \",9\"" >> "${CHART_SCRIPT}"
+
+	echo "set xlabel \"\"" >> "${CHART_SCRIPT}"
+	echo "set xdata time" >> "${CHART_SCRIPT}"
+	echo "set timefmt \"%Y-%m-%d\"" >> "${CHART_SCRIPT}"
+# 	echo "set timefmt \"%b_%d\"" >> "${CHART_SCRIPT}"
+# 	echo "set xrange [\"Nov_13\":\"Jan_07\"]" >> "${CHART_SCRIPT}"
+	echo "set xrange [\"${X_START_DATE}\":\"${X_END_DATE}\"]" >> "${CHART_SCRIPT}"
+	echo "set format x \"%b %d\"" >> "${CHART_SCRIPT}"
+
+	echo "set xtics rotate by 90 offset 0,-1.3" >> "${CHART_SCRIPT}"
+	echo "set xtics font \",7\"" >> "${CHART_SCRIPT}"
+	echo "set mxtics 0" >> "${CHART_SCRIPT}"
+
+	echo "set ytics offset 0.5,0" >> "${CHART_SCRIPT}"
+	echo "set ytics font \",7\"" >> "${CHART_SCRIPT}"
+	echo "set yrange [30:100]" >> "${CHART_SCRIPT}"
+	echo "set mytics 10" >> "${CHART_SCRIPT}"
+
+	echo >> "${CHART_SCRIPT}"
+	echo -n "plot " >> "${CHART_SCRIPT}"
+	t=$(grep -c . "${CHART_NAMES}")
+	x=1
+	i=2
+	while [ ! $x -gt $t ] ; do
+		NAME=$(sed -n "${x},${x}p" "${CHART_NAMES}")
+		echo -n "\"${CHART_VALUES}\" using 1:${i} title '${NAME}' smooth bezier lw 2" >> "${CHART_SCRIPT}"
+#		echo -n "\"${CHART_VALUES}\" using 1:${i} title '${NAME}' smooth csplines lw 2" >> "${CHART_SCRIPT}"
+# 		echo "t: $t || x: $x || i: $i"
+		x=$(( $x + 1 ))
+		i=$(( $i + 1 ))
+		[ ! $x -gt $t ] && echo -n ", " >> "${CHART_SCRIPT}"
+	done
+
+#	cat "${CHART_SCRIPT}" | gnuplot
+	gnuplot "${CHART_SCRIPT}" > /dev/null 2>&1
+
+#	scp -q "${CHART_DIR}/${CHART_PLOT_NAME}" elwood@blackhole.local:/var/www/localhost/htdocs/chart/
+# 	scp -q "${CHART_DIR}/${CHART_PLOT_NAME}" elwood@fleagus.dyndns.tv:/var/www/localhost/htdocs/chart/
+
+	cp -a "${CHART_DIR}/${CHART_PLOT_NAME}" /var/www/localhost/htdocs/chart/
+
+# 	rm -f "${CHART_SCRIPT}" "${CHART_VALUES}" "${CHART_NAMES}" "${RAWDIR}/${CHART_PLOT_NAME}"
+
+}
+
+############################
+# Do it
+#
+function UpdateGrades {
+	#######
+	# MAKE NEW FILE?
+	#
+	NewYearFile
+
+	if [ ${DEBUG} ] ; then
+		echo --------------
+		echo THIS_FILE: ${RAWDIR}/${THIS_FILE}
+		echo THIS_AS_OF_DATE: ${THIS_AS_OF_DATE}
+		echo --------------
+	fi
+
+	GFILE="${GPATH}/Grades_${SYEARFILE}.csv"
+	GDATE="$(date -d "${THIS_FILE}" +%Y-%m-%d)"
+# 	GDATE=$(date -d "${THIS_FILE}" +%b_%d)
+# 	echo GFILE: ${GFILE}
+
+# 	sed '1s/.*/fly hoopty/' Grades_2012-2013_8th.csv
+
+
+	if [ ! -f "${GFILE}" ] ; then
+		echo -n "${SYEARHEADER}," > "${GFILE}"
+# 		grep -A1 PERIOD "${RAWDIR}/${THIS_FILE}" | tr '\r\n' ' ' | sed -e 's/PERIOD/\nPERIOD/g' | egrep -v 'Homeroom|Lunch|Guidance|Study Hall' | cut -d: -f2  | sed -e '/^$/d' -e 's/^[ \t]*//' -e 's/ (.*//g' -e 's/ [0-9]$//g' -e 's/--//g' | tr '\n' ',' | sed -e 's/,$/\n/' >> "${GFILE}"
+		grep -A1 PERIOD "${RAWDIR}/${THIS_FILE}" | tr -d \\n | sed -e 's/PERIOD/\nPERIOD/g' | egrep -v 'Homeroom|Lunch|Guidance|Study Hall' | cut -d: -f2  | sed -e '/^$/d' -e 's/^[ \t]*//' -e 's/ (.*//g' -e 's/ [0-9]$//g' -e 's/--//g' | tr '\n' ',' | sed -e 's/,$/\n/' >> "${GFILE}"
+	fi
+
+# 	if [ $(grep "${GDATE}" "${GFILE}" | wc | awk '{print $1}') = 0 ] ; then
+# 	if [ $(grep -c "${GDATE}" "${GFILE}") -eq 0 ] ; then
+	if [ $(grep -c "${THIS_AS_OF_DATE}" "${GFILE}") -eq 0 ] ; then
+# 		GRADES="$(grep -A1 PERIOD "${RAWDIR}/${FILE_DATE}" | tr -d \\n | sed -e 's/PERIOD/\nPERIOD/g' | egrep -v 'Homeroom|Lunch|Guidance|Study Hall' | sed -e '/^$/d' -e 's/.*Grade: //g' -e 's/  Absences.*/,/g' -e 's/--//g' | tr -d '\n' | sed -e 's/,$/\n/')"
+
+
+	########################
+	# GRADE_LINE=""
+	x=2
+
+	for CLASS_GRADE in $(grep -A1 PERIOD "${RAWDIR}/${FILE_DATE}" | tr -d \\n | sed -e 's/PERIOD/\nPERIOD/g' | egrep -v 'Homeroom|Lunch|Guidance|Study Hall' | sed -e '/^$/d' -e 's/--//g' -e 's/.*Grade: //g' -e 's/  Absences.*/,/g') ; do 
+
+#	echo CLASS_GRADE: $CLASS_GRADE
+
+
+	#########################
+	# RIGHT HERE
+	#########################
+
+
+
+		if [[ "$CLASS_GRADE" == "," ]] ; then
+			GRADE_PREV=$(tail -n1 "${GFILE}" | cut -d, -f$x)
+			[ $DEBUG ] && echo "GRADE_PREV: ${GRADE_PREV} - CLASS_GRADE: ${CLASS_GRADE}"
+
+			GRADE_PREV_NUMS=$(echo "${GRADE_PREV}" | grep -v [a-zA-Z])
+
+#			if [ "${GRADE_PREV}" ] ; then
+			if [ "${GRADE_PREV_NUMS}" ] ; then
+				GRADES+="${GRADE_PREV},"
+			else
+				GRADES+=","
+			fi
+		else
+#			echo ELSE
+			GRADES+="$CLASS_GRADE"
+		fi
+
+# 		echo X: $x $CLASS_GRADE
+
+		x=$(( $x + 1 ))
+	done
+
+	GRADES=$(echo "${GRADES}" | sed -e 's/,$//g')
+
+	[ ${DEBUG} ] && echo -e "##############\\nGrades: $GRADES\\n##############"
+
+
+		#echo "Updating $GFILE"
+# 		echo "${GDATE},${GRADES}" >> "${GFILE}"
+		echo "${THIS_AS_OF_DATE},${GRADES}" >> "${GFILE}"
+
+		########################
+		# THIS SHOULD SHORT CIRCUIT THE SCRIPT.
+		# JUST BAIL IF THERE ARE NO GRADES AT ALL
+		if [ ! "$(echo "${GRADES}" | sed 's/,//g')" ] ; then
+			echo "There are no grades found in the email. GRADES: \"${GRADES}\".  Bailing..."
+			exit
+		fi
+		########################
+
+		#######
+		# Chart Gen
+		#
+		MakeChart
+
+		#######
+		# Make HTML
+		#
+		MakeHTML
+
+		#######
+		# Send Email
+		#
+# 		if [ ! ${DEBUG} ] ; then
+# 			mutt -a "${GFILE}" -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -e "set content_type=text/html" -- "${EMAILS}" < ${EMAILBODY}
+			mutt -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -e "set content_type=text/html" -- "${EMAILS}" < ${EMAILBODY}
+			[ ! ${DEBUG} ] && rm -f ${EMAILBODY}
+# 		fi
+		#######
+
+		#######
+		# Clean Up
+# 		if [ -f "${RAWDIR}/$(echo ${SYEARHEADER} | cut -d' ' -f1)/${THIS_FILE}"
+
+	else
+		##############
+		# DEBUG
+		#
+		if [ ${DEBUG} ] ; then
+# 			echo "DATE ALREADY RECORDED - ${GDATE} ${GFILE}"
+			echo "DATE ALREADY RECORDED - ${THIS_AS_OF_DATE} ${GFILE}"
+			GRADES="$(grep -A1 PERIOD "${RAWDIR}/${FILE_DATE}" | tr '\r\n' ' ' | sed -e 's/PERIOD/\nPERIOD/g' | egrep -v 'Homeroom|Lunch|Study Hall' | sed -e '/^$/d' -e 's/.*Grade: //g' -e 's/  Absences.*/,/g' -e 's/--//g' | tr -d '\n' | sed -e 's/,$/\n/')"
+			MakeChart
+			MakeHTML
+			echo mutt -a "${GFILE}" -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -e "set content_type=text/html" -- "${EMAILS}" < ${EMAILBODY}
+			echo FILE USED: "${RAWDIR}/${THIS_FILE}"
+			echo HTML FILE: echo ${EMAILBODY}
+			echo GFILE: ${GFILE}
+		fi
+
+		exit 0
+	fi
+
+	exit 0
+}
+
+function MakeHTML() {
+		EMAILBODY="${RAWDIR}/GradesEmailBody_${TODAY_ZERO}.html"
+
+		THREE_WEEKS=$(date -d "monday 3 weeks ago" +%s)
+
+		STYLE_BODY="margin:0; padding:0; text-align:center; width:360px"
+		STYLE_TABLE="width:100%;border:1px solid;border-collapse:collapse;font-family:sans-serif;font-size:7pt;text-align:center;vertical-align:middle;"
+		STYLE_TD_HEAD="text-overflow:hide;border:1px solid;border-style:solid;min-width:25px;word-break:break-word;font-family:sans-serif;font-size:7pt;text-align:center;vertical-align:middle;color:black;background-color:#AAAAAA;font-weight:bold;"
+		STYLE_TD="text-overflow:clip;border:1px solid;border-color:#AAAAAA;min-width:25px;word-break:break-word;font-family:sans-serif;font-size:7pt;text-align:center;vertical-align:middle;"
+		STYLE_HR="width:100%";
+
+		echo "<!DOCTYPE html><html><head><title>Lex's Grades - ${THIS_AS_OF_DATE}</title></head><body style=\"${STYLE_BODY}\"><center>" > ${EMAILBODY}
+		echo "<a href=\"http://aragorn.fleag.us/chart/${CHART_PLOT_NAME}\"><img alt=\"Lex's Grades - ${THIS_AS_OF_DATE}\" src=\"http://aragorn.fleag.us/chart/${CHART_PLOT_NAME}\" style=\"border:1px solid;border-style:raised;\"></a>" >> ${EMAILBODY}
+		echo "<hr style=\"${STYLE_HR}\"><table summary=\"Lex's Grades - ${THIS_AS_OF_DATE}\" style=\"${STYLE_TABLE}\">" >> ${EMAILBODY}
+
+		LINE_COUNT=0
+		LINE_TOTAL=$(( $(grep . "${GFILE}" | wc -l) - 1 ))
+
+		[ ${DEBUG} ] && echo "LINE_TOTAL: ${LINE_TOTAL}"
+
+		echo -n "<tr><td style=\"${STYLE_TD_HEAD}\">" >> ${EMAILBODY}
+
+		head -n1 "${GFILE}" | sed -e 's/[0-9][0-9][0-9][0-9]-//g' -e 's/_/ /g' -e "s/,/<\/td>\n\t<td style=\"${STYLE_TD_HEAD}\">/g" -e 's/$/<\/td><\/tr>/g' >> ${EMAILBODY}
+
+		tac "${GFILE}" | while read LINE ; do
+
+			if [ ! "$(echo ${LINE} | grep [a-zA-Z])" ] ; then
+
+				LINE_DATE=$(date -d $(echo ${LINE} | cut -d, -f1) +%s)
+
+				[ ${DEBUG} ] && echo "LINE_DATE: ${LINE_DATE} || THREE_WEEKS: ${THREE_WEEKS}"
+
+				if [ ${LINE_DATE} -ge ${THREE_WEEKS} ] ; then
+					echo -n "<tr><td style=\"${STYLE_TD_HEAD}\">" >> ${EMAILBODY}
+#					echo "${LINE}" | sed -e 's/-/ /g' -e 's/_/ /g' -e "s/,/<\/td>\n\t<td style=\"${STYLE_TD}\">/g" -e 's/$/<\/td><\/tr>/g' >> ${EMAILBODY}
+					echo "${LINE}" | sed -e 's/[0-9][0-9][0-9][0-9]-//g' -e "s/,/<\/td>\n\t<td style=\"${STYLE_TD}\">/g" -e 's/$/<\/td><\/tr>/g' >> ${EMAILBODY}
+
+					[ ${DEBUG} ] && echo "${LINE_COUNT}: ${LINE}"
+
+
+					LINE_COUNT=$(( ${LINE_COUNT} + 1 ))
+				fi
+			fi
+		done
+
+		echo "</table><br></body></html>" >> ${EMAILBODY}
+}
+
+
+RAWDIR="$HOME/temp/Grades" ; [ ! -d "${RAWDIR}" ] && mkdir -p "${RAWDIR}"
+
+GPATH="$HOME/Nathan/Grades" ; [ ! -d "${GPATH}" ] && mkdir -p "${GPATH}"
+
+TODAY=$(date +%-d%b%Y)
+TODAY_S=$(date -d "${TODAY}" +%s)
+
+TODAY_ZERO=$(date +%d%b%Y)
+YESTERDAY=$(date -d "yesterday" +%-d%b%Y)
+YESTERDAY_ZERO=$(date -d "yesterday" +%d%b%Y)
+
+case $1 in
+	"debug")
+		STOPTIME=19
+		THIS_HOUR=$(date +%-H)
+		DEBUG="yes"
+		EMAILS="${EMAIL_MINE}"
+		CheckGmail
+		;;
+	*)
+		STOPTIME=9
+		THIS_HOUR=$(date +%-H)
+# 		EMAILS="${EMAIL_MINE}"
+
+		if [ $(date -d ${TODAY} +%A) == "Monday" ] ; then
+			EMAILS="${EMAIL_MINE}, ${EMAIL_DENISE}, ${EMAIL_CYN}, ${EMAIL_LEX}"
+		else
+			EMAILS="${EMAIL_MINE}, ${EMAIL_DENISE}, ${EMAIL_CYN}"
+		fi
+# 		[ ${THIS_HOUR} -lt ${STOPTIME} ] && 
+		CheckGmail
+		;;
+esac

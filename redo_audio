@@ -1,0 +1,234 @@
+#!/bin/bash
+
+
+##########################################
+# SETUP VARS
+#
+function SetupVars() {
+	OLD_FILE="$1"
+	NEW_FILE="${OLD_FILE%.${EXTEN}}.mp3"
+	NEW_WAV="${OLD_FILE%.${EXTEN}}_working.wav"
+
+	INFO="${OLD_FILE%.${EXTEN}}.info"
+
+	OLD_FILE_DIR="${EXTEN} - $(basename "$(pwd)")"
+	FINAL_DIR=$(basename "$(pwd)")
+}
+
+##########################################
+# CLEANUP
+#
+function Cleanup() {
+	[ -f "${INFO}" ] && rm -fv "${INFO}"
+	[ -f "${NEW_WAV}" ] && rm -fv "${NEW_WAV}"
+	mv "${OLD_FILE}" "${OLD_FILE_DIR}"
+	touch -r "${OLD_FILE_DIR}/${OLD_FILE}" "${FINAL_DIR}/${NEW_FILE}"
+}
+
+##########################################
+# NORMALIZE
+#
+function DoNormalize() {
+	midentify "${OLD_FILE}" | grep -v '=0$' | sort -u >> "${INFO}"
+	. "${INFO}"
+
+#	ffmpeg -y -v warning -i "${OLD_FILE}" -qscale 0 -vn -f wav -ac ${ID_AUDIO_NCH} -ar "${ID_AUDIO_RATE}" "${NEW_WAV}"
+	ffmpeg -y -v warning -i "${OLD_FILE}" -q:a 0 -vn -f wav -ac ${ID_AUDIO_NCH} -ar "${ID_AUDIO_RATE}" "${NEW_WAV}"
+
+	echo -e \\v~~~~~~~
+
+	VOLINFO=$(normalize -n "${NEW_WAV}")
+	VOL_LEVEL=$(echo ${VOLINFO} | awk '{print $1}' | sed -e 's/\..*//g')
+	VOL_PEAK=$(echo ${VOLINFO} | awk '{print $2}' | sed -e 's/\..*//g')
+	VOL_GAIN=$(echo ${VOLINFO} | awk '{print $3}' | sed -e 's/\..*//g')
+
+	if [ "${VOL_GAIN}" -gt 0 ] ; then
+		nice normalize "${NEW_WAV}"
+	else
+		echo "No RMS normalize needed."
+	fi
+
+	VOLINFO=$(normalize -n "${NEW_WAV}")
+	VOL_LEVEL=$(echo ${VOLINFO} | awk '{print $1}')
+	VOL_PEAK=$(echo ${VOLINFO} | awk '{print $2}')
+	VOL_GAIN=$(echo ${VOLINFO} | awk '{print $3}')
+
+#	if [ "${VOL_PEAK}" -lt 0 ] ; then
+	if [ "${VOL_PEAK}" \< 0 ] ; then
+		nice normalize --peak "${NEW_WAV}"
+	else
+		echo "No PEAK normalize needed."
+	fi
+
+	VOLINFO="" ; VOL_LEVEL="" ; VOL_PEAK="" ; VOL_GAIN=""
+
+	echo -e ~~~~~~~\\v
+}
+
+##########################################
+# MAKE MP3
+#
+function MakeMp3() {
+	if [ "${ALBUM}" ] ; then
+		OLD_FILE_DIR="${EXTEN} - ${ALBUM}"
+		FINAL_DIR="${ALBUM}"
+	fi
+
+	if [ "${DATE}" ] ; then
+		FINAL_DIR="${DATE} - ${ALBUM}"
+	fi
+
+	[ ! -d "${FINAL_DIR}" ] && mkdir "${FINAL_DIR}"
+	[ ! -d "${OLD_FILE_DIR}" ] && mkdir "${OLD_FILE_DIR}"
+
+
+#echo NEW_WAV: $NEW_WAV
+#echo FINAL_DIR: $FINAL_DIR
+#echo NEW_FILE: $NEW_FILE
+
+
+
+	nice lame -q0 -V0 --vbr-new --clipdetect --add-id3v2 --id3v2-only --lowpass 22000 --noreplaygain \
+		--resample ${ID_AUDIO_RATE} \
+		--tt "${TITLE}" \
+		--tn "${TRACKNUMBER}" \
+		--tg "${GENRE}" \
+		--ty "${DATE}" \
+		--ta "${ARTIST}" \
+		--tl "${ALBUM}" \
+		"${NEW_WAV}" "${FINAL_DIR}/${NEW_FILE}"
+}
+
+
+##########################################
+# OGG
+#
+function redo_ogg(){
+# 	id3info "${OLD_FILE}" | grep === | sort | sed -e 's/=== //g' -e 's/ (.*: /="/g' -e 's/$/"/g' -e 's/TALB/ALBUM/g' -e 's/TCON/GENRE/g' -e 's/TIT2/TITLE/g' -e 's/TPE1/ARTIST/g' -e 's/TRCK/TRACKNUMBER/g' -e 's/TYER/DATE/g' | sort -u > "${INFO}"
+	ogginfo "${OLD_FILE}" | grep = | sed 's/^[ \t]//g;s/=/="/;s/$/"/' | sort -u > "${INFO}"
+	. "${INFO}"
+
+	DoNormalize && MakeMp3 && Cleanup
+}
+
+
+##########################################
+# MP3
+#
+function redo_mp3(){
+	id3info "${OLD_FILE}" | grep === | sort | sed -e 's/=== //g' -e 's/ (.*: /="/g' -e 's/$/"/g' -e 's/TALB/ALBUM/g' -e 's/TCON/GENRE/g' -e 's/TIT2/TITLE/g' -e 's/TPE1/ARTIST/g' -e 's/TRCK/TRACKNUMBER/g' -e 's/TYER/DATE/g' | sort -u > "${INFO}"
+	. "${INFO}"
+
+	DoNormalize && MakeMp3 && Cleanup
+}
+
+
+##########################################
+# FLAC
+#
+function redo_flac() {
+	metaflac --export-tags-to=- "${OLD_FILE}" | sort | grep -v COMMENT | awk 'BEGIN { FS = "=" } ; {$1=toupper($1)"="}1' | sed -e 's/= /=\"/g' -e 's/$/\"/g' | egrep '^ALBUM=|^ARTIST=|^TRACKNUMBER=|^GENRE=|^DATE=|^TITLE=' | sort -u > "${INFO}"
+	. "${INFO}"
+
+	DoNormalize && MakeMp3 && Cleanup
+}
+
+
+##########################################
+# APE
+#
+function redo_ape() {
+	apetag -i "${OLD_FILE}" | grep '"' | awk '{$1=toupper($1)}1' | sed -e 's/\"/\\"/g' -e 's/\(.*\)=/\U\1=/g' -e 's/\"\ \"/\=\"/g' -e 's/^\"//g' | grep "=" | sort -u > "${INFO}"
+	. "${INFO}"
+
+	DoNormalize && MakeMp3 && Cleanup
+}
+
+
+##########################################
+# WAV
+#
+function redo_wav() {
+	echo "TITLE=\"$(basename "${OLD_FILE}" | sed -e 's/\(.*\)\..*$/\1/g')\"" | sort -u > "${INFO}"
+	. "${INFO}"
+
+	DoNormalize && MakeMp3 && Cleanup
+}
+
+
+##########################################
+# MKV
+#
+function redo_mkv() {
+	echo "TITLE=\"$(basename "${OLD_FILE}" | sed -e 's/\(.*\)\..*$/\1/g')\"" | sort -u > "${INFO}"
+	. "${INFO}"
+
+	DoNormalize && MakeMp3 && Cleanup
+}
+
+
+##########################################
+# RENAME DIRECTORIES
+#
+function RenameDirectories() {
+	ALBUM_LIST="/tmp/m3uMaker_albumlist"
+
+	rm -f *.m3u
+	find -maxdepth 1 -mindepth 1 -type d -exec basename "{}" \; > "${ALBUM_LIST}"
+
+	while read ALBUM ; do
+
+		eyeD3 --to-v2.3 "${ALBUM}"/*.mp3 &> /dev/null
+
+		ID3_YEAR=$(id3info "${ALBUM}/$(ls "${ALBUM}" | head -n1)" | grep TYER | sed -e 's/.*: //g')
+		ID3_ALBUM=$(id3info "${ALBUM}/$(ls "${ALBUM}" | head -n1)" | grep TALB | sed -e 's/.*: //g' -e 's/:/ -/g' -e 's/?//g')
+
+		if [ ! -d "${ID3_YEAR} - ${ID3_ALBUM}" ] ; then
+			mv -vi "${ALBUM}" "${ID3_YEAR} - ${ID3_ALBUM}"
+		else
+			echo "Already renamed: ${ID3_YEAR} - ${ID3_ALBUM}"
+		fi
+
+	done < "${ALBUM_LIST}"
+
+# 	rm -f "${ALBUM_LIST}"
+
+	$HOME/Sources/scripts-git/make_world_m3u here
+}
+
+##########################################
+# DUMP HELP
+#
+function DumpHelp() {
+	echo -e \\v --- HELP ---
+	echo handles mp3, flac, wav
+	echo -e \\vor\\v
+# 	[ -f "$1" ] && echo \"$1\" is: $(file "$1")
+# 	echo -e \\v
+	echo $(basename $0) rename
+	echo Renames all albums in current dir with \"Year - Name\"
+	exit
+}
+
+
+##########################################
+# BALLS
+#
+[[ "$1" = "--help" || "$1" = "-h" || ! "$1" ]] && DumpHelp
+
+if [ "$1" = rename ] ; then
+	RenameDirectories
+else
+	EXTEN=$(echo $(basename "$1") | sed -e 's/.*\.//g')
+
+	case "${EXTEN}" in 
+		[mM][pP]3) SetupVars "$1" && redo_mp3 ;;
+		[aA][pP][eE]) SetupVars "$1" && redo_ape ;;
+		[fF][lL][aA][cC]) SetupVars "$1" && redo_flac ;;
+		[mM][kK][vV]) SetupVars "$1" && redo_mkv;;
+		[oO][gG][gG]) SetupVars "$1" && redo_ogg;;
+		[wW][aA][vV]) SetupVars "$1" && redo_wav;;
+		   [mM][pP]4) SetupVars "$1" && redo_wav;;
+		*) DumpHelp;;
+	esac
+fi

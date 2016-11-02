@@ -1,0 +1,629 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN">
+<html lang="en" oncontextmenu="return false">
+<head>
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="cache-control" content="no-cache">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<meta http-equiv="imagetoolbar" content="no">
+<meta name="copyright" content="(C) Panasonic Syetem Networks Co.,Ltd. 2010">
+<title>WV-SC385 Network Camera</title>
+<!--<script type="text/javascript"	src="/js/cmsg.js?Language=0&Rnd=885"></script>
+<script type="text/javascript"	src="/js/cmsgtab.js?Language=0&Rnd=886"></script>
+<script type="text/javascript"	src="/js/camctrl.js?Language=0&Rnd=887"></script>
+<script type="text/javascript"	src="/js/chknet.js?Language=0&Rnd=888"></script>-->
+<script type="text/javascript"	src="cmsg.js?Language=0&Rnd=885"></script>
+<script type="text/javascript"	src="cmsgtab.js?Language=0&Rnd=886"></script>
+<script type="text/javascript"	src="camctrl.js?Language=0&Rnd=887"></script>
+<script type="text/javascript"	src="chknet.js?Language=0&Rnd=888"></script>
+
+<link REL="StyleSheet" TYPE="text/css" HREF="cams.css">
+
+<!-- <script type="text/javascript"	src="/js/capi.js?Language=0&Rnd=889"></script> -->
+<script type="text/javascript"	src="capi.js?Language=0&Rnd=889"></script>
+<script type="text/javascript">
+<!--
+
+
+// curl "http://67.204.164.159:9293/cgi-bin/nphControlCamera?Width=320&Height=240&clientWidth=320&clientHeight=240&Direction=Direct&NewPosition.x=0&NewPosition.y=100&Language=0"
+// curl "http://67.210.198.15:9092/cgi-bin/nphControlCamera?clientWidth=320&clientHeight=240&Direction=Direct&NewPosition.x=160&NewPosition.y=0"
+// curl -sL "http://67.210.198.15:9092/cgi-bin/camctrl?times=up&zoom=-3"
+
+
+var camWidth=320;
+// var camHeight=240;
+// var camWidth=640;
+var camHeight=(camWidth * 0.75);
+
+var giRequestID = new Array(5);
+var gsTitle = new Array(5);
+var gsAddr = new Array(5);
+var giRetryID = new Array(5);
+var giDisconnectID = new Array(5);
+var giConnectFlg = new Array(false, false, false, false, false);
+var gsHttpTBL = new Array("http://", "https://");
+// var gsReqURI = new Array("/cgi-bin/camera?resolution=320", "/SnapshotJPEG?Resolution=320x240");
+var gsReqURI = new Array("/cgi-bin/camera?resolution=" + camWidth + "", "/SnapshotJPEG?Resolution=" + camWidth + "x" + camHeight + "");
+var gsReqURIIdx = new Array(5);
+var gihttps = 0;
+
+// var giRequestID = new Array(4);
+// var gsTitle = new Array(4);
+// var gsAddr = new Array(4);
+// var giRetryID = new Array(4);
+// var giDisconnectID = new Array(4);
+// var giConnectFlg = new Array(false, false, false, false);
+// var gsHttpTBL = new Array("http://", "https://");
+// // var gsReqURI = new Array("/cgi-bin/camera?resolution=320", "/SnapshotJPEG?Resolution=320x240");
+// var gsReqURI = new Array("/cgi-bin/camera?resolution=" + camWidth + "", "/SnapshotJPEG?Resolution=" + camWidth + "x" + camHeight + "");
+// var gsReqURIIdx = new Array(4);
+// var gihttps = 0;
+
+function MakeNoise(iIndex) {
+
+
+
+// 	if ( action == "move" ) {
+// 		alert("PAN: " + pan + " || TILT: " + tilt + "");
+// 	} else {
+
+// 		alert(document.getElementById("img" + iIndex + "1").style.visibility);
+// 		alert(document.getElementById("img" + iIndex + "1").width);
+
+		var imageName = document.images[iIndex].name;
+		var imageWidth = document.images[iIndex].width;
+		var imageHeight = document.images[iIndex].height;
+		var imageSource = document.images[iIndex].src;
+
+		var alertString = "imageName: " + imageName + " || ";
+		alertString += "imageWidth: " + imageWidth + " || ";
+		alertString += "imageHeight: " + imageHeight + " || ";
+		alertString += "imageSource: " + imageSource + " || ";
+
+		if ( imageName == "imgView01" ) {
+
+			alert( alertString );
+		}
+// 	}
+}
+
+
+function InitThisPage() {
+	var iCamNum = 1;
+	var sAddr1 = "67.210.198.15:8081";
+	var sAddr2 = "67.210.198.15:7271";
+	var sAddr3 = "67.210.198.15:9092";
+	var sAddr4 = "67.204.164.159:9293";
+	var sAddr5 = "67.210.198.15:8919";
+	var sAddr6 = "";
+	var sAddr7 = "";
+	var sAddr8 = "";
+	var sAddr9 = "";
+	var sAddr10 = "";
+	var sAddr11 = "";
+	var sAddr12 = "";
+	var sAddr13 = "";
+	var sAddr14 = "";
+	var sAddr15 = "";
+	var sAddr16 = "";
+	var sTitle1 = "Downtown";
+	var sTitle2 = "Emkay";
+	var sTitle3 = "River Park";
+	var sTitle4 = "BPRD";
+	var sTitle5 = "Pavilion";
+	var sTitle6 = "";
+	var sTitle7 = "";
+	var sTitle8 = "";
+	var sTitle9 = "";
+	var sTitle10 = "";
+	var sTitle11 = "";
+	var sTitle12 = "";
+	var sTitle13 = "";
+	var sTitle14 = "";
+	var sTitle15 = "";
+	var sTitle16 = "";
+	try {
+		switch (top.frmLeft.menubar_GetMultiMode()) {
+			case 3:
+				iCamNum = 5;
+				break;
+			case 4:
+				iCamNum = 9;
+				break;
+			case 5:
+				iCamNum = 13;
+				break;
+// 			case 6:
+// 				iCamNum = 17;
+// 				break;
+		}
+	} catch (e) {}
+// 	for (var i = 0; i < 4; i++) {
+	for (var i = 0; i < 5; i++) {
+		gsTitle[i] = eval("sTitle" + iCamNum);
+		gsAddr[i] = eval("sAddr" + iCamNum++);
+	}
+	for (var i = 0; i < gsAddr.length; i++) {
+		gsReqURIIdx[i] = 0;
+		if ((gsAddr[i].substr(0, 7) != "http://") && (gsAddr[i].substr(0, 8) != "https://")) {
+			if (chknet_ipaddr_familly(gsAddr[i]) == "IPv6") {
+				if ((gsAddr[i].indexOf("[") < 0) && (gsAddr[i].indexOf("]") < 0)) {
+					gsAddr[i] = "[" + gsAddr[i] + "]";
+				}
+			}
+		}
+	}
+	try {
+		top.frmLeft.menubar_ClearOneTimeFlag();
+	} catch (e) {}
+	this.idTitle0.innerHTML = capi_ChangeSpecialSign(gsTitle[0]);
+	this.idTitle1.innerHTML = capi_ChangeSpecialSign(gsTitle[1]);
+	this.idTitle2.innerHTML = capi_ChangeSpecialSign(gsTitle[2]);
+	this.idTitle3.innerHTML = capi_ChangeSpecialSign(gsTitle[3]);
+	this.idTitle4.innerHTML = capi_ChangeSpecialSign(gsTitle[4]);
+	document.getElementById("img00").style.visibility = "visible";
+	document.getElementById("img10").style.visibility = "visible";
+	document.getElementById("img20").style.visibility = "visible";
+	document.getElementById("img30").style.visibility = "visible";
+	document.getElementById("img40").style.visibility = "visible";
+	document.getElementById("img01").style.visibility = "hidden";
+	document.getElementById("img11").style.visibility = "hidden";
+	document.getElementById("img21").style.visibility = "hidden";
+	document.getElementById("img31").style.visibility = "hidden";
+	document.getElementById("img41").style.visibility = "hidden";
+	document.getElementById("img02").style.visibility = "hidden";
+	document.getElementById("img12").style.visibility = "hidden";
+	document.getElementById("img22").style.visibility = "hidden";
+	document.getElementById("img32").style.visibility = "hidden";
+	document.getElementById("img42").style.visibility = "hidden";
+	if (gsAddr[0] != "") {
+		RequestJpegPic1(0);
+	}
+	if (gsAddr[1] != "") {
+		RequestJpegPic1(1);
+	}
+	if (gsAddr[2] != "") {
+		RequestJpegPic1(2);
+	}
+	if (gsAddr[3] != "") {
+		RequestJpegPic1(3);
+	}
+	if (gsAddr[4] != "") {
+		RequestJpegPic1(4);
+	}
+}
+
+function RequestJpegPic1(iIndex) {
+	var sAddr;
+	var objDate = new Date();
+	if (giRetryID[iIndex] != 0) {
+		clearTimeout(giRetryID[iIndex]);
+		giRetryID[iIndex] = 0;
+	}
+	var strFunc = "ErrorProcessing1(" + iIndex + ")";
+	giRetryID[iIndex] = setTimeout(strFunc, 100 * 1000);
+	if (gsAddr[iIndex] != "") {
+		if ((gsAddr[iIndex].substr(0, 7) == "http://") || (gsAddr[iIndex].substr(0, 8) == "https://")) {
+			document.all("imgView" + iIndex + "1").src = gsAddr[iIndex] + gsReqURI[gsReqURIIdx[iIndex]] + "&page=" + objDate.getTime() + "&Language=0";
+		} else {
+			document.all("imgView" + iIndex + "1").src = gsHttpTBL[gihttps] + gsAddr[iIndex] + gsReqURI[gsReqURIIdx[iIndex]] + "&page=" + objDate.getTime() + "&Language=0";
+		}
+	}
+}
+
+function DispJpegPic1(iIndex) {
+
+// 	alert( "DispJpegPic1: " + iIndex );
+
+	if (giRetryID[iIndex] != 0) {
+		clearTimeout(giRetryID[iIndex]);
+		giRetryID[iIndex] = 0;
+	}
+	if (giDisconnectID[iIndex] != 0) {
+		clearTimeout(giDisconnectID[iIndex]);
+		giDisconnectID[iIndex] = 0;
+	}
+	document.getElementById("img" + iIndex + "0").style.visibility = "hidden";
+	document.getElementById("img" + iIndex + "1").style.visibility = "visible";
+	document.getElementById("img" + iIndex + "2").style.visibility = "hidden";
+	strFunc = "RequestJpegPic2(" + iIndex + ")";
+	giRequestID[iIndex] = setTimeout(strFunc, 500);
+	strFunc = "DisconnectAlert(" + iIndex + ")";
+	giDisconnectID[iIndex] = setTimeout(strFunc, 120 * 1000);
+	giConnectFlg[iIndex] = true;
+
+	
+	
+// 	MakeNoise(iIndex);
+
+
+
+}
+
+function RequestJpegPic2(iIndex) {
+
+// 	alert ("RequestJpegPic2: " + iIndex);
+
+	var sAddr;
+	var objDate = new Date();
+	if (giRetryID[iIndex] != 0) {
+		clearTimeout(giRetryID[iIndex]);
+		giRetryID[iIndex] = 0;
+	}
+	var strFunc = "ErrorProcessing2(" + iIndex + ")";
+	giRetryID[iIndex] = setTimeout(strFunc, 100 * 1000);
+	if (gsAddr[iIndex] != "") {
+		if ((gsAddr[iIndex].substr(0, 7) == "http://") || (gsAddr[iIndex].substr(0, 8) == "https://")) {
+// 			alert( gsAddr[iIndex] + gsReqURI[gsReqURIIdx[iIndex]] + "&page=" + objDate.getTime() + "&Language=0" );
+			document.all("imgView" + iIndex + "2").src = gsAddr[iIndex] + gsReqURI[gsReqURIIdx[iIndex]] + "&page=" + objDate.getTime() + "&Language=0";
+		} else {
+// 			alert (gsHttpTBL[gihttps] + gsAddr[iIndex] + gsReqURI[gsReqURIIdx[iIndex]] + "&page=" + objDate.getTime() + "&Language=0");
+
+			///////////////////////////
+			// MINE
+// 			MakeNoise(iIndex);
+			///////////////////////////
+
+			document.all("imgView" + iIndex + "2").src = gsHttpTBL[gihttps] + gsAddr[iIndex] + gsReqURI[gsReqURIIdx[iIndex]] + "&page=" + objDate.getTime() + "&Language=0";
+		}
+	}
+}
+
+function DispJpegPic2(iIndex) {
+	if (giRetryID[iIndex] != 0) {
+		clearTimeout(giRetryID[iIndex]);
+		giRetryID[iIndex] = 0;
+	}
+	if (giDisconnectID[iIndex] != 0) {
+		clearTimeout(giDisconnectID[iIndex]);
+		giDisconnectID[iIndex] = 0;
+	}
+	document.getElementById("img" + iIndex + "0").style.visibility = "hidden";
+	document.getElementById("img" + iIndex + "1").style.visibility = "hidden";
+	document.getElementById("img" + iIndex + "2").style.visibility = "visible";
+	strFunc = "RequestJpegPic1(" + iIndex + ")";
+	giRequestID[iIndex] = setTimeout(strFunc, 500);
+	strFunc = "DisconnectAlert(" + iIndex + ")";
+	giDisconnectID[iIndex] = setTimeout(strFunc, 120 * 1000);
+	giConnectFlg[iIndex] = true;
+}
+
+function OpenLiveWindow(iIndex) {
+	if (gsAddr[iIndex] != "") {
+		if ((gsAddr[iIndex].substr(0, 7) == "http://") || (gsAddr[iIndex].substr(0, 8) == "https://")) {
+			window.open(gsAddr[iIndex]);
+		} else {
+			window.open(gsHttpTBL[gihttps] + gsAddr[iIndex]);
+		}
+	}
+}
+
+function DocWriteCamTitle(iIndex) {
+
+// 	alert("DocWriteCamTitle: " + iIndex );
+
+	var sLine;
+	var bAct = true;
+	if (gsAddr[iIndex] == "") {
+		bAct = false;
+	}
+	if (bAct) {
+		sLine = "<div class=\"camera_title" + iIndex + "\" style=\"cursor:hand;\" tabindex=\"1\" onclick=\"OpenLiveWindow(" + iIndex + ");\" onkeypress=\"OpenLiveWindow(" + iIndex + ");\">";
+	} else {
+		sLine = "<div class=\"camera_title" + iIndex + "\">";
+	}
+
+// 	var picNum = (iIndex + 1);
+// 	var thisPicWidth = document.getElementsByName("imgView01" + picNum )[0];
+// 	var thisPicWidth = document.getElementById("img" + iIndex + "1");
+// 	var thisPicWidth = document.all("imgView" + iIndex + "1").src;
+// 	alert (document.all("imgView" + iIndex + "1").src);
+// 	var thisPicWidth = document.getElementById("imgView01").style.visibility;
+// 	img01
+
+// 	sLine += "" + sAddr + "";
+
+	sLine += "<div id=\"idTitle" + iIndex + "\" class=\"14textB\">";
+	sLine += "</div>";
+	sLine += "</div>";
+	document.write(sLine);
+}
+
+function clrTimer() {
+	var iIndex;
+// 	for (iIndex = 0; iIndex < 4; iIndex++) {
+	for (iIndex = 0; iIndex < 5; iIndex++) {
+		clearTimeout(giRequestID[iIndex]);
+		clearTimeout(giRetryID[iIndex]);
+	}
+}
+
+function ErrorProcessing1(iIndex) {
+	gsReqURIIdx[iIndex] = (gsReqURIIdx[iIndex] == 0) ? 1 : 0;
+	strFunc = "RequestJpegPic1(" + iIndex + ")";
+	setTimeout(strFunc, 500);
+	giConnectFlg[iIndex] = false;
+}
+
+function ErrorProcessing2(iIndex) {
+	gsReqURIIdx[iIndex] = (gsReqURIIdx[iIndex] == 0) ? 1 : 0;
+	strFunc = "RequestJpegPic2(" + iIndex + ")";
+	setTimeout(strFunc, 500);
+	giConnectFlg[iIndex] = false;
+}
+
+function DisconnectAlert(iIndex) {
+	if (gsTitle[iIndex] != "") {
+		var strArt = gsTitle[iIndex] + "\n" + cmsg_show("JE0914");
+		alert(strArt);
+	} else {
+		var iCamNum = 1;
+		try {
+			switch (top.frmLeft.menubar_GetMultiMode()) {
+				case 3:
+					iCamNum = 5;
+					break;
+				case 4:
+					iCamNum = 9;
+					break;
+				// MINE
+				case 5:
+					iCamNum = 13;
+					break;
+			}
+		} catch (e) {}
+		iCamNum = iCamNum + iIndex;
+		alert(cmsg_show("JE0915") + iCamNum + "\n" + cmsg_show("JE0914"));
+	}
+	strFunc = "DisconnectAlert(" + iIndex + ")";
+	giDisconnectID[iIndex] = setTimeout(strFunc, 30 * 1000);
+}
+
+function funcpt(pan, tilt, iIndex) {
+	var url = "";
+	if (gsAddr[iIndex] != "") {
+		if (giConnectFlg[iIndex] == true) {
+			switch (iIndex) {
+				case 0:
+					tilt = tilt - 27;
+					break;
+				case 1:
+					pan = pan - 373;
+					tilt = tilt - 27;
+					break;
+				case 2:
+					tilt = tilt - 310;
+					break;
+				case 3:
+					pan = pan - 373;
+					tilt = tilt - 310;
+					break;
+				default:
+					break;
+			}
+			var x_step = 29;
+			var y_step = 26.6;
+			var y1 = 0;
+			var y2 = y1 + y_step;
+			for (var i = -4; i <= 4; i++) {
+				if ((tilt >= y1) && (tilt <= y2)) {
+					break;
+				}
+				y1 += y_step;
+				y2 += y_step;
+			}
+			var x1 = 0;
+			var x2 = x1 + x_step;
+			for (var j = -5; j <= 5; j++) {
+				if ((pan >= x1) && (pan <= x2)) {
+					break;
+				}
+				x1 += x_step;
+				x2 += x_step;
+			}
+			if (i == 5 || j == 6) {
+				return false;
+			}
+			if ((gsAddr[iIndex].substr(0, 7) == "http://") || (gsAddr[iIndex].substr(0, 8) == "https://")) {
+				if (gsReqURIIdx[iIndex] == 0) {
+					url = gsAddr[iIndex] + "/cgi-bin/camctrl?pan=" + j + "&tilt=" + i + "&Language=0";
+				} else {
+// 					url = gsAddr[iIndex] + "/cgi-bin/nphControlCamera?Width=320&Height=240&clientWidth=320&clientHeight=240&Direction=Direct&NewPosition.x=" + pan + "&NewPosition.y=" + tilt + "&Language=0";
+					url = gsAddr[iIndex] + "/cgi-bin/nphControlCamera?Width=" + camWidth + "&Height=" +camHeight+ "&clientWidth=" + camWidth + "&clientHeight=" +camHeight+ "&Direction=Direct&NewPosition.x=" + pan + "&NewPosition.y=" + tilt + "&Language=0";
+				}
+			} else {
+				if (gsReqURIIdx[iIndex] == 0) {
+
+					///////////////////////////
+					// MINE
+// 					alert("PAN: " + pan + " || TILT: " + tilt + "");
+					///////////////////////////
+
+					url = gsHttpTBL[gihttps] + gsAddr[iIndex] + "/cgi-bin/camctrl?pan=" + j + "&tilt=" + i + "&Language=0";
+				} else {
+// 					url = gsHttpTBL[gihttps] + gsAddr[iIndex] + "/cgi-bin/nphControlCamera?Width=320&Height=240&clientWidth=320&clientHeight=240&Direction=Direct&NewPosition.x=" + pan + "&NewPosition.y=" + tilt + "&Language=0";
+					url = gsHttpTBL[gihttps] + gsAddr[iIndex] + "/cgi-bin/nphControlCamera?Width=" + camWidth + "&Height=" +camHeight+ "&clientWidth=" + camWidth + "&clientHeight=" +camHeight+ "&Direction=Direct&NewPosition.x=" + pan + "&NewPosition.y=" + tilt + "&Language=0";
+				}
+			}
+			camctrl_CgiSend(gsCgiKind[3], url);
+		}
+	}
+}
+
+function MouseClick(iIndex) {
+	funcpt(event.clientX, event.clientY, iIndex);
+}
+
+function MouseWheel(iIndex) {
+	var url = "";
+	if (gsAddr[iIndex] != "") {
+		if (giConnectFlg[iIndex] == true) {
+			var FuncURL = "";
+			if (event.wheelDelta > 0) {
+				FuncURL += "times=up&zoom=3";
+			} else {
+				FuncURL += "times=down&zoom=-3";
+			}
+			if ((gsAddr[iIndex].substr(0, 7) == "http://") || (gsAddr[iIndex].substr(0, 8) == "https://")) {
+				url = gsAddr[iIndex] + "/cgi-bin/camctrl?" + FuncURL + "&Language=0";
+			} else {
+				url = gsHttpTBL[gihttps] + gsAddr[iIndex] + "/cgi-bin/camctrl?" + FuncURL + "&Language=0";
+			}
+			camctrl_CgiSend(gsCgiKind[3], url);
+		}
+	}
+}
+//-->
+</script>
+</head>
+<!-- <body bgcolor="transparent" tabindex="-1" onunload="clrTimer();"> -->
+<body bgcolor="black" tabindex="-1" onunload="clrTimer();">
+<table width="100%" border="0" cellspacing="5" cellpadding="5">
+<tr>
+	<td>
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+			<td>
+			<script>
+				DocWriteCamTitle(0);
+			</script>
+			</td>
+		</tr>
+		<tr>
+			<td onClick="MouseClick(0);" onMouseWheel="MouseWheel(0)">
+				<div id="img00" class="image_table0"></div>
+				<div id="img01" class="image_table0">
+					<img name="imgView01" border="0" class="image" onLoad="DispJpegPic1(0);" onError="ErrorProcessing1(0);">
+				</div>
+				<div id="img02" class="image_table0">
+					<img name="imgView02" border="0" class="image" onLoad="DispJpegPic2(0);" onError="ErrorProcessing2(0);">
+				</div>
+			</td>
+		</tr>
+		</table>
+	</td>
+	<td>
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+			<td>
+			<script>
+				DocWriteCamTitle(1);
+			</script>
+			</td>
+		</tr>
+		<tr>
+			<td onClick="MouseClick(1);" onMouseWheel="MouseWheel(1)">
+				<div id="img10" class="image_table1"></div>
+				<div id="img11" class="image_table1">
+					<img name="imgView11" border="0" class="image" onLoad="DispJpegPic1(1);" onError="ErrorProcessing1(1);">
+				</div>
+				<div id="img12" class="image_table1">
+					<img name="imgView12" border="0" class="image" onLoad="DispJpegPic2(1);" onError="ErrorProcessing2(1);">
+				</div>
+			</td>
+		</tr>
+		</table>
+	</td>
+
+</tr>
+<tr>
+	<td>
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+			<td>
+			<script>
+				DocWriteCamTitle(2);
+			</script>
+			</td>
+		</tr>
+		<tr>
+			<td onClick="MouseClick(2);" onMouseWheel="MouseWheel(2)">
+				<div id="img20" class="image_table2"></div>
+				<div id="img21" class="image_table2">
+					<img name="imgView21" border="0" class="image" onLoad="DispJpegPic1(2);" onError="ErrorProcessing1(2);">
+				</div>
+				<div id="img22" class="image_table2">
+					<img name="imgView22" border="0" class="image" onLoad="DispJpegPic2(2);" onError="ErrorProcessing2(2);">
+				</div>
+			</td>
+		</tr>
+		</table>
+	</td>
+	<td>
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+		<td>
+			<script>
+				DocWriteCamTitle(3);
+			</script>
+		</td>
+		</tr>
+		<tr>
+			<td onClick="MouseClick(3);" onMouseWheel="MouseWheel(3)">
+				<div id="img30" class="image_table3"></div>
+			<div id="img31" class="image_table3">
+				<img name="imgView31" border="0" class="image" onLoad="DispJpegPic1(3);" onError="ErrorProcessing1(3);">
+			</div>
+			<div id="img32" class="image_table3">
+				<img name="imgView32" border="0" class="image" onLoad="DispJpegPic2(3);" onError="ErrorProcessing2(3);">
+				
+			</div>
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>
+	<table width="100%" border="0" cellspacing="0" cellpadding="0">
+	<tr>
+		<td>
+		<script>
+			DocWriteCamTitle(4);
+		</script>
+		</td>
+	</tr>
+	<tr>
+		<td onClick="MouseClick(4);" onMouseWheel="MouseWheel(4)">
+			<div id="img40" class="image_table4"></div>
+			<div id="img41" class="image_table4">
+				<img name="imgView41" border="0" class="image" onLoad="DispJpegPic1(4);" onError="ErrorProcessing1(4);">
+			</div>
+			<div id="img42" class="image_table4">
+				<img name="imgView42" border="0" class="image" onLoad="DispJpegPic2(4);" onError="ErrorProcessing2(4);">
+			</div>
+		</td>
+	</tr>
+	</table>
+	</td>
+	<td>
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+			<td>
+				<div class="image_table5" color=white>
+				<font color="gray">
+				<b>Downtown:</b> 67.210.198.15:8081/cgi-bin/camera - 67.210.198.15:8081/mobile <BR><BR>
+				<b>Emkay:</b> 67.210.198.15:7271/cgi-bin/camera - 67.210.198.15:7271/mobile <BR><BR>
+				<b>River Park:</b> 67.210.198.15:9092/cgi-bin/camera - 67.210.198.15:9092/mobile <BR><BR>
+				<b>BPRD:</b> 67.204.164.159:9293/cgi-bin/camera - 67.204.164.159:9293/mobile<BR><BR>
+				<b>Pavilion:</b> 67.210.198.15:8919/cgi-bin/camera - 67.210.198.15:8919/mobile<BR>
+				<BR>
+				</font>
+				</div>
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>
+<script>
+	InitThisPage();
+</script>
+<iframe style="visibility:hidden"n ame="M" src="/live/mainview_hide.html?Language=0" width="0" height="0"></iframe>
+</body>
+</html>
+
+
+<!-- 	var sAddr5 = "67.210.198.15:8919"; -->

@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN">
+<html lang="en" oncontextmenu="return false">
+<head>
+<title>New Viewer</title>
+
+<script language="JavaScript">
+<!--
+var cams = [];
+
+cams = [
+	['BPRD','67.204.164.159:9293'],
+	['Downtown','67.210.198.15:8081'],
+	['Emkay','67.210.198.15:7271'],
+	['RiverPark','67.210.198.15:9092'],
+	['Pavilion','67.210.198.15:8919']];
+
+var counter = 0;
+
+function startTimer() {
+
+// 	alert("START TIMER");
+
+// 	var refreshInterval = setInterval(updatePhoto, 1000);
+// 	var refreshInterval = setInterval(countThings, 1000);
+// 	var refreshInterval = 
+	setTimeout(countThings, 2000);
+
+}
+
+function updateEach(id,src) {
+
+// 	alert(id +" - "+ src);
+
+	var timestamp = new Date().getTime();
+
+	var img = new Image();
+
+	img.src = src +"&timestamp=" + timestamp;
+
+	document.getElementById(id).src = img.src;
+
+// 	document.getElementById('count2').innerHTML=counter +": "+ id +" - "+ src;
+
+	counter = (counter + 1);
+}
+
+
+function updatePhoto() {
+
+// 	clearInverval(refreshInterval);
+
+	var timestamp = new Date().getTime();
+
+	var img = new Image();
+// 	img.onload = function() { alert("Height: " + this.height); }
+
+	img.src = "http://67.204.164.159:9293/cgi-bin/SnapshotJPEG?Resolution=320x240&timestamp=" + timestamp + "";
+// 	img.src = "http://67.210.198.15:9092/cgi-bin/SnapshotJPEG?Resolution=320x240&timestamp=" + timestamp + "";
+
+// 	var camsrc = "http://67.204.164.159:9293/cgi-bin/SnapshotJPEG?Resolution=320x240&timestamp=" + timestamp + "";
+	
+// 	var camsrc = "http://67.210.198.15:9092/cgi-bin/SnapshotJPEG?Resolution=320x240&timestamp=" + timestamp + "";
+
+// 	document.getElementById("camimg").src = camsrc;
+	document.getElementById("camimg").src = img.src;
+// 	setTimeout(updatePhoto(), 1000)
+
+// 	var refreshInterval = setInterval(updatePhoto, 1000);
+
+	startTimer();
+}
+
+
+// var refreshInterval = setInterval(updatePhoto, 1000);
+// setInterval(updatePhoto, 1000)
+
+// setTimeout(updatePhoto, 1000);
+
+function countThings() {
+// 	var allElements = document.getElementsByTagName("*");
+	var allElements = document.getElementsByTagName("img");
+// 	var allIds = [];
+// 	var allSrc = [];
+
+// 	alert(allElements.length);
+// 	document.getElementById('count2').innerHTML=allElements.length;
+	
+	
+	for (var i = 0, n = allElements.length; i < n; ++i) {
+
+		var el = allElements[i];
+
+		if (el.id && el.id.indexOf('cam') == 0) {
+// 			allIds.push(el.id +": " + el.src);
+
+// 			if (document.getElementById(the check box).checked)
+				updateEach(el.id,el.src)
+// 			}
+// 		} else {
+// 			document.getElementById('count1').innerHTML=el.id +": " + el.src;
+		}
+
+// 		document.getElementById('count1').innerHTML=allIds;
+// 		document.getElementById('count2').innerHTML=allSrc;
+	}
+
+// 	allElements = [];
+
+	startTimer();
+}
+
+
+-->
+</script>
+</head>
+<body>
+
+<div id="count1"></div>
+<br>
+<div id="count2"></div>
+
+
+
+<form id="camform">
+<table border="1">
+<tr>
+	<td>
+		<img id="camimg01" src="http://67.204.164.159:9293/cgi-bin/SnapshotJPEG?Resolution=320x240">
+		<br>
+		<input type="checkbox" id="bprd" name="bprd" CHECKED>Colorado Street Bridge<br>
+	</td>
+	<td>
+		<img id="camimg02" src="http://67.210.198.15:8919///cgi-bin/SnapshotJPEG?Resolution=320x240">
+		<br>
+		<input type="checkbox" name="Pavilion" CHECKED>Simpson Pavilion<br>
+	</td>
+</tr>
+
+<tr>
+	<td>
+		<img id="camimg03" src="http://67.210.198.15:8081///cgi-bin/SnapshotJPEG?Resolution=320x240">
+		<br>
+		<input type="checkbox" name="Downtown" NOTCHECKED>Downtown<br>
+	</td>
+	<td>
+		<img id="camimg04" src="http://67.210.198.15:9092///cgi-bin/SnapshotJPEG?Resolution=320x240">
+		<br>
+		<input type="checkbox" name="RiverPark" CHECKED>River Park<br>
+	</td>
+</tr>
+<tr>
+	<td>
+		<img id="camimg05" src="http://67.210.198.15:7271///cgi-bin/SnapshotJPEG?Resolution=320x240">
+		<br>
+		<input type="checkbox" name="Emkay" CHECKED>Old Mill<br>
+	</td>
+</tr>
+</table>
+</form>
+
+<script language="JavaScript">
+
+setTimeout(countThings, 2000);
+
+for (var i = 0, n = cams.length; i < n; ++i) {
+
+// 	if ( first == 1 ) { document.getElementById('count2').innerHTML+="<table><tr>"; first = 0; }
+	
+// 	document.getElementById('count1').innerHTML=cams[i].length;
+// 	document.getElementById('count2').innerHTML+="<tr><td>"+ cams[i][0] +"</td><td>"+ cams[i][1] +"</td>";
+	document.getElementById('count2').innerHTML += cams[i][0] +": "+ cams[i][1] +"<br>";
+}
+
+// document.getElementById('count2').innerHTML+="</tr></table>";
+
+var allCheckBoxes = document.getElementsByTagName("input");
+
+// alert(document.getElementById("bprd").checked);
+
+var allChecks = [];
+
+for (var a = 0, b = allCheckBoxes.length; a < b; ++a) {
+
+	var cb = allCheckBoxes[a];
+
+// 	if ( cb.name.indexOf(",") < 0 ) {
+// 		var cbName = cb.name.indexOf(',') +" - "+ cb.name;
+// 	} else {
+// 		var cbName = cb.name.substr(1,cb.name.length);
+// 	}
+
+	if (cb.name) {
+		allChecks.push(cb.name +": " + cb.checked + "<br>");
+// 		allChecks.push(cbName +": " + cb.checked + "<br>");
+	}
+
+// 	document.getElementById('count1').innerHTML=allChecks;
+	document.getElementById('count1').innerHTML += cb.name +": " + cb.checked + "<br>";
+}
+
+</script>
+
+</body>
+</html>

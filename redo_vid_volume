@@ -1,0 +1,93 @@
+#!/bin/sh
+
+##########################################
+# Just a quick syntax check.  This is not idiot-proof.
+#
+if [ -z "$1" ] ; then
+	echo -e "\\vSyntax: $0 [The File]\\v"
+        exit
+fi
+##########################################
+
+##########################################
+# Variables that I need to know / create for re-encoding the file
+#
+INFILE="$1"
+INDIR="$(dirname "$1")"
+SHORT_NAME="${1%.*}"
+OUTFILE="$SHORT_NAME.avi"
+AUDIO_FILE="$SHORT_NAME.mp3"
+TMP_AUDIO_FILE="$SHORT_NAME.wav"
+TMP_INFO="$SHORT_NAME.info"
+TODAY=`date +%m/%d/%Y`
+# TMP_DIR="TempFiles"
+# FINAL_DIR="Final"
+TMP_DIR="${INDIR}/TempFiles"
+FINAL_DIR="${INDIR}/Final"
+OLD_DIR="${INDIR}/OLD"
+##########################################
+
+##########################################
+# Make sure our TEMP and FINAL dirs are here
+#
+if [ ! -d "${TMP_DIR}" ] ; then mkdir "${TMP_DIR}" ; fi
+if [ ! -d "${FINAL_DIR}" ] ; then mkdir "${FINAL_DIR}" ; fi
+##########################################
+
+##########################################
+# Get the nitty-gritty from the original file
+#
+midentify "$1" | grep AUDIO | grep -v "=0" | sort > "${TMP_DIR}/${TMP_INFO}"
+. "${TMP_DIR}/${TMP_INFO}"
+##########################################
+
+##########################################
+# Dump to .wav, normalize, make mp3
+#
+if [ ! -f "${TMP_DIR}/${TMP_AUDIO_FILE}" ] ; then
+
+	ffmpeg -i "${INFILE}" -vn -f wav -ac ${ID_AUDIO_NCH} -ar "${ID_AUDIO_RATE}" "${TMP_DIR}/${TMP_AUDIO_FILE}"
+
+	if [ $(normalize --peak -n -q "${TMP_DIR}/${TMP_AUDIO_FILE}" | awk '{print $2}' | cut -d\. -f-1) -lt 0 ] ; then 
+		echo -e \\vNormalizing Audio...\\v
+		normalize --peak "${TMP_DIR}/${TMP_AUDIO_FILE}"
+	else
+		echo -e \\vNormalize not needed.  Skipping...\\v
+		rm -fv "${TMP_DIR}/${TMP_INFO}" "${TMP_DIR}/${TMP_AUDIO_FILE}"
+		echo -e \\v
+# 		rm -rf "${TMP_DIR}"
+		exit 0
+# 		if [ ! -d "${OLD_DIR}" ] ; then mkdir "${OLD_DIR}" ; fi
+	fi
+fi
+
+if [ ! -f "${TMP_DIR}/${AUDIO_FILE}" ] ; then
+# 	nice lame -q0 -V7 -ms --resample "${ID_AUDIO_RATE}" "${TMP_DIR}/${TMP_AUDIO_FILE}" "${TMP_DIR}/${AUDIO_FILE}"
+	nice lame -q0 -V5 --resample "${ID_AUDIO_RATE}" "${TMP_DIR}/${TMP_AUDIO_FILE}" "${TMP_DIR}/${AUDIO_FILE}"
+fi
+##########################################
+
+##########################################
+# Put it all back together
+#
+echo -e \\vPutting it all back together.\\v
+
+MPLAYER_VERBOSE="-4" \
+ionice mencoder "${INFILE}" \
+	-o "${FINAL_DIR}"/"${OUTFILE}" \
+	-msglevel all=0:statusline=5 \
+	-info name="${SHORT_NAME}":comment="Audio Normalized ${TODAY}" \
+	-forceidx \
+	-ovc copy \
+	-oac copy -audiofile "${TMP_DIR}/${AUDIO_FILE}"
+
+rm -fv "${TMP_DIR}/${TMP_INFO}" "${TMP_DIR}/${TMP_AUDIO_FILE}"
+
+# mv -vif 
+
+# mv -vi "${INFILE}" "${OLD_DIR}"
+
+
+echo -e \\v
+##########################################
+

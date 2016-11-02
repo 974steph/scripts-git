@@ -1,0 +1,757 @@
+#!/bin/sh
+
+source $HOME/Sources/scripts-git/secret_stuff.sh
+
+##########################################
+# PARSE EVERYDAY MOMENTS
+#
+function ParseEverydayMoments() {
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ START PARSE MOMENTS ~~~~~~~~~~~~~~~~~~~
+	export XMLLINT_INDENT=""
+
+	MOMENTS_DUMP_FILE="${TMP_DIR}/moments_dump_file"
+	MOMENTS_SHOW_FILE="${TMP_DIR}/moments_show_file"
+
+	curl -s http://jmmsandbox.com/podcast/EverydayMoments.xml | xmllint --format - | tail -n +23 | sed \
+		-e 's/\&#x2013;/\-/g' \
+		-e 's/\&#x2014;/\&mdash;/g' \
+		-e "s/\&#x2019;/'/g" \
+		-e 's/\&#x2026;/.../g' \
+		-e 's/  - / - /g' \
+		-e 's/<item>/===/g'  \
+		-e 's/<title>\(.*\) <\/.*>/!TITLE="\1"/g;s/<title>\(.*\)<\/.*>/!TITLE="\1"/g' \
+		-e 's/<itunes:author>\(.*\)<\/.*>/!AUTHOR="\1"/g' \
+		-e 's/<itunes:subtitle>\(.*\)<\/.*>/!SUBTITLE="\1"/g' \
+		-e 's/<itunes:summary>\(.*\)<\/.*>/!SUMMARY="\1"/g' \
+		-e 's/<enclosure url="\(.*\)?siteid=itunes.*$/!URL="\1"/g' \
+		-e 's/<guid>\(.*\)?siteid=itunes.*<\/guid>/!GUID="\1"/g' \
+		-e 's/<pubDate>\(.*\)<\/.*>/!DATE="\1"/g' \
+		-e 's/<itunes:duration>\(.*\)<\/.*>/!DURATION="\1"/g' \
+		-e 's/<itunes:keywords>\(.*\)<\/.*>/!KEYWORDS="\1"/g' \
+		-e '/<\/item>/d;/^<.*channel.*>$/d;/^<.*rss.*>$/d;/^<.*xml.*>$/d;/^<.*\/>$/d' \
+		| tr -d \\n | sed -e 's/===/\n/g' | tail -n +2 > ${MOMENTS_DUMP_FILE}
+
+	TOTAL_MOMENTS=$(grep -c . ${MOMENTS_DUMP_FILE})
+	x=1
+
+	while [[ $x -lt ${TOTAL_MOMENTS} || $x -eq ${TOTAL_MOMENTS} ]] ; do
+		head -n$x ${MOMENTS_DUMP_FILE} | tail -n1 | sed -e 's/!/\n/g' -e 's/\([0-9]\)$/\1"/g' | tail -n +2 > "${MOMENTS_SHOW_FILE}"
+		source "${MOMENTS_SHOW_FILE}"
+
+		if [ "${TITLE}" ] ; then
+			[ ${DEBUG} ] && echo "DATE: $(date -d "${DATE}" +%Y%m%d) || ${DATE}"
+
+			if [ $(date -d "${DATE}" +%Y%m%d) -eq $(date -d @"${TODAY}" +%Y%m%d) ] ; then
+				if [ ${DEBUG} ] ; then
+					echo "TITLE: ${TITLE}"
+					echo "AUTHOR: ${AUTHOR}"
+					echo "SUBTITLE: ${SUBTITLE}"
+					echo "URL: ${URL}"
+					echo "GUID: ${GUID}"
+					echo DATE: $(date -d "${DATE}")
+					echo "DURATION: ${DURATION}"
+					echo "KEYWORDS: ${KEYWORDS}"
+				fi
+
+# 				MOMENTS_FILE="Everyday Moments - $(date -d"${DATE}" +%Y-%m-%d).mp3"
+				MOMENTS_FILE="$(date -d"${DATE}" +%Y-%m-%d) - Everyday Moments.mp3"
+				[ ${DEBUG} ] && echo "MOMENTS_FILE: ${MOMENTS_FILE}"
+
+				[ ! ${DEBUG} ] && GetEverydayMoments
+				FILE_TODAY="yes"
+			fi
+		else
+			x=$(( $x + 1 ))
+		fi
+
+		x=$(( $x + 1 ))
+	done
+
+	export XMLLINT_INDENT=" "
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ DONE PARSE MOMENTS ~~~~~~~~~~~~~~~~~~~\\v
+}
+
+
+##########################################
+# GET EVERYDAY MOMENTS
+#
+function GetEverydayMoments() {
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ START GET MOMENTS ~~~~~~~~~~~~~~~~~~~
+
+	if [ ${FAKE_ATTACH} ] ; then
+		touch "${TMP_DIR}/${MOMENTS_FILE}"
+	else
+		[ ! -f "${TMP_DIR}/${MOMENTS_FILE}" ] && wget -q "${URL}" -O "${TMP_DIR}/${MOMENTS_FILE}"
+	fi
+
+	MOMENTS_ART="${TMP_DIR}/Joyce Meyer - Everyday Moments.jpg"
+	MOMENTS_ART_REMOTE="http://jmmsandbox.com/podcast/images/itunesEverydayMoments.jpg"
+
+	if [ ! -f "${RADIO_ART}" ] ; then
+		wget -q http://jmmsandbox.com/podcast/images/itunesEverydayMoments.jpg -O ${TMP_DIR}/itunesEverydayMoments.jpg
+		convert -resize 500 ${TMP_DIR}/itunesEverydayMoments.jpg "${MOMENTS_ART}"
+	fi
+
+	if [ -f "${TMP_DIR}/${MOMENTS_FILE}" ] ; then
+		eyeD3 --remove-all "${TMP_DIR}/${MOMENTS_FILE}" &> /dev/null
+
+		eyeD3 --no-tagging-time-frame \
+			--set-text-frame="TCON:Christian" \
+			--set-text-frame="TYER:$(date -d "${DATE}" +%Y)" \
+			--add-image="${MOMENTS_ART}":FRONT_COVER:"Joyce Meyer - Everyday Moments" \
+			-a "Joyce Meyer" \
+			-A "Joyce Meyer - Everyday Moments" \
+			-t "$(date -d "${DATE}" '+%B %d, %Y') - ${TITLE}" \
+			-n $(date -d "${DATE}" +%d) "${TMP_DIR}/${MOMENTS_FILE}" &> /dev/null
+
+# 		touch -r "${STAMP}" "${TMP_DIR}/${MOMENTS_FILE}"
+		touch -d "$(date -d "${DATE}" "+%Y%m%d %H:%M:%S")" "${TMP_DIR}/${MOMENTS_FILE}"
+
+		[ ! ${DEBUG} -o ! ${FAKE_ATTACH} ] && echo $(echo ${MOMENTS_FILE} | sed -e 's/\.mp3//'g) >> "${JOYCE_MOMENTS_LIST}"
+# 		FILE_TODAY="yes"
+
+		FILE_SIZE=$(ls -sh "${TMP_DIR}/${MOMENTS_FILE}" | awk '{print $1}')
+
+# 		echo "<center><table style=\"${STYLE_JOYCE_ATTACHED}\"><tr><td style=\"${STYLE_TD_1}\"><span style=\"font-size:larger;\">Attached Files:</span></td></tr></table></center>" >> ${BODY}
+		echo "<center><span style=\"font-size:larger; margin:14px;\">Attached Files:</span></center>" >> ${BODY}
+		FILE_TODAY_HEADER="yes"
+
+		DURATION=$(echo ${DURATION} | sed -e 's/[0-9][0-9]:[0-9]\([0-9]\):\([0-9][0-9]\)/\1 minute, \2 seconds/g')
+
+		echo "<table style=\"${STYLE_JOYCE_SHOW_TR}\"><tr><td style=\"${STYLE_TD_1}\"><img src=\""${MOMENTS_ART_REMOTE}"\" style=\"${STYLE_JOYCE_IMAGE}\"></td>" >> ${BODY}
+		echo "<td style=\"${STYLE_TD_2}\">&mdash; ${TITLE} &mdash;<br><br><span style=\"font-size:smaller;\">${DURATION}</span><br><span style=\"font-size:smaller;\">File Size: ${FILE_SIZE}</span></td></tr></table>" >> ${BODY}
+	else
+		echo BOOM - EVERYDAY MOMENTS FILE DISAPPEARED
+	fi
+
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ DONE GET MOMENTS ~~~~~~~~~~~~~~~~~~~\\v
+}
+
+
+##########################################
+# PARSE RADIO SHOW
+#
+function ParseRadio() {
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ START PARSE RADIO ~~~~~~~~~~~~~~~~~~~
+	export XMLLINT_INDENT=""
+
+	RADIO_DUMP_FILE="${TMP_DIR}/radio_dump_file"
+	RADIO_SHOW_FILE="${TMP_DIR}/radio_show_file"
+
+	curl -s http://jmmsandbox.com/podcast/Radio.xml | xmllint --format - | tail -n +23 | sed \
+		-e 's/^[ \t]*//;s/[ \t]*$//' \
+		-e 's/\&#x2013;/\-/g' \
+		-e 's/\&#x2014;/\&mdash;/g' \
+		-e "s/\&#x2019;/'/g" \
+		-e 's/\&#x2026;/.../g' \
+		-e 's/?siteid=itunes//g' \
+		-e 's/   -\|  -/ -/g' \
+		-e 's/[pP][tT] \([0-9].*\)/Part \1/g' \
+		-e 's/<title>*[ \t]*/===!TITLE="/g;s/[ \t]*<\/title>/"/g' \
+		-e 's/<itunes:author>*[ \t]*/!AUTHOR="/g;s/[ \t]*<\/itunes:author>/"/g' \
+		-e 's/<itunes:subtitle>/!SUBTITLE="/g;s/[ \t]*<itunes:subtitle\/>//g' \
+		-e 's/<itunes:summary>*[ \t]*/!SUMMARY="/g;s/[ \t]*<\/itunes:summary>/"/g' \
+		-e 's/<itunes:duration>*[ \t]*/!DURATION="/g;s/[ \t]*<\/itunes:duration>/"/g' \
+		-e 's/<itunes:keywords>*[ \t]*\(.*\)<\/.*>/\n!KEYWORDS="\1"/g' \
+		-e 's/<pubDate>*[ \t]*/!DATE="/g;s/[ \t]*<\/pubDate>/"/g' \
+		-e 's/<enclosure url=/!URL=/g;s/ length.*//g;' \
+		-e 's/<guid>*[ \t]*/!GUID="/g;s/[ \t]*<\/guid>/"/g' \
+		-e '/<item>\|<\/item>/d' \
+		-e '/<channel>\|<\/channel>/d' \
+		-e '/<rss>\|<\/rss>/d' \
+		| tr -d \\n \
+		| sed -e 's/===/\n/g' > ${RADIO_DUMP_FILE}
+# 		-e 's/^[ \t]*//;s/[ \t]*$//' \
+# 		-e 's/\&#x2013;/\-/g' \
+# 		-e 's/\&#x2014;/\&mdash;/g' \
+# 		-e "s/\&#x2019;/'/g" \
+# 		-e 's/\&#x2026;/.../g' \
+# 		-e 's/   -/ -/g;s/  -/ -/g' \
+# 		-e 's/?siteid=itunes//g' \
+# 		-e 's/<title>/===!TITLE="/g;s/<\/title>/"/g' \
+# 		-e 's/<itunes:author>/!AUTHOR="/g;s/<\/itunes:author>/"/g' \
+# 		-e 's/<itunes:subtitle>/!SUBTITLE="/g;s/<itunes:subtitle\/>//g' \
+# 		-e 's/<itunes:summary>/!SUMMARY="/g;s/<\/itunes:summary>/"/g' \
+# 		-e 's/<itunes:duration>/!DURATION="/g;s/<\/itunes:duration>/"/g' \
+# 		-e 's/<itunes:keywords>\(.*\)<\/.*>/\n!KEYWORDS="\1"/g' \
+# 		-e 's/<pubDate>/!DATE="/g;s/<\/pubDate>/"/g' \
+# 		-e 's/<enclosure url=/!URL=/g;s/ length.*//g;' \
+# 		-e 's/<guid>/!GUID="/g;s/<\/guid>/"/g' \
+# 		-e '/<item>\|<\/item>/d' \
+# 		-e '/<channel>\|<\/channel>/d' \
+# 		-e '/<rss>\|<\/rss>/d' | \
+# 		tr -d \\n | sed -e 's/===/\n/g' | tail -n +2 > ${RADIO_DUMP_FILE}
+
+	TOTAL_RADIOS=$(grep -c . ${RADIO_DUMP_FILE})
+
+	x=1
+
+	while [[ $x -lt ${TOTAL_RADIOS} || $x -eq ${TOTAL_RADIOS} ]] ; do
+		head -n$x ${RADIO_DUMP_FILE} | tail -n1 | sed -e 's/!/\n/g' -e 's/\([0-9]\)$/\1"/g' | tail -n +2 > "${RADIO_SHOW_FILE}"
+		source "${RADIO_SHOW_FILE}"
+
+		[ ${DEBUG} ] && echo "DATE: $(date -d "${DATE}" +%Y%m%d) || ${DATE}"
+
+		if [ $(date -d "${DATE}" +%Y%m%d) -eq $(date -d @"${TODAY}" +%Y%m%d) ] ; then
+			if [ ${DEBUG} ] ; then
+				echo "TITLE: ${TITLE}"
+				echo "AUTHOR: ${AUTHOR}"
+				echo "SUBTITLE: ${SUBTITLE}"
+				echo "URL: ${URL}"
+				echo "GUID: ${GUID}"
+				echo DATE: $(date -d "${DATE}")
+				echo "DURATION: ${DURATION}"
+				echo "KEYWORDS: ${KEYWORDS}"
+			fi
+
+			RADIO_FILE="$(date -d"${DATE}" +%Y-%m-%d) - ${TITLE}.mp3"
+
+			PREVIOUS_RADIO_RELEASE=$(grep "${TITLE}" "${JOYCE_RADIO_LIST}")
+			PREVIOUS_RADIO_DATE=$(date -d "$(echo ${PREVIOUS_RADIO_RELEASE} | awk '{print $1}')" +%Y%m%d)
+
+			if [ ${DEBUG} ] ; then
+				echo "-------"
+				echo PREVIOUS_RADIO_RELEASE: ${PREVIOUS_RADIO_RELEASE}
+				echo PREVIOUS_RADIO_DATE: ${PREVIOUS_RADIO_DATE}
+				echo TODAY: $(date -d "@${TODAY}" +%Y%m%d)
+				echo "-------"
+			fi
+
+			if [ "${PREVIOUS_RADIO_RELEASE}" -a ! ${PREVIOUS_RADIO_DATE} -eq $(date -d "@${TODAY}" +%Y%m%d) ] ; then
+				echo "<table style=\"${STYLE_JOYCE_SHOW_TR}\"><tr><td style=\"${STYLE_TD_1}\"><img src=\""${RADIO_ART_REMOTE}"\" style=\"${STYLE_JOYCE_IMAGE}\"></td>" >> ${BODY}
+				echo "<td style=\"text-align:center;vertical-align:middle;\">&mdash; ${TITLE} &mdash;<br><br><span style=\"font-size:smaller;\">Previously Released on $(date -d "${PREVIOUS_RADIO_DATE}" '+%A, %B %-d, %Y')</span></td></tr></table>" >> ${BODY}
+			else
+				[ ! ${DEBUG} ] && GetRadio
+			fi
+		fi
+
+		x=$(( $x + 1 ))
+	done
+
+	export XMLLINT_INDENT=" "
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ DONE PARSE RADIO ~~~~~~~~~~~~~~~~~~~\\v
+}
+
+
+##########################################
+# GET RADIO SHOW
+#
+function GetRadio() {
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ START GET RADIO ~~~~~~~~~~~~~~~~~~~
+
+	if [ ${FAKE_ATTACH} ] ; then
+		touch "${TMP_DIR}/${RADIO_FILE}"
+	else
+		[ ! -f "${TMP_DIR}/${RADIO_FILE}" ] && wget -q "${URL}" -O "${TMP_DIR}/${RADIO_FILE}"
+	fi
+
+# 	touch -r "${TMP_DIR}/${RADIO_FILE}" "${STAMP}"
+
+	RADIO_ART="${TMP_DIR}/Joyce Meyer - Radio.jpg"
+	RADIO_ART_REMOTE="http://jmmsandbox.com/podcast/images/itunesRadio.jpg"
+
+	if [ ! -f "${RADIO_ART}" ] ; then
+		wget -q http://jmmsandbox.com/podcast/images/itunesRadio.jpg -O ${TMP_DIR}/itunesRadio.jpg
+		convert -resize 500 ${TMP_DIR}/itunesRadio.jpg "${RADIO_ART}"
+	fi
+
+	if [ -f "${TMP_DIR}/${RADIO_FILE}" ] ; then
+		eyeD3 --remove-all "${TMP_DIR}/${RADIO_FILE}" &> /dev/null
+
+		eyeD3 --no-tagging-time-frame \
+			--set-text-frame="TCON:Christian" \
+			--set-text-frame="TYER:$(date -d "${DATE}" +%Y)" \
+			--add-image="${RADIO_ART}":FRONT_COVER:"Joyce Meyer - Radio Broadcasts" \
+			-a "Joyce Meyer" \
+			-A "Joyce Meyer - Radio Broadcasts" \
+			-t "$(date -d "${DATE}" '+%B %d, %Y') - ${TITLE}" \
+			-n $(date -d "${DATE}" +%d) "${TMP_DIR}/${RADIO_FILE}" &> /dev/null
+
+# 		touch -r "${STAMP}" "${TMP_DIR}/${RADIO_FILE}"
+		touch -d "$(date -d "${DATE}" "+%Y%m%d %H:%M:%S")" "${TMP_DIR}/${RADIO_FILE}"
+
+		[ ! ${DEBUG} -o ! ${FAKE_ATTACH} ] && echo $(echo ${RADIO_FILE} | sed -e 's/\.mp3//g') >> "${JOYCE_RADIO_LIST}"
+		FILE_TODAY="yes"
+
+		[ ! ${FILE_TODAY_HEADER} ] && echo "<center><span style=\"font-size:larger; margin:14px;\">Attached Files:</span></center>" >> ${BODY}
+
+		DURATION=$(echo ${DURATION} | sed -e 's/[0-9][0-9]:\([0-9][0-9]\):\([0-9][0-9]\)/\1 minutes, \2 seconds/g')
+
+		FILE_SIZE=$(ls -sh "${TMP_DIR}/${RADIO_FILE}" | awk '{print $1}')
+# 		echo "<table style=\"${STYLE_JOYCE_SHOW_TR}\"><tr><td><img src=\""${RADIO_ART_REMOTE}"\" height=\"70\" width=\"70\"></td>" >> ${BODY}
+		echo "<table style=\"${STYLE_JOYCE_SHOW_TR}\"><tr><td style=\"${STYLE_TD_1}\"><img src=\""${RADIO_ART_REMOTE}"\" style=\"${STYLE_JOYCE_IMAGE}\"></td>" >> ${BODY}
+		echo "<td style=\"text-align:center;vertical-align:middle;\">&mdash; ${TITLE} &mdash;<br><br><span style=\"font-size:smaller;\">${DURATION}</span><br><span style=\"font-size:smaller;\">File Size: ${FILE_SIZE}</span></td></tr></table>" >> ${BODY}
+	else
+		echo BOOM - RADIO FILE DISAPPEARED
+	fi
+
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ DONE GET RADIO ~~~~~~~~~~~~~~~~~~~\\v
+}
+
+
+##########################################
+# PARSE TV SHOW
+#
+function ParseTV() {
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ START CHECK TV ~~~~~~~~~~~~~~~~~~~
+	export XMLLINT_INDENT=""
+
+	TV_DUMP_FILE="${TMP_DIR}/tv_dump_file"
+	TV_SHOW_FILE="${TMP_DIR}/tv_show_file"
+	TV_BODY="${TMP_DIR}/JoyceTV.html"
+	TV_ART_REMOTE="http://jmmsandbox.com/podcast/images/itunesTv.jpg"
+
+	TV_HOLDING_DIR="${JOYCE_DIR}/TV"
+
+	curl -s http://www.jmmsandbox2.com/hd_rss_client/SDPodcastProxy.ashx | xmllint --format - | tail -n+22 | sed \
+		-e 's/^[ \t]*//;s/[ \t]*$//' \
+		-e 's/\&#x2013;/\-/g' \
+		-e 's/\&#x2014;/\&mdash;/g' \
+		-e "s/\&#x2019;/'/g" \
+		-e 's/\&#x2026;/.../g' \
+		-e 's/[pP][tT] \([0-9].*\)/Part \1/g' \
+		-e 's/"/\\\"/g' \
+		-e 's/<title>/===!TITLE="/g;s/<\/title>/"/g' \
+		-e 's/<itunes:author>/!AUTHOR="/g;s/<\/itunes:author>/"/g' \
+		-e 's/<itunes:subtitle>/!SUBTITLE="/g;s/<\/itunes:subtitle>/"/g' \
+		-e 's/<itunes:summary>/!SUMMARY="/g;s/<\/itunes:summary>/"/g' \
+		-e 's/<itunes:duration>/!DURATION="/g;s/<\/itunes:duration>/"/g' \
+		-e 's/<pubDate>/!DATE="/g;s/<\/pubDate>/"/g' \
+		-e 's/<enclosure url=/!URL=/g;s/ length.*//g;' \
+		-e 's/<guid>/!GUID="/g;s/<\/guid>/"/g' \
+		-e '/<item>\|<\/item>/d' \
+		-e '/<channel>\|<\/channel>/d' \
+		-e '/<rss>\|<\/rss>/d' | \
+		tr -d \\n | sed -e 's/===/\n/g' | tail -n +2 > ${TV_DUMP_FILE}
+
+	TOTAL_TV=$(grep -c . ${TV_DUMP_FILE})
+	x=1
+
+	while [[ $x -lt ${TOTAL_TV} || $x -eq ${TOTAL_TV} ]] ; do
+		head -n$x ${TV_DUMP_FILE} | tail -n1 | sed -e 's/!/\n/g' -e 's/\([0-9]\)$/\1"/g' | tail -n +2 > "${TV_SHOW_FILE}"
+		source "${TV_SHOW_FILE}"
+# 		cp -av "${TV_SHOW_FILE}" /tmp/"$(date +%F_%T)-${TITLE}"
+		URL=${GUID}
+
+		if [ $(echo ${TITLE} | wc -w) -gt 0 ] ; then
+			[ ${DEBUG} ] && echo "DATE: $(date -d "${DATE}" +%Y%m%d) || ${DATE}"
+
+			NICE_DATE=$(date -d "${DATE}" +%Y%m%d)
+			TV_FILE_NAME="$(date -d"${DATE}" +%Y-%m-%d) - ${TITLE}.mp4"
+
+			if [ ${NICE_DATE} -eq $(date -d "@${TODAY}" +%Y%m%d) ] ; then
+				if [ ${DEBUG} ] ; then
+					echo "TITLE: ${TITLE}"
+					echo "AUTHOR: ${AUTHOR}"
+					echo "SUBTITLE: ${SUBTITLE}"
+					echo "URL: ${URL}"
+					echo "GUID: ${GUID}"
+					echo DATE: $(date -d "${DATE}")
+					echo "DURATION: ${DURATION}"
+					echo "KEYWORDS: ${KEYWORDS}"
+				fi
+
+# 				TV_TODAY="yes"
+# 				[ ! ${DEBUG} ] && mutt -s "$(date -d"${DATE}" +%Y-%m-%d) - ${TITLE}" -e "set content_type=text/html" -- ${EMAIL_MINE} < ${TV_BODY}
+				PREVIOUS_TV_RELEASE=$(grep "${TITLE}" "${JOYCE_TV_LIST}")
+				PREVIOUS_TV_DATE=$(date -d "$(echo ${PREVIOUS_TV_RELEASE} | awk '{print $1}')" +%Y%m%d)
+
+				if [ ${DEBUG} ] ; then
+					echo "-------"
+					echo "PREVIOUS_TV_RELEASE: ${PREVIOUS_TV_RELEASE}"
+					echo "PREVIOUS_TV_DATE: ${PREVIOUS_TV_DATE}"
+					echo TODAY: $(date -d "@${TODAY}" +%Y%m%d)
+					echo "-------"
+				fi
+
+				if [ "${PREVIOUS_TV_RELEASE}" -a ! "${PREVIOUS_TV_DATE}" -eq $(date -d "@${TODAY}" +%Y%m%d) ] ; then
+					[ "${DEBUG}" ] && echo "${TITLE} - ${SUBTITLE}: Previously Released on ${PREVIOUS_TV_DATE}"
+
+					echo "<table style=\"${STYLE_JOYCE_SHOW_TR}\"><tr><td style=\"${STYLE_TD_1}\"><img src=\""${TV_ART_REMOTE}"\" style=\"${STYLE_JOYCE_IMAGE}\"></td>" >> ${BODY}
+					echo "<td style=\"text-align:center;vertical-align:middle;\">&mdash; ${TITLE} &mdash;<br>${SUBTITLE}<br><br><span style=\"font-size:smaller;\">Previously Released on $(date -d "${PREVIOUS_TV_DATE}" '+%A, %B %-d, %Y')</span></td></tr></table>" >> ${BODY}
+
+# 					GetTV
+				else
+					GetTV
+				fi
+
+				x=$(( $x + 1 ))
+			else
+				x=$(( $x + 1 ))
+			fi
+		else
+			x=$(( $x + 1 ))
+		fi
+	done
+
+	export XMLLINT_INDENT=" "
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ DONE CHECK TV ~~~~~~~~~~~~~~~~~~~\\v
+}
+
+
+##########################################
+# GET TV SHOW
+#
+function GetTV() {
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ START GET TV ~~~~~~~~~~~~~~~~~~~
+
+	if [ -f "${TV_HOLDING_DIR}/${TV_FILE_NAME}" ] ; then
+		if [ ${DEBUG} ] ; then
+			echo "${TV_HOLDING_DIR}/${TV_FILE_NAME}"
+			echo "ALREADY EXISTS: $(ls -sh "${TV_HOLDING_DIR}/${TV_FILE_NAME}")"
+		fi
+	else
+		[ ! ${FAKE_ATTACH} ] && wget -q "${URL}" -O "${TV_HOLDING_DIR}/${TV_FILE_NAME}"
+
+# 		echo "<b>TITLE:</b> ${TITLE}<br>" > ${TV_BODY}
+# 		echo "<b>SUBTITLE:</b> ${SUBTITLE}<br>" >> ${TV_BODY}
+# 		echo "<b>DATE:</b> $(date -d "${DATE}")<br>" >> ${TV_BODY}
+# 		echo "<b>TV_FILE_NAME:</b> ${TV_FILE_NAME}<br>" >> ${TV_BODY}
+# 		echo "<b>URL:</b> ${URL}<br>" >> ${TV_BODY}
+# 		echo "<b>DURATION:</b> ${DURATION}<br>" >> ${TV_BODY}
+# # 		echo "<b>AUTHOR:</b> ${AUTHOR}<br>" >> ${TV_BODY}
+# # 		echo "<b>GUID:</b> ${GUID}<br>" >> ${TV_BODY}
+# # 		echo "<b>KEYWORDS:</b> ${KEYWORDS}<br>" >> ${TV_BODY}
+# 		echo "<br><br>" >> ${TV_BODY}
+# 		echo "wget ${URL} -O ${TV_FILE_NAME}<br>" >> ${TV_BODY}
+# 		mutt -s "$(date -d"${DATE}" +%Y-%m-%d) - ${TITLE}" -e "set content_type=text/html" -- ${EMAIL_MINE} < ${TV_BODY}
+	fi
+
+	[ ! ${DEBUG} -o ! ${FAKE_ATTACH} ] && echo $(echo ${TV_FILE_NAME} | sed -e 's/\.mp4//g') >> "${JOYCE_TV_LIST}"
+
+	TV_FILE_NAME_NEW=$(echo ${TV_FILE_NAME} | sed -e 's/\.mp4/\.avi/g')
+
+	if [ -f "${TV_HOLDING_DIR}/Final/${TV_FILE_NAME_NEW}" ] ; then
+		if [ ${DEBUG} ] ; then
+			echo "${TV_HOLDING_DIR}/Final/${TV_FILE_NAME_NEW}"
+			echo "FINAL TV ALREADY EXISTS: $(ls -sh "${TV_HOLDING_DIR}/Final/${TV_FILE_NAME_NEW}")"
+		fi
+	else
+		$HOME/Scripts/DailyJoyceTV "${TV_HOLDING_DIR}/${TV_FILE_NAME}" &
+	fi
+
+# 	if [ "${PREVIOUS_TV_RELEASE}" -a ! ${PREVIOUS_TV_DATE} -eq $(date -d "@${TODAY}" +%Y%m%d) ] ; then
+# 		echo "<center><span style=\"font-size:larger; margin:14px;\"><br>Video (not attached):</span></center>" >> ${BODY}
+#                 echo "<table style=\"${STYLE_JOYCE_SHOW_TR}\"><tr><td style=\"${STYLE_TD_1}\"><img src=\""${TV_ART_REMOTE}"\" style=\"${STYLE_JOYCE_IMAGE}\"></td>" >> ${BODY}
+# 		echo "<td style=\"text-align:center;vertical-align:middle;\">&mdash; ${TITLE} &mdash;<br>${SUBTITLE}<br><br><span style=\"font-size:smaller;\">Previously Released on $(date -d "${PREVIOUS_TV_DATE}" '+%A, %B %-d, %Y')</span></td></tr></table>" >> ${BODY}
+#         else
+		#echo "<center><span style=\"font-size:larger; margin:14px;\"><br>New Video (not attached):</span></center>" >> ${BODY}
+		echo "<table style=\"${STYLE_JOYCE_SHOW_TR}\"><tr><td style=\"${STYLE_TD_1}\"><img src=\""${TV_ART_REMOTE}"\" style=\"${STYLE_JOYCE_IMAGE}\"></td>" >> ${BODY}
+		echo "<td style=\"text-align:center;vertical-align:middle;\">&mdash; ${TITLE} &mdash;<br>${SUBTITLE}<br><br><span style=\"font-size:smaller;\">$(echo ${DURATION} | sed -e 's/\([0-9][0-9]\):\([0-9][0-9]\)/\1 Minutes, \2 Seconds/g')</span></td></tr></table>" >> ${BODY}
+# 	fi
+
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ DONE GET TV ~~~~~~~~~~~~~~~~~~~\\v
+}
+
+
+##########################################
+# DEVOTIONAL
+#
+function GetDevotional() {
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ START GET DEVOTIONAL ~~~~~~~~~~~~~~~~~~~
+	export XMLLINT_INDENT=""
+	DEVOTEMP=${TMP_DIR}/devotemp.html
+	DEVOTIONAL_FILE="$HOME/Joyce_Devotional.html"
+	DEVOTIONAL_FILE="$HOME/devosource"
+
+	curl -s "http://www.joycemeyer.org/Articles/Devotional.aspx" \
+		| sed -n -e '/devotionalTitle/,$p' -e '/From the book/q;d' \
+		| sed -e '/From the book/d' \
+		| xmllint --format --html --nowarning --nowrap - \
+		| tr -d \\n | tr -d \\r \
+		| sed \
+			-e 's/&acirc\;//g;s/&#128\;//g;s/&#148\;//g;s/&Acirc\;//g;s/&nbsp\;//g' \
+			-e 's/\&brvbar;/.../g' \
+			-e 's/\&#x2013\;/\-/g' \
+			-e 's/ . . ./.../g' \
+			-e 's/\&#x2014\;/\&mdash;/g' \
+			-e "s/\&#x2019\;/'/g" \
+			-e 's/\&#x2026\;/.../g' \
+			-e "s/\&#137\;//g" \
+			-e "s/\&#139\;/ /g" \
+			-e 's/\&#147;/-/g' \
+			-e "s/\&#153\;/'/g" \
+			-e 's/<br>\|<br \/>//g' \
+			-e 's/<p>/\n<p>/g;s/<\/p>/<\/p>\n/g' \
+			-e 's/<hr>//g' \
+			-e 's/<\/em><em>//g' \
+			-e 's/[ \t]*\[Jesus said\][ \t]*//g' \
+			-e 's/[ \t]*(emphasis mine)//g' \
+			-e 's/>[ \t]*</></g' \
+		> ${DEVOTEMP}
+
+	DEVOTIONAL_TITLE=$(grep -i devotionalTitle ${DEVOTEMP} \
+		| sed -e 's/.*<h2>\(.*\)<\/h2>.*/\1/g' \
+		)
+	DEVOTIONAL_DATE=$(grep -i AuthorDate ${DEVOTEMP} \
+		| sed -e 's/.*posted \(.*\).*<\/span>.*/\1/g' \
+		)
+	DEVOTIONAL_SCRIPTURE=$(cat ${DEVOTEMP} \
+		| sed -n \
+			-e '/<p>.*<em>/,$p' \
+			-e '/<\/em>/q;d' \
+		| sed \
+			-e 's/<p><em>//' \
+		| sed -r 's/(.*)<\/em>.*/\1/' \
+		| sed -e 's/<em>//g;s/<\/em>//g' \
+		)
+	DEVOTIONAL_LOCATION=$(cat ${DEVOTEMP} \
+		| sed -n -e '/<p>.*<em>/,$p' -e '/<p>/q;d' \
+		| sed \
+			-e 's/.*<\/em>\?\(.*\)<\/p>/\1/g' -e 's/\&.*;//g' -e 's/,.*\([0-9]\)/,\1/g' \
+		)
+	DEVOTIONAL_MESSAGE=$(cat ${DEVOTEMP} \
+		| tail -n +3 | head -n -3 \
+		| sed \
+			-e 's/<p>/<p style="text-align:justify; text-indent:1em;">/g' \
+			-e 's/<em>/<em style="font-variant:small-caps;">/g' \
+		)
+
+	if [ ${DEBUG} ] ; then
+		echo DEVOTIONAL_TITLE: ${DEVOTIONAL_TITLE}
+		echo DEVOTIONAL_DATE: ${DEVOTIONAL_DATE}
+		echo DEVOTIONAL_SCRIPTURE: ${DEVOTIONAL_SCRIPTURE}
+		echo DEVOTIONAL_LOCATION: ${DEVOTIONAL_LOCATION}
+		echo DEVOTIONAL_MESSAGE: ${DEVOTIONAL_MESSAGE}
+	fi
+
+
+# 	###############
+	echo "<div style=\"${STYLE_BIBLE_IMAGE}\">" >> ${BODY}
+	echo "<table border=\"0\" cellpadding=\"10px\" cellspacing=\"0\">" >> ${BODY}
+	echo "<tr><td style=\"${STYLE_DAGGER}\">&dagger;</td><td width=\"100%\" style=\"font-size:larger; text-align:center; padding:0px;\">&asymp; ${DEVOTIONAL_TITLE} &asymp;</td><td style=\"${STYLE_DAGGER}\">&dagger;</td></tr>" >> ${BODY}
+	echo "<tr><td colspan=\"3\" style=\"padding:1%\"><p style=\"${STYLE_BIBLE_CENTER}\">&ldquo;${DEVOTIONAL_SCRIPTURE}&rdquo;<br><span style=\"font-size:smaller;\">&ndash; ${DEVOTIONAL_LOCATION} &ndash;</span><br><br></td></tr>" >> ${BODY}
+	echo "<tr><td colspan=\"3\" style=\"padding-left:1%;padding-right:1%;padding-top:0px;padding-bottom:0px;\">${DEVOTIONAL_MESSAGE}" >> ${BODY}
+	echo "<hr style=\"${STYLE_HR}\"></td></tr>" >> ${BODY}
+	echo "<tr><td style=\"${STYLE_DAGGER}\">&dagger;</td>" >> ${BODY}
+	echo "<td style=\"${STYLE_TD_2} font-size:smaller; padding:0px;\">Joyce Meyer<br>Daily Devotional for ${DEVOTIONAL_DATE}</td>" >> ${BODY}
+	echo "<td style=\"${STYLE_DAGGER}\">&dagger;</td></tr></table></div>" >> ${BODY}
+# 	###############
+
+
+# 	# &dagger;
+# 	echo -e "<div style=\"${STYLE_BIBLE_IMAGE}\">" >> ${BODY}
+# 	echo "<p style=\"font-size:larger; text-align:center;\">&asymp; ${DEVOTIONAL_TITLE} &asymp;" >> ${BODY}
+# 	echo "<p style=\"${STYLE_BIBLE_CENTER}\">&ldquo;${DEVOTIONAL_SCRIPTURE}&rdquo;" >> ${BODY}
+# 	echo "<div style=\"${STYLE_TD_2} font-size:smaller; font-variant:small-caps;\">&ndash; ${DEVOTIONAL_LOCATION} &ndash;</div>" >> ${BODY}
+# # 	echo "<p style=\"text-align:justify;\">${DEVOTIONAL_MESSAGE}</p>" >> ${BODY}
+# 	echo "${DEVOTIONAL_MESSAGE}" >> ${BODY}
+# 	echo "<hr style=\"width: 90px; height:1px; border:0px; color:black; background-color:black;\">" >> ${BODY}
+# 	echo "<p style=\"${STYLE_TD_2}font-size:smaller;\">Joyce Meyer<br>Daily Devotional for ${DEVOTIONAL_DATE}</div><br>" >> ${BODY}
+
+	cat "${BODY}" > "${DEVOTIONAL_ARCHIVE}"
+	echo "</body></html>" >> "${DEVOTIONAL_ARCHIVE}"
+
+	export XMLLINT_INDENT=" "
+	[ ${DEBUG} ] && echo -e ~~~~~~~~~~~~~~~~~~~ DONE GET DEVOTIONAL ~~~~~~~~~~~~~~~~~~~\\v
+}
+
+
+##########################################
+# START MAIL
+#
+function StartMail() {
+	echo -e "<!DOCTYPE html>" > ${BODY}
+	echo -e "<html><head><title>${TODAY_PRETTY}</title><meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\">" >> ${BODY}
+	echo -e "</head><body style=\"${STYLE_BODY}\">" >> ${BODY}
+}
+
+
+##########################################
+# FINISH MAIL
+#
+function FinishMail() {
+
+	[ ${DEBUG} ] && echo -e \\v~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\\v
+#	echo -e "<img src=\"http://img15.imageshack.us/img15/667/1pxu.gif\" alt=\"1px\">" >> ${BODY}
+	echo -e "</body></html>" >> ${BODY}
+
+
+
+	if [ ${DEBUG} ] ; then
+		echo BODY: ${BODY}
+		echo "mutt -s \"Joyce Meyer - ${TODAY_PRETTY}\" -e \"set content_type=text/html\" -a ${TMP_DIR}/*.mp3 -- \"${EMAILS}\" < ${BODY}"
+		echo mutt -s "Joyce Meyer - ${TODAY_PRETTY}" -e "set content_type=text/html" -- ${EMAILS} < ${BODY}
+	else
+
+		echo NOTHING > /dev/null
+
+		###
+		### PUT THESE BACK IN TO RE-ENABLE MAILING
+		###
+		if [ ${FILE_TODAY} ] ; then
+			mutt -s "Joyce Meyer - ${TODAY_PRETTY}" -e "set content_type=text/html" -a ${TMP_DIR}/*.mp3 -- "${EMAILS}" < ${BODY}
+		else
+			mutt -s "Joyce Meyer - ${TODAY_PRETTY}" -e "set content_type=text/html" -- ${EMAILS} < ${BODY}
+		fi
+	fi
+}
+
+
+##########################################
+# SET STYLES AND VARIABLES
+#
+function SetStylesAndVariables() {
+
+	########################
+	# TIMES AND DATES
+	#
+	TODAY=$(date +%s)
+# 	TODAY=$(date -d "20130903" +%s)
+	TODAY_PRETTY=$(date -d @${TODAY} '+%A, %B %-d, %Y')
+
+	JOYCE_MONTH=$(date -d "@${TODAY}" +%B)
+	JOYCE_DATE=$(date -d "@${TODAY}" +%m%d%y)
+	JOYCE_DATE_HUMAN=$(date -d "@${TODAY}" +%Y-%m-%d)
+
+	JOYCE_DIR="$HOME/JoyceMeyer"
+	JOYCE_TV_LIST="${JOYCE_DIR}/List-Video"
+	JOYCE_RADIO_LIST="${JOYCE_DIR}/List-Radio"
+	JOYCE_MOMENTS_LIST="${JOYCE_DIR}/List-Moments"
+# 	JOYCE_DEVOTIONALS="${JOYCE_DIR}/Devotionals"
+	DEVOTIONAL_ARCHIVE="${JOYCE_DIR}/Devotionals/Devotional_$(date -d @${TODAY} +%Y%m%d).html"
+	########################
+
+	########################
+	# ALL TEMP FILES
+	#
+	TMP_DIR="/tmp/$(date -d "@${TODAY}" +%Y%m%d)-DailyJoyce"
+	[ ! -d ${TMP_DIR} ] && mkdir "${TMP_DIR}"
+	BODY="${TMP_DIR}/DailyJoyce_body.html"
+	LOCAL_MOMENTS_FILE="${TMP_DIR}/EverydayMoments_${JOYCE_DATE_HUMAN}.mp3"
+	LOCAL_MOMENTS_ART_RAW="${TMP_DIR}/EverydayMoments_RAW.jpg"
+	LOCAL_MOMENTS_ART="/tmp/EverydayMoments.jpg"
+	########################
+
+
+	########################
+	# STYLES
+	#
+#	box-shadow: 0px 0px 14px #555555;
+# 	http://imageshack.us/a/img17/868/paper02.jpg
+# 	http://imageshack.us/a/img594/9471/wood01.png
+#	STYLE_BODY="width: 100%; height: 100%; background:#E3C798 url(http://img17.imageshack.us/img17/5757/contentpattern.jpg) repeat; padding:0px; margin:0px; border:0px solid;"
+	STYLE_BODY="width: 100%; height: 100%; background:#E3C798 url(http://s4.postimg.org/bzxvt2arh/contentpattern.jpg) repeat; padding:0px; margin:0px; border:0px solid;"
+# 	STYLE_BODY="background:#E3C798 url(http://imageshack.us/a/img594/9471/wood01.png) repeat; padding:0px; margin:0px; border:0px solid;"
+
+	STYLE_JOYCE_ATTACHED="background:rgba(255,255,255,0.5); border:2px; border-style:groove; padding:0pt; margin:1%; text-align:center;vertical-align:middle;"
+	STYLE_JOYCE_SHOW_TR="background:rgba(255,255,255,0.5); width:98%; border:2px; border-style:groove; padding:0pt; margin:1%; text-align:center;vertical-align:middle;"
+# 	STYLE_JOYCE_SHOW_TR="background:rgba(255,255,255,0.5) url(http://img526.imageshack.us/img526/7158/wood01.jpg) repeat; width:98%; border:2px; border-style:groove; padding:0pt; margin:1%; text-align:center;vertical-align:middle;"
+
+	STYLE_TD_1="padding:0px; margin:0px; text-align:left; vertical-align:middle;"
+	STYLE_TD_2="text-align:center; vertical-align:middle;"
+
+	STYLE_JOYCE_IMAGE_DIV="border:2px; border-style:groove; padding:0pt; margin:1%; text-align:center;"
+	STYLE_JOYCE_IMAGE="border:0px; padding:0px; margin:0px; text-align:center; vertical-align:middle; height:auto; width:70px;"
+	STYLE_JOYCE="font-variant:small-caps; font-style:italic; text-align:center; padding:0pt; margin:0pt;"
+
+ 	STYLE_BIBLE_IMAGE="background:rgba(255,255,255,0.5); background-size:auto 100%; border:2px; border-style:groove; padding:1%; margin:1%;"
+# 	STYLE_BIBLE_IMAGE="background:rgba(255,255,255,0.5) url(http://imageshack.us/a/img17/868/paper02.jpg) no-repeat;; background-size:100% 100%; border:2px; border-style:groove; padding:1%; margin:1%;"
+#	STYLE_BIBLE_IMAGE="background:rgba(255,255,255,0.5) url(http://img41.imageshack.us/img41/4130/paper02small.jpg) no-repeat;; background-size:100% 100%; border:2px; border-style:groove; padding:1%; margin:1%;"
+	STYLE_BIBLE="font-variant:small-caps; text-align:justify; padding:0pt; margin:0pt;"
+	STYLE_BIBLE_CENTER="font-variant:small-caps; text-align:center; padding:0pt; margin:0pt;"
+
+	STYLE_HR="width: 90px; height:1px; border:0px; color:black; background-color:black; padding:0px; spacing:0px;"
+	STYLE_DAGGER="text-align:center; font-size:larger; font-variant:small-caps;"
+}
+
+
+##########################################
+# CLEAN UP
+#
+function CleanUp() {
+
+	[ ${DEBUG} ] && echo "MOMENTS_FILE: \"${MOMENTS_FILE}\""
+
+	if [ -f "${TMP_DIR}/${MOMENTS_FILE}" ] ; then
+		MOMENTS_MONTH=$(date -d "$(basename "${TMP_DIR}/${MOMENTS_FILE}" | awk '{print $1}')" +%Y-%m)
+		[ ! -d "${JOYCE_DIR}/EverydayMoments/${MOMENTS_MONTH}" ] && mkdir -p "${JOYCE_DIR}/EverydayMoments/${MOMENTS_MONTH}"
+		[ ${DEBUG} ] && echo "cp -aq ${TMP_DIR}/${MOMENTS_FILE} ${JOYCE_DIR}/EverydayMoments/${MOMENTS_MONTH}/${MOMENTS_FILE}"
+
+		if [ ! -f "${JOYCE_DIR}/EverydayMoments/${MOMENTS_MONTH}/${MOMENTS_FILE}" -a -f "${TMP_DIR}/${MOMENTS_FILE}" ] ; then
+			cp -a "${TMP_DIR}/${MOMENTS_FILE}" "${JOYCE_DIR}/EverydayMoments/${MOMENTS_MONTH}/${MOMENTS_FILE}"
+		fi
+	fi
+
+
+	if [ -f "${TMP_DIR}/${RADIO_FILE}" ] ; then
+		RADIO_SHOW_MONTH=$(date -d "$(basename "${TMP_DIR}/${RADIO_FILE}" | awk '{print $1}')" +%Y-%m)
+		[ ! -d "${JOYCE_DIR}/Radio/${RADIO_SHOW_MONTH}" ] && mkdir -p "${JOYCE_DIR}/Radio/${RADIO_SHOW_MONTH}"
+		[ ${DEBUG} ] && echo "cp -aq ${TMP_DIR}/${RADIO_FILE} ${JOYCE_DIR}/Radio/${RADIO_SHOW_MONTH}/${RADIO_FILE}"
+
+		if [ ! -f "${JOYCE_DIR}/Radio/${RADIO_SHOW_MONTH}/${RADIO_FILE}" -a -f "${TMP_DIR}/${RADIO_FILE}" ] ; then
+			cp -a "${TMP_DIR}/${RADIO_FILE}" "${JOYCE_DIR}/Radio/${RADIO_SHOW_MONTH}/${RADIO_FILE}"
+		fi
+	fi
+
+	[ -d "${TMP_DIR}" ] && rm -rf "${TMP_DIR}"
+}
+
+
+##########################################
+# GET IT GOING
+#
+case $1 in
+	"debug")
+		EMAILS="${EMAIL_MINE}"
+		DEBUG="yes"
+# 		CLEAN="no"
+		FAKE_ATTACH="true"
+		;;
+	"me")
+		EMAILS="${EMAIL_MINE}"
+		CLEAN="no"
+		FAKE_ATTACH="true"
+		DEBUG="yes"
+		SetStylesAndVariables
+		StartMail
+		GetDevotional
+#		ParseEverydayMoments
+#		ParseRadio
+#		ParseTV
+		FinishMail
+# 		CleanUp
+		exit
+		;;
+	"devo")
+# 		[ ! ${CLEAN} ] && CleanUp
+		EMAILS="${EMAIL_MINE}"
+# 		CLEAN="no"
+		DEBUG="yes"
+		DUMP_DEVO="yes"
+		SetStylesAndVariables
+		StartMail
+		GetDevotional
+# 		ParseEverydayMoments
+# 		ParseRadio
+# 		[ ${FILE_TODAY} ] && 
+# 		ParseTV
+# 		FinishMail
+# 		CleanUp
+		exit
+		;;
+	*)
+# 		EMAILS="${EMAIL_MINE}"
+		EMAILS="${EMAIL_MINE}, ${EMAIL_CYN}"
+		SetStylesAndVariables
+		StartMail
+		GetDevotional
+		#ParseEverydayMoments
+		#ParseRadio
+#		ParseTV
+		FinishMail
+		;;
+esac
+
+# [ ! ${CLEAN} ] && CleanUp
+
+#SetStylesAndVariables
+#StartMail
+#GetDevotional
+##ParseEverydayMoments
+##ParseRadio
+#ParseTV
+## [ ${FILE_TODAY} ] && FinishMail
+#FinishMail
+
+[ ! ${CLEAN} ] && CleanUp

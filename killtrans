@@ -1,0 +1,55 @@
+#!/bin/sh
+
+#$HOME/.config/transmission/torrents/HOWARD+STERN+-+SIRIUSXM+SO+FAR+-+CF128K+-+04-30-12+[WDM].4b46fdb90e7dcfbc.torrent
+# magnet:?xt=urn:btih:B7854487EEB25E5378A25BABC29E725B5B763DF5&dn=Howard+Stern+show+july+20%2C+2015&tr=udp%3A%2F%2Finferno.demonoid.ooo%3A3392%2Fannounce -O /tmp/150720.mp3
+
+
+#for ID in $(transmission-remote -l | egrep -v "^ID|^Sum" | awk '{print $1}') ; do
+#for TOR in $(transmission-remote -l | grep "^ \+[0-9].*Stopped" | awk '{print $1}' | grep -o '[0-9]\+') ; do
+
+COUNT=0
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+
+for TOR in $(transmission-remote -l) ; do
+#for TOR in $(cat ~/transout_real.txt) ; do
+
+	ID=$(echo ${TOR} | grep "^ \+[0-9].*Seeding" | awk '{print $1}' | grep -o '[0-9]\+')
+	NAME=$(echo ${TOR} | grep "^ \+[0-9].*Seeding" | sed "s/ \+/ /g" | cut -d ' ' -f 10-)
+
+	if [ "${NAME}" ] && [ "${ID}" ] ; then
+#		echo ${NAME}: ${ID}
+		echo "Removing ${ID}: ${NAME}"
+
+		transmission-remote -t ${ID} -r
+#	else
+#		echo \"${TOR}\"
+#		echo NOTHING
+	fi
+done
+
+IFS=${SAVEIFS}
+
+#if [ "$(find /var/lib/transmission/downloads/ -mindepth 1 -type d | wc -l)" -gt 0 ] ; then
+#	echo 'sudo chown -R ${UN}:users /var/lib/transmission/downloads/*'
+#fi
+
+REMAINING=$(transmission-remote -l | grep "^ \+[0-9].*")
+
+if [ ! "${REMAINING}" ] ; then
+	echo -e "No running Torrents remaining.  Stopping..."
+	echo 'sudo /etc/init.d/transmission-daemon stop'
+fi
+
+
+exit
+
+if [ "$1" ] ; then
+	echo "Killing exact: \"$1\""
+	kill $(ps -e | grep transmission.*${1} | awk '{print $1}')
+else
+	echo "Killing general: \"$1\""
+	kill $(ps -e | grep transmission | awk '{print $1}')
+fi
+
+

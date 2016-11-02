@@ -1,0 +1,174 @@
+#! /usr/bin/python
+
+'''
+Created on Nov 27, 2015
+
+@author: brian
+'''
+import requests
+import json
+import time
+import sys
+import pprint
+import time
+
+port="8080"
+server='http://devjenkins.use1dev1.zonoff.io'
+build_details=[]
+
+def getBuildURLs(job_name):
+    builds_resonse = requests.get( server + ':' + port + '/job/' + job_name + '/api/json?pretty=true&tree=builds[number,url]')  
+    
+    #print "==========================="
+    #print builds_resonse
+    #print "==========================="
+    
+    return json.loads(str(builds_resonse.content))['builds']
+
+def getBuildDetails(build_url_base):
+    #request_url = build_url_base + 'api/json?pretty=true&tree=result,timestamp'
+    request_url = build_url_base + 'api/json?pretty=true&tree=number,duration,timestamp,result'
+    build_response = requests.get(request_url)
+    
+    #print(build_response.content)
+    
+    return json.loads(build_response.content)
+
+def buildsRecentEnoughToQualify(prior_build_detail, report_start):
+    if prior_build_detail['timestamp'] >= report_start:
+        return True
+    else:
+        return False
+
+def buildsOldEnoughToQualify(prior_build_detail, report_end):
+    if prior_build_detail['timestamp'] >= report_end:
+        return False
+    else:
+        return True
+
+def reportOnPassedBuilds(job, build_details, since, until):
+    
+    results = {};
+    num_builds=0;
+    
+    for build_detail in build_details:
+        if not results.has_key(build_detail['result']):
+            results[build_detail['result']]=1
+        else:
+            results[build_detail['result']]+=1
+    
+    for status in ['SUCCESS', 'UNSTABLE', 'FAILURE']: #ignore ABORTED
+        if results.has_key(status):
+            num_builds += results[status]
+            #print status, results[status]
+
+    if results.has_key('SUCCESS'):
+        print " (green builds %):\t" + str(results['SUCCESS'] * 100 / num_builds) + "%"
+
+def reportOnGreenTime(job, build_details, since, until):
+
+    # set the starting point to now
+#    report_run_time = {'timestamp' : int(time.time()*1000), 'status' : 'Undefined'};
+    report_run_time = {'timestamp' : until, 'status' : 'Undefined'};
+    reference_point_build_detail = report_run_time
+    prior_build_status = 'SUCCESS'
+    time_green = 0
+    
+    for prior_build_detail in build_details:
+        
+        # work back in time to find the first build that is old enough to qualify...
+        if not buildsOldEnoughToQualify( prior_build_detail, until):
+            continue
+
+        #############################################################
+        #############################################################
+        #############################################################
+        #############################################################
+        # now until the builds are not too old to qualify...
+        if buildsRecentEnoughToQualify(prior_build_detail, since):
+ 
+            #############################################################
+            #print dir(prior_build_detail)
+            #json.dumps(prior_build_detail)
+            #print dict([attr, getattr(prior_build_detail, attr)] for attr in dir(prior_build_detail) if not attr.startswith('_'))
+            #print prior_build_detail
+
+            build_status = prior_build_detail['result']
+            build_time = prior_build_detail['timestamp']
+            duration = reference_point_build_detail['timestamp'] - build_time
+            jobNum = prior_build_detail['number']
+
+            #print( build_status + ":" + str(build_time) + " " + str(duration))
+            #print( time.strftime("%x %X", time.gmtime(build_time/1000)))
+
+            if prior_build_status == "SUCCESS":
+    #            print( "credit for good time...")
+
+                time_green += duration
+
+                print "" + str(build_status) + " | " + str(jobNum) + " | " + str(time_green) + " | 1"
+
+                #prior_build_status = build_status;
+
+            #we'll count ABORTED as a 'non-event' also 'UNSTABLE' is considered not green.
+            if build_status != "ABORTED":
+
+               #print("change of state")
+
+                print "" + str(build_status) + " | " + str(jobNum) + " | " + str(time_green) + " | 2"
+
+                prior_build_status = build_status;
+
+            reference_point_build_detail = prior_build_detail
+        else:
+            # if the last build before the report period was green then count the time
+            # from the start of the report period to the first build in the period.
+            if prior_build_detail['result'] == "SUCCESS":
+
+                time_green += reference_point_build_detail['timestamp'] - since;
+
+                print "" + str(build_status) + " | " + str(jobNum) + " | " + str(time_green) + " | 3"
+
+            print "---------"
+            break
+
+    report_period = report_run_time["timestamp"] - since
+
+    print(job + " (green time %): \t" + str(int(float(time_green)*100/report_period)) + "%"),
+
+def validateCommandLine():
+    if len(sys.argv) != 4:
+        print('syntax: ./uptime.py <jenkins job> <from date> <to date>')
+        print('example: ./uptime.py system-int-BUILD-FLOW-MASTER 11/1/15 12/1/15')
+        exit(-1)
+    
+validateCommandLine()
+#print("Retrieving Build Information... ")
+# 'acct-svcs-BUILD-FLOW-MASTER'
+job = str(sys.argv[1])
+
+#gmtTime = gmtime()
+#localTime = localtime()
+#print "GMT: " + str(gmtTime) + " ||| LOCAL: " + str(localTime) + ""
+
+print "OFFSET: " + str( ((time.timezone / 60) / 60) )
+
+#offset = time.isdst()
+#print "OFFSET: " + str(offset)
+
+
+offset = time.timezone
+since = int(((time.mktime(time.strptime(sys.argv[2], "%x"))) - offset) * 1000)
+until = int(((time.mktime(time.strptime(sys.argv[3], "%x"))) - offset) * 1000)
+
+print "since %s until %s" % (since, until)
+
+print "offset: " + str(offset) + " ||| since: " + str(since) + " ||| " + str(time.strptime(sys.argv[2], "%x")) + " ||| " + str(time.mktime(time.strptime(sys.argv[2], "%x"))) + ""
+
+#exit()
+
+for build in getBuildURLs(job):
+    build_details.append(getBuildDetails(build['url'])) 
+
+reportOnGreenTime(job, build_details, since, until )
+reportOnPassedBuilds(job, build_details, since, until)

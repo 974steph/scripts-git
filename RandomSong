@@ -1,0 +1,105 @@
+#!/bin/sh
+
+function GetSong() {
+	ARTIST=$(sort -R "${DUMP}" | head -n1)
+	SONG=$(find "${WHERE}/${ARTIST}/" -iname '*.mp3' | sort -R | head -n1)
+
+	[ ! "${SONG}" ] && GetSong
+
+	SONG_SIZE=$(ls -sk "${SONG}" | awk '{print $1}')
+	[ ! ${SONG_SIZE} ] && GetSong
+
+	if [ ${SIZE_WANT} ] ; then
+		DoMathCopy
+	else
+		ActuallyCopy "${SONG}"
+	fi
+}
+
+
+function DoMathCopy() {
+
+#	if [ $(( ${SIZE_NOW} + ${SONG_SIZE} )) -lt ${SIZE_MAX} ] ; then
+	if [ ${SIZE_NOW} -lt ${SIZE_MAX} ] ; then
+
+		ActuallyCopy "${SONG}"
+
+#		SIZE_NOW=$(( ${SIZE_NOW} + ${SONG_SIZE} ))
+		SIZE_NOW=$(du -s "${RAND_DIR}" | awk '{print $1}')
+
+		if [ ${SIZE_NOW} -lt ${SIZE_MAX} ] ; then
+			GetSong
+		fi
+	fi
+}
+
+
+function ActuallyCopy() {
+#echo ActuallyCopy
+
+	ARTIST="$(id3info "${SONG}" | grep TPE1 | sed -e 's/.*TPE1.*: \(.*\)/\1/')"
+	TITLE="$(id3info "${SONG}" | grep TIT2 | sed -e 's/.*TIT2.*: \(.*\)/\1/')"
+
+	if [ "${ARTIST}" -a "${TITLE}" ] ; then
+# 		if [ ! -f "${RAND_DIR}/${ARTIST} - ${TITLE}.mp3" ] ; then
+# 		if [ ! -f "${RAND_DIR}"/"${ARTIST}"*.mp3 -o ! -f "${RAND_DIR}"/*"${TITLE}.mp3" ] ; then
+		if [ ! "$(ls "${RAND_DIR}"/ | grep -i "${ARTIST}")" ] ; then
+			SONG_SIZE_PRETTY=$(expr ${SONG_SIZE} / 1024)
+
+			SONG_NEW="${ARTIST} - ${TITLE}.mp3"
+
+			echo -e "+ ${SONG_SIZE_PRETTY}M\\t${ARTIST} - ${TITLE}"
+#			cp -a "${SONG}" "${RAND_DIR}"
+			cp -a "${SONG}" "${RAND_DIR}/${SONG_NEW}"
+#			eyeD3 --no-tagging-time-frame -A "Random Music" --rename="%A - %t" "${RAND_DIR}/$(basename "${SONG}")" &> /dev/null
+#			eyeD3 -A "Random Music" --rename="$artist - $title" "${RAND_DIR}/$(basename "${SONG}")" &> /dev/null
+		fi
+	fi
+}
+
+
+########################
+# MAIN
+#
+RAND_DIR="$HOME/Music/Random Music"
+[ ! -d "${RAND_DIR}" ] && mkdir -p "${RAND_DIR}"
+
+LOOP_COUNT="0"
+
+if [ ! $1 ] ; then
+	echo -e \\vTell me how many songs to grab:
+	echo -e $(basename $0) 10
+	echo -e \\v
+	echo -e or size to fill:
+	echo -e $(basename $0) 400M \(meg only\)
+	echo -e \\v
+	exit
+else
+
+
+	WHERE="/usr/local/music"
+	DUMP="/tmp/RandomSong.tmp"
+	SIZE_WANT=$(echo $1 | sed -e 's/[0-9]//g')
+
+	ls "${WHERE}" > "${DUMP}"
+
+
+	if [ "${SIZE_WANT}" ] ; then
+		#SIZE_WANT=$(echo ${SIZE_WANT} | sed -e 's/[a-zA-Z]//g')
+		SIZE_MAX=$(( $(echo "$1" | sed -e 's/[a-z\|A-Z]//g') * 1024 ))
+ 		#echo "${SIZE_MAX}"
+		SIZE_NOW=$(du -s "${RAND_DIR}" | awk '{print $1}')
+		GetSong
+	else
+		x=$1
+
+		while [ ${x} -gt 0 ] ; do
+			GetSong
+			x=$(( ${x} - 1 ))
+		done
+	fi
+fi
+
+rm -f "${DUMP}"
+
+echo -e "\\n$(basename "${RAND_DIR}"): $(du -hs "${RAND_DIR}" | awk '{print $1}')\\n"

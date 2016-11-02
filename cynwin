@@ -1,0 +1,138 @@
+#!/bin/sh
+
+
+
+##################
+#FIND_TYPE="ctime"
+FIND_TYPE="atime"
+#FIND_TYPE="mtime"
+##################
+
+DIR="$HOME/Cyn/WIN"
+
+BASE="$HOME/Cyn/WIN/Documents and Settings/cynthia"
+
+MOUNTED=$(mount | grep "Cyn/WIN")
+
+
+if [ $2 ] ; then 
+	MTIME=$2
+else
+	MTIME=1
+fi
+
+
+function mountCyn() {
+#	sudo mount -t cifs -o noserverino,password="" //192.168.11.38/C "${DIR}"
+#	sudo mount -t cifs -o noserverino,password="" //taka-nuva.local/C "${DIR}"
+#	sudo mount -t cifs -o noserverino,password="" //192.168.11.15/C "${DIR}"
+	sudo mount -t cifs -o noserverino,password="" //192.168.11.88/C "${DIR}"
+}
+
+function unmountCyn() {
+#	echo UNMOUNT
+	sudo umount "${DIR}"
+}
+
+function checkMount() {
+
+	if [ ! "$(mount | grep ${DIR})" ] ; then
+#		echo MOUNT
+		mountCyn
+		MOUNTED=$(mount | grep "Cyn/WIN")
+	else
+#		echo UNMOUNT
+		unmountCyn
+		MOUNTED=$(mount | grep "Cyn/WIN")
+	fi
+}
+
+function syncCache() {
+#	rsync -ai --exclude 'data_*' --progress --delete "$HOME/Cyn/WIN/Documents and Settings/cynthia/Local Settings/Application Data/Google/Chrome/User Data/Default/Cache/" $HOME/Cyn/Cache/
+	rsync -ai --exclude 'data_*' --progress --delete "${BASE}/Local Settings/Application Data/Google/Chrome/User Data/Default/Cache/" $HOME/Cyn/Cache/
+	echo -e \\v"synced to $HOME/Cyn/Cache/"\\v
+}
+
+function FindPics() {
+
+		case $FIND_TYPE in
+			ctime)
+				# CTIME
+				find "${BASE}" ! -path \*[Gg]oogle\* ! -path \*[Ff]irefox\* -ctime -${MTIME} -ctime -${MTIME} -type f \( -iname \*.jpg -o -iname \*.png -o -iname \*.gif \)
+				;;
+			atime)
+				# ATIME
+				find "${BASE}" ! -path \*[Gg]oogle\* ! -path \*[Ff]irefox\* -atime -${MTIME} -type f \( -iname \*.jpg -o -iname \*.png -o -iname \*.gif \)
+				;;
+			mtime)
+				# MTIME
+				find "${BASE}" ! -path \*[Gg]oogle\* ! -path \*[Ff]irefox\* -mtime -${MTIME} -type f \( -iname \*.jpg -o -iname \*.png -o -iname \*.gif \)
+				;;
+			*)
+				echo -e "\\vFIND NEEDS A TIME FRAME\vBAILING...\\v"
+				unmountCyn
+				exit 1
+				;;
+		esac
+}
+
+
+function FindSounds() {
+		case $FIND_TYPE in
+			ctime)
+				# CTIME
+				find "${BASE}" -ctime -${MTIME} -type f \( -iname \*.wav -o -iname \*.mp3 -o -iname \*.m4a \)
+				;;
+			atime)
+				# ATIME
+				find "${BASE}" -atime -${MTIME} -type f \( -iname \*.wav -o -iname \*.mp3 -o -iname \*.m4a \)
+				;;
+			mtime)
+				# MTIME
+				find "${BASE}" -ctime -${MTIME} -type f \( -iname \*.wav -o -iname \*.mp3 -o -iname \*.m4a \)
+				;;
+			*)
+				echo -e "\\vFIND NEEDS A TIME FRAME\vBAILING...\\v"
+				unmountCyn
+				exit 1
+				;;
+		esac
+}
+
+
+case $1 in
+	mount)	mountCyn;;
+	unmount)	unmountCyn;;
+	m)	mountCyn;;
+	u)	unmountCyn;;
+
+	cache)
+		[ ! "${MOUNTED}" ] && mountCyn
+		syncCache
+		unmountCyn
+		;;
+	pics)
+		[ ! "${MOUNTED}" ] && mountCyn
+		FindPics
+		unmountCyn
+		;;
+	sounds)
+		[ ! "${MOUNTED}" ] && mountCyn
+		FindSounds
+		unmountCyn
+		;;
+	*)
+		if [ ! "${MOUNTED}" ] ; then
+			mountCyn
+			echo -e \\v"mounted ${DIR}"\\v
+		else
+			unmountCyn
+			echo -e \\v"unmounted ${DIR}"\\v
+		fi
+esac
+
+
+#stat -c %x,%z,%n *
+#%x     Time of last access
+#%z     Time of last change
+#%n     Name of file

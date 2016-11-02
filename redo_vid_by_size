@@ -1,0 +1,384 @@
+#!/bin/sh
+
+
+DEBUG="yes"
+
+TARGET_WIDTH=720
+#TARGET_WIDTH=600
+#TARGET_WIDTH=576
+#TARGET_WIDTH=480
+#TARGET_WIDTH=464
+#TARGET_WIDTH=448
+#TARGET_WIDTH=240
+
+
+function PreReqs() {
+
+	##########################################
+	# Just a quick syntax check.  This is not idiot-proof, but it works enough to 
+	# remind my (often... :\) forgetful mind
+	#
+
+	if [ $# -lt 2 -o "$1" = "--help" -o "$1" = "-h" -o "$2" = "--help" -o "$2" = "-h" ] ; then
+		echo -e "\\vSyntax: $0 [The File] [Target File Size in Meg]\\v"
+		echo "Example #1"
+		echo -e "----------"
+		echo "For a final file size of 700 Meg, type:"
+		echo -e "$0 [FILE] 700\\v"
+		echo "Example #2"
+		echo -e "----------"
+		echo -e "Just type \"auto\" to use the existing file as a size reference:"
+		echo -e "$0 [FILE] auto\\v"
+		exit
+	fi
+	##########################################
+
+
+	##########################################
+	# Variables that I need to know / create for re-encoding the file
+	# as pretty as possible.  I know it's not sorted, it sort-of can't be... :\
+	#
+	INFILE="$1"
+	INDIR="$(dirname "$1")"
+	SHORT_NAME="$(basename "${1%.*}")"
+	OUTFILE="${SHORT_NAME}.avi"
+	AUDIO_FILE="${SHORT_NAME}.mp3"
+	TMP_AUDIO_FILE="${SHORT_NAME}.wav"
+	TMP_INFO="${SHORT_NAME}.info"
+	PASS_LOG="${SHORT_NAME}.stats"
+	TODAY=$(date +%m/%d/%Y)
+	TMP_DIR="${INDIR}/TempFiles"
+	FINAL_DIR="${INDIR}/Final"
+	##########################################
+
+
+	if [ ${DEBUG} ] ; then
+		echo -e \\v"=============================="
+		echo INFILE: ${INFILE}
+		echo SHORT_NAME: ${SHORT_NAME}
+		echo OUTFILE: ${OUTFILE}
+		echo AUDIO_FILE: ${AUDIO_FILE}
+		echo TMP_AUDIO_FILE: ${TMP_AUDIO_FILE}
+		echo TMP_INFO: ${TMP_INFO}
+		echo PASS_LOG: ${PASS_LOG}
+		echo TODAY: ${TODAY}
+		echo TMP_DIR: ${TMP_DIR}
+		echo FINAL_DIR: ${FINAL_DIR}
+		echo -e "=============================="\\v
+	fi
+
+# 	exit
+
+
+
+	##########################################
+	# Detect how big we want the final file
+	# "auto" will use the current size of the file as the target size
+	# This isn't perfect since the audio size may change from the re-encode
+	# There's a way to make it FAR more exact, but with huge (movie sized) files
+	# there'd be a *HUGE* .wav file on the machine.  I'd like to do that since I'd 
+	# like to run a normalize on the file, but alas, I don't have that kind of
+	# drive space, thus just taking the audio through pipes. 
+	# /me shrugs
+	#
+	if [ "$2" = "auto" ] ; then
+		REQUESTED_SIZE=$(expr $(ls -s "$1" | awk '{print $1}') / 1024)
+	else
+		REQUESTED_SIZE="$2"
+	fi
+	##########################################
+
+
+	##########################################
+	# Make sure our TEMP and FINAL dirs are here
+	#
+	if [ ! -d "${TMP_DIR}" ] ; then mkdir "${TMP_DIR}" ; fi
+	if [ ! -d "${FINAL_DIR}" ] ; then mkdir "${FINAL_DIR}" ; fi
+	##########################################
+
+
+	##########################################
+	# Get the nitty-gritty from the original file
+	# That bit is important for a lot of the math
+	#
+	midentify "$1" | sort > "${TMP_DIR}/${TMP_INFO}"
+	. "${TMP_DIR}/${TMP_INFO}"
+	##########################################
+}
+
+
+
+function RedoAudio () {
+	echo -e "\\v\033[1;41m-+-+-+-+-+-+-+-\033[0m \033[1;45m${INFILE}\033[0m \033[1;41m-+-+-+-+-+-+-+-\033[0m\\n"
+
+
+	##########################################
+	# Encode audio if needed
+	#
+	if [ -f "${TMP_DIR}/${AUDIO_FILE}" ] ; then
+		echo -e "\\v\033[1;44m ${TMP_DIR}/${AUDIO_FILE} found. Skipping Audio Encoding. \033[0m\\n"
+	else
+		echo -e "\\v\033[1;44m         Encoding Audio         \033[0m \
+			\\nVideo: \\033[3;36m${INFILE}\033[0m \
+			\\nAudio: \\033[3;36m${TMP_DIR}/${AUDIO_FILE}\033[0m\\v"
+
+#		ffmpeg -i "${INFILE}" -v 2 -vn -sn -ac 2 -ar "${ID_AUDIO_RATE}" -qscale 0 "${TMP_DIR}/${TMP_AUDIO_FILE}"
+		ffmpeg -i "${INFILE}" -v 2 -vn -sn -ac 2 -ar "${ID_AUDIO_RATE}" -q:a 0 "${TMP_DIR}/${TMP_AUDIO_FILE}"
+
+		if [ $(normalize --peak -n -q "${TMP_DIR}/${TMP_AUDIO_FILE}" | awk '{print $2}' | cut -d\. -f-1 | sed -e 's/[0-9]//g' | wc -w) -gt 0 ] ; then 
+			echo -e \\vNormalizing Audio...\\v
+			normalize --peak "${TMP_DIR}/${TMP_AUDIO_FILE}"
+		else
+			echo -e \\vNormalize not needed.  Skipping...\\v
+		fi
+
+		echo -e \\v LAME_OPTS: ${LAME_OPTS}
+		echo -e "Lame CMD: lame ${LAME_OPTS} --vbr-new --resample \"${ID_AUDIO_RATE}\" \"${TMP_DIR}/${TMP_AUDIO_FILE}\" \"${TMP_DIR}/${AUDIO_FILE}\""\\v
+
+# 		lame -q2 -V3 -ms --vbr-new --resample "${ID_AUDIO_RATE}" "${TMP_DIR}/${TMP_AUDIO_FILE}" "${TMP_DIR}/${AUDIO_FILE}"
+# 		lame -q2 -V3 --vbr-new --resample "${ID_AUDIO_RATE}" "${TMP_DIR}/${TMP_AUDIO_FILE}" "${TMP_DIR}/${AUDIO_FILE}"
+		lame ${LAME_OPTS} --vbr-new --resample "${ID_AUDIO_RATE}" "${TMP_DIR}/${TMP_AUDIO_FILE}" "${TMP_DIR}/${AUDIO_FILE}"
+
+		rm -fv "${TMP_DIR}/${TMP_AUDIO_FILE}"
+	fi
+	##########################################
+}
+
+
+
+function RedoVideo_Pass_1() {
+
+	##########################################
+	# Math for the re-encode
+	#
+
+	# File size of the new audio file we just made
+	AUDIO_FILE_SIZE=$(ls -s "${TMP_DIR}/${AUDIO_FILE}" | awk '{print $1}')
+
+	# I read somewhere that the avi container has 24 bytes of overhead per frame
+	# I don't know if mencoder accounts for that or not, so I do it.  I found that
+	# the final file size was indeed MUCH closer to the requested size, on larger 
+	# files with this deduction in (eg. DVD backups and hour-length TV programs).
+	OVERHEAD=$(echo "((${ID_LENGTH} * ${ID_VIDEO_FPS}) * 24) / 1024" | bc)
+
+	# The size of JUST the video part of the file and then ... 
+	VIDEO_SIZE=$(echo "(${REQUESTED_SIZE} * 1024) - ${AUDIO_FILE_SIZE}" | bc)
+
+	# ...take out the overhead to tell mencoder for target size
+	FINAL_SIZE=$(echo "${VIDEO_SIZE}" - "${OVERHEAD}" | bc | cut -d\. -f1)
+# 	FINAL_SIZE=${VIDEO_SIZE}
+
+	# Put it all back together just for the pretty info stuff
+	FINAL_FILE_SIZE=$(echo "${FINAL_SIZE} + ${AUDIO_FILE_SIZE}" | bc)
+
+	if [ ${ID_VIDEO_HEIGHT} ] ; then
+		THREADS=$((${ID_VIDEO_HEIGHT} / 16))
+	else
+		THREADS=2
+	fi
+
+	echo AUDIO_FILE_SIZE: ${AUDIO_FILE_SIZE} - $(( ${AUDIO_FILE_SIZE} / 1024 ))
+	echo OVERHEAD: ${OVERHEAD} - $(( ${OVERHEAD} / 1024 ))
+	echo VIDEO_SIZE: ${VIDEO_SIZE} - $(( ${VIDEO_SIZE} / 1024 ))
+	echo FINAL_SIZE: ${FINAL_SIZE} - $(( ${FINAL_SIZE} / 1024 ))
+	echo FINAL_FILE_SIZE: ${FINAL_FILE_SIZE} - $(( ${FINAL_FILE_SIZE} / 1024 ))
+	echo THREADS: ${THREADS}
+# 	exit
+
+	##########################################
+
+
+	##########################################
+	# Let's see if we should resize or not.
+	#
+	if [ ${ID_VIDEO_WIDTH} -eq ${TARGET_WIDTH} ] ; then
+		echo -e "\\v\033[1;45m         Resize not needed: ${ID_VIDEO_WIDTH}         \033[0m\\v"
+		VIDEO_FILTER_CHAIN_1=""
+# 		VIDEO_FILTER_CHAIN_2="-vf fspp"
+		VIDEO_FILTER_CHAIN_2=""
+	else
+		echo -e "\\v\033[1;45m         Resizing to: \\033[3;36m${TARGET_WIDTH}px wide         \033[0m\\v"
+		VIDEO_FILTER_CHAIN_1="-vf scale=${TARGET_WIDTH}:-3"
+# 		VIDEO_FILTER_CHAIN_2="-vf scale=${TARGET_WIDTH}:-3,fspp"
+		VIDEO_FILTER_CHAIN_2="-vf scale=${TARGET_WIDTH}:-3"
+	fi
+	##########################################
+
+
+	##########################################
+	# Video First Pass if needed
+	#
+	if [ -f "${TMP_DIR}/$PASS_LOG" ] ; then
+		echo -e "\\v\033[0;30;44m ${PASS_LOG} found. Skipping the first pass. \033[0m\\n"
+	else
+		echo -e "\\v\033[0;30;44m         Pass 1         \033[0m \
+			\\nOriginal: \\033[3;36m${INFILE}\033[0m \
+			\\nOriginal Width: \\033[3;36m${ID_VIDEO_WIDTH}\033[0m \
+			\\nOriginal Height: \\033[3;36m${ID_VIDEO_HEIGHT}\033[0m \
+			\\nPass Log: \\033[3;36m${TMP_DIR}/${PASS_LOG}\033[0m \
+			\\nVideo Size: \\033[3;36m${FINAL_SIZE} kB\033[0m \
+			\\nAudio Size: \\033[3;36m${AUDIO_FILE_SIZE} kB\033[0m \
+			\\nFinal File Size: \\033[3;36m${FINAL_FILE_SIZE} kB\033[0m \
+			\\nThreads: \\033[3;36m${THREADS}\033[0m \
+			\\nFilter Chain: \\033[3;36m${VIDEO_FILTER_CHAIN_1}\033[0m\\n"
+
+
+# 			-info name="${SHORT_NAME}":comment="Re-encoded ${TODAY}" \
+#		MPLAYER_VERBOSE="-4" \
+		nice mencoder "${INFILE}" -o /dev/null \
+			-msglevel all=0:statusline=5 \
+			-passlogfile "${TMP_DIR}/${PASS_LOG}" \
+			-ovc xvid -xvidencopts pass=1:turbo:bitrate=-${FINAL_SIZE}:threads=4 \
+			-nosub -nosound \
+			${VIDEO_FILTER_CHAIN_1}
+	fi
+	##########################################
+}
+
+
+
+function RedoVideo_Pass_2() {
+
+INFO_SHORT_NAME=$(echo ${SHORT_NAME} | sed -e 's/[()]//g' -e 's/://g')
+
+echo ${INFO_SHORT_NAME}
+
+	##########################################
+	# Video Second Pass we always need this...
+	#
+	if [ -f "${FINAL_DIR}/${OUTFILE}" ] ; then
+		echo -e "\\v\033[0;30;44m "${FINAL_DIR}/${OUTFILE}" found. Skipping final pass. \033[0m\\n"
+	else
+		echo -e "\\v\\v\033[0;30;44m         Pass 2         \033[0m \
+			\\nOriginal: \\033[3;36m${INFILE}\033[0m \
+			\\nNew File: \\033[3;36m${FINAL_DIR}/${OUTFILE}\033[0m \
+			\\nPass Log: \\033[3;36m${TMP_DIR}/${PASS_LOG}\033[0m \
+			\\nVideo Size: \\033[3;36m${FINAL_SIZE} kB\033[0m \
+			\\nAudio Size: \\033[3;36m${AUDIO_FILE_SIZE} kB\033[0m \
+			\\nFinal File Size: \\033[3;36m${FINAL_FILE_SIZE} kB\033[0m \
+			\\nThreads: \\033[3;36m${THREADS}\033[0m \
+			\\nFilter Chain: \\033[3;36m${VIDEO_FILTER_CHAIN_2}\033[0m\\n"
+
+# 		-ovc xvid -xvidencopts pass=2:bitrate=-${FINAL_SIZE}:vhq=4:bvhq=1:threads=2 \
+# 			-info name="${SHORT_NAME}":comment="Re-encoded ${TODAY}" \
+#		MPLAYER_VERBOSE="-4" \
+		nice mencoder "${INFILE}" -o "${FINAL_DIR}"/"${OUTFILE}" \
+			-msglevel all=0:statusline=5 \
+			-passlogfile "${TMP_DIR}/${PASS_LOG}" \
+			-ovc xvid -xvidencopts pass=2:bitrate=-${FINAL_SIZE}:vhq=4:bvhq=1:threads=4 \
+			-oac copy -audiofile "${TMP_DIR}/${AUDIO_FILE}" \
+			-nosub -info name="${INFO_SHORT_NAME}":comment="Re-encoded ${TODAY}" \
+			${VIDEO_FILTER_CHAIN_2}
+
+		touch -r "${INFILE}" "${FINAL_DIR}"/"${OUTFILE}"
+
+		echo -e "\\v\\v\033[1;43m         Completed ${OUTFILE}         \033[0m\\v\\v"
+	fi
+	##########################################
+}
+
+###################################
+#
+function CountTime() {
+
+	TIME_RAW=$1
+	TIME_COUNT=0
+	TIME_HOURS=0
+	TIME_MINUTES=0
+	TIME_SECONDS=0
+
+# 	echo "<BR><BR>${TIME_RAW} - ${TIME_COUNT}<BR><BR>"
+# 	echo TIME_COUNT: ${TIME_COUNT}
+# 	echo TIME_RAW: ${TIME_RAW}
+
+	while [ ! "${TIME_COUNT}" -gt "${TIME_RAW}" ] ; do
+
+# 	echo TIME_COUNT: ${TIME_COUNT}
+# 	echo TIME_RAW: ${TIME_RAW}
+
+		if [ ! $(( ${TIME_COUNT} + 60 )) -gt ${TIME_RAW} ] ; then
+			TIME_COUNT=$(( ${TIME_COUNT} + 60 ))
+			TIME_MINUTES=$(( ${TIME_MINUTES} + 1 ))
+
+			if [ ${TIME_MINUTES} -gt 1 ] ; then TIME_MINUTES_S="s" ; fi
+
+			if [ ${TIME_MINUTES} -eq 60 ] ; then
+				TIME_HOURS=$(( ${TIME_HOURS} + 1 ))
+				TIME_MINUTES=0
+
+				if [ ${TIME_HOURS} -gt 1 ] ; then TIME_HOURS_S="s" ; fi
+			fi
+
+			TIME_SECONDS=$(( ${TIME_RAW} - ${TIME_COUNT} ))
+
+			if [ ${TIME_SECONDS} -gt 1 ] ; then TIME_SECONDS_S="s" ; fi
+		else
+			[ "${TIME_HOURS}" -gt 0 ] && DURATION="${TIME_HOURS} hour${TIME_HOURS_S}"
+			[ "${TIME_MINUTES}" -gt 0 ] && DURATION="$( [ "${DURATION}" ] && echo "${DURATION}, ")${TIME_MINUTES} minute${TIME_MINUTES_S}"
+			[ "${TIME_SECONDS}" -gt 0 ] && DURATION="$( [ "${DURATION}" ] && echo "${DURATION}, ")${TIME_SECONDS} second${TIME_SECONDS_S}"
+
+			echo "${DURATION}"
+			DURATION=""
+			break
+		fi
+	done
+}
+###################################
+
+
+if [ ! "$2" ] ; then
+	echo -e \\vNeed target size or "auto"\\v
+	exit
+fi
+
+case "$3" in
+	[jJ]oyce)
+		LAME_OPTS="-q0 -V5"
+		;;
+	*)
+		if [ $2 == "auto" ] ; then
+			LAME_OPTS="-q0 -V0"
+		else
+			#LAME_OPTS="-q0 -V5 -ms"
+			LAME_OPTS="-q0 -V3"
+		fi
+		;;
+esac
+
+# echo ${LAME_OPTS}
+# exit
+
+TIME_START=$(date +%s)
+
+PreReqs "$1" "$2"
+[ $? -gt 0 ] && exit
+
+RedoAudio "$1" "$2"
+[ $? -gt 0 ] && exit
+
+RedoVideo_Pass_1 "$1" "$2"
+# [ $? -gt 0 ] && exit
+
+RedoVideo_Pass_2 "$1" "$2"
+# [ $? -gt 0 ] && exit
+
+TIME_END=$(date +%s)
+
+echo "Time taken: $(CountTime $(( ${TIME_END} - ${TIME_START} )))"
+
+################################3
+# NOTES
+#
+# -ffourcc DX50
+
+#1280x720, 720x576, 720x480, 704x576, 704x480, 640x480, 640x368, 480x576, 480x480, 384x288, 352x288, 352x240, 320x240
+#1: transcode -q1 -J stabilize=shakiness=8 -i VID00001.MP4 -y null,null -o dummy
+#2: transcode -J transform=smoothing=30 -i VID00001.MP4 -y xvid,tcaud -R2 -o stab2.avi
+
+#transcode -J stabilize=shakiness=8 -i VID00001.mp4 -y null,null -Z 244x -o dummy
+#transcode -J transform=smoothing=30 -i VID00001.mp4 -y xvid,lame -R 2 -Z 244x -o VID00001_Stab.avi
+
+#bc
+# bc -l: Decimals
+# echo "scale=2; (7884188494556 - 7884181194556 ) * 8 / 5 / 1024 / 1024 " | bc  TWO DECIMAL PLACES!
+ beep -f 1400 -l 500 -n -f 900 -l 500 -n -f 1400 -l 500

@@ -1,0 +1,1131 @@
+#!/bin/sh
+
+source $HOME/Sources/scripts-git/secret_stuff.sh
+
+# HOLIDAYS TODAY
+# curl -qL https://www.checkiday.com/rss.php 2>/dev/null | xmllint --format -
+
+##########################################
+# HUMANIZE TIME
+#
+function HumanizeTime() {
+
+	S_YMD=$(date -d @${1} +%Y%m%d)
+	E_YMD=$(date -d @${2} +%Y%m%d)
+	TIME_TYPE=${3}
+
+	D_YEARS="0"
+	D_MONTHS="0"
+	D_WEEKS="0"
+	D_DAYS="0"
+	unset DISPLAY
+
+	#########
+	# YEARS
+	#
+	while [ ! ${S_YMD} -gt $(date -d "${E_YMD} -1 years" +%Y%m%d) ] ; do
+		if [ ! $(date -d "${S_YMD} +1 years" +%Y%m%d) -gt ${E_YMD} ] ; then
+			S_YMD=$(date -d "${S_YMD} +1 years" +%Y%m%d)
+			D_YEARS=$(( ${D_YEARS} + 1 ))
+		else
+			break
+		fi
+
+		[ ${D_YEARS} -gt 30 ] && exit
+
+	done
+
+	#########
+	# MONTHS
+	#
+	while [ ! ${S_YMD} -gt $(date -d "${E_YMD} -1 months" +%Y%m%d) ] ; do
+		if [ $(date -d "${S_YMD} +1 months" +%Y%m%d) ] ; then
+			S_YMD=$(date -d "${S_YMD} +1 months" +%Y%m%d)
+			D_MONTHS=$(( ${D_MONTHS} + 1 ))
+		else
+			break
+		fi
+
+		[ ${D_MONTHS} -gt 30 ] && exit
+	done
+
+	#########
+	# WEEKS
+	#
+	while [ ! ${S_YMD} -gt $(date -d "${E_YMD} -1 weeks" +%Y%m%d) ] ; do
+		if [ $(date -d "${S_YMD} +1 week" +%Y%m%d) ] ; then
+			S_YMD=$(date -d "${S_YMD} +1 week" +%Y%m%d)
+			D_WEEKS=$(( ${D_WEEKS} + 1 ))
+		else
+			break
+		fi
+
+		[ ${D_WEEKS} -gt 30 ] && exit
+	done
+
+	#########
+	# DAYS
+	#
+	while [ ! ${S_YMD} -gt $(date -d "${E_YMD} -1 days" +%Y%m%d) ] ; do
+		if [ $(date -d "${S_YMD} +1 days" +%Y%m%d) ] ; then
+			S_YMD=$(date -d "${S_YMD} +1 days" +%Y%m%d)
+			D_DAYS=$(( ${D_DAYS} + 1 ))
+		else
+			break
+		fi
+
+		[ ${D_DAYS} -gt 30 ] && exit
+	done
+
+	#########
+	# MAKE PRETTY
+	case ${TIME_TYPE} in
+
+	FUZZY)
+
+		[ ${D_YEARS} -ne 1 ] && YS="s"
+		[ ${D_YEARS} -ge 1 ] && [ ${D_MONTHS} -gt 0 -o ${D_WEEKS} -gt 0 -o ${D_DAYS} -gt 0 ] && DISPLAY="${D_YEARS} year${YS} and "
+		[ ${D_YEARS} -ge 1 ] && DISPLAY="${D_YEARS} year${YS}"
+		[ ${D_YEARS} -gt 0 ] && AND=" and "
+
+		#########
+		# Fuzzy Time Display
+		#
+		if [ ${D_MONTHS} -gt 0 ] ; then
+
+			case ${D_WEEKS} in
+				5)	[ $(( ${D_MONTHS} + 1 )) -gt 1 ] && MS="s"
+					DISPLAY+="${AND}just over $(( ${D_MONTHS} + 1 )) month${MS}"
+					;;
+				4)	[ $(( ${D_MONTHS} + 1 )) -gt 1 ] && MS="s"
+					DISPLAY+="${AND}just under $(( ${D_MONTHS} + 1 )) month${MS}"
+					;;
+				[2-3])	DISPLAY+="${AND}${D_MONTHS} 1/2 months"
+					;;
+				[0-1])	[ ${D_MONTHS} -gt 1 ] && MS="s"
+					DISPLAY+="${AND}just over ${D_MONTHS} month${MS}"
+					;;
+			esac
+		else
+			if [ ${D_WEEKS} -gt 0 ] ; then
+				[ ! ${D_WEEKS} -eq 1 ] && WS="s"
+				if [ "${DISPLAY}" ] ; then DISPLAY+=", ${D_WEEKS} week${WS}" ; else DISPLAY="${D_WEEKS} week${WS}" ; fi
+			fi
+			if [ ${D_DAYS} -gt 0 ] ; then
+				[ ! ${D_DAYS} -eq 1 ] && DS="s"
+				if [ "${DISPLAY}" ] ; then DISPLAY+=", ${D_DAYS} day${DS}" ; else DISPLAY="${D_DAYS} day${DS}" ; fi
+			fi
+		fi
+		;;
+	EXACT)
+		#########
+		# Exact Time Display
+		#
+		if [ ${D_YEARS} -gt 0 ] ; then
+			[ ! ${D_YEARS} -eq 1 ] && YS="s"
+			if [ "${DISPLAY}" ] ; then DISPLAY+=", ${D_YEARS} year${YS}" ; else DISPLAY="${D_YEARS} year${YS}" ; fi
+		fi
+		if [ ${D_MONTHS} -gt 0 ] ; then
+			[ ! ${D_MONTHS} -eq 1 ] && MS="s"
+			if [ "${DISPLAY}" ] ; then DISPLAY+=", ${D_MONTHS} month${MS}" ; else DISPLAY="${D_MONTHS} month${MS}" ; fi
+		fi
+		if [ ${D_WEEKS} -gt 0 ] ; then
+			[ ! ${D_WEEKS} -eq 1 ] && WS="s"
+			if [ "${DISPLAY}" ] ; then DISPLAY+=", ${D_WEEKS} week${WS}" ; else DISPLAY="${D_WEEKS} week${WS}" ; fi
+		fi
+		if [ ${D_DAYS} -gt 0 ] ; then
+			[ ! ${D_DAYS} -eq 1 ] && DS="s"
+			if [ "${DISPLAY}" ] ; then DISPLAY+=", and ${D_DAYS} day${DS}" ; else DISPLAY="${D_DAYS} day${DS}" ; fi
+		fi
+		;;
+	*)
+		echo -e \\v"${1} || ${2} || ${3} || TELL ME WHAT TO DO"\\v
+		exit
+		;;
+	esac
+
+	echo ${DISPLAY}
+}
+
+
+##########################################
+# UNION DAY BREAK DOWN
+#
+function UnionDayBreakDown() {
+
+	UNION_IN=${1}
+	UNION_LENGTH=$(( ${#UNION_IN} - 1 ))
+
+	UNION_COUNTER=0
+
+	while [ ! ${UNION_COUNTER} -gt ${UNION_LENGTH} ] ; do
+
+		[ "${UNION_BUILD}" ] && UNION_BUILD+=" + "
+		UNION_BUILD+="$(echo ${UNION_IN:${UNION_COUNTER}:1})"
+		UNION_COUNTER=$(( ${UNION_COUNTER} + 1 ))
+	done
+
+	UNION_MATH=$(( ${UNION_BUILD} ))
+
+	if [ ${#UNION_MATH} -gt 1 ] ; then
+
+		unset UNION_IN UNION_LENGTH UNION_COUNTER UNION_BUILD
+
+		UnionDayBreakDown ${UNION_MATH}
+	else
+		echo ${UNION_MATH}
+	fi
+}
+
+
+##########################################
+# UNION CHECK LEX DAY
+#
+function UnionCheckLexDay() {
+
+	UNION_START_MIN=$(date -d "${1}" +%Y-%m-%d)
+	UNION_START_MAX=$(date -d "${1} +1 days" +%Y-%m-%d)
+
+# 	echo "$1 UNION_START_MIN: $UNION_START_MIN"
+# 		-d fields=entry/title,entry/content \
+
+# 	IS_LEX="$(curl -L -s -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
+# 		-d fields=entry/title \
+# 		-d q=nathan \
+# 		-d start-min=${UNION_START_MIN} \
+# 		-d start-max=${UNION_START_MAX} | grep -c -i nathan)"
+
+	IS_LEX=0
+
+	if [ ${IS_LEX} -gt 0 ] ; then
+		UNION_IS_LEX+="<li style=\"${STYLE_LI_DISC_UNION}\">$(date -d "${UNION_COUNT}" '+%A, %B %-d, %Y')</li>"
+		[ ${DEBUG} ] && echo "${UNION_COUNT} - IS"
+		unset IS_LEX
+	else
+		UNION_NON_LEX+="<li style=\"${STYLE_LI_DISC_UNION}\">$(date -d "${UNION_COUNT}" '+%A, %B %-d, %Y')</li>"
+		[ ${DEBUG} ] && echo "${UNION_COUNT} - NON"
+		unset IS_LEX
+	fi
+}
+
+
+
+##########################################
+# UNION FINDER
+#
+function UnionFinder() {
+
+	UNION_START=$(date -d "@${TODAY}" +%Y%m01)
+	UNION_END=$(date -d "$(date -d "@${TODAY}" +%Y%m01) +1 month -1 day" +%Y%m%d)
+
+	UNION_COUNT=${UNION_START}
+
+	[ ${DEBUG} ] && echo -e \\v~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\\v
+
+	[ ${UNION_TOTAL_COUNT} -gt 1 -o ${UNION_TOTAL_COUNT} -eq 0 ] && UNION_S="s"
+
+
+	while [ ${UNION_COUNT} -lt ${UNION_END} ] ; do
+		UNION_SPACES="$(echo ${UNION_COUNT} | sed -e 's/\([0-9][0-9][0-9][0-9]\)\([0-9][0-9]\)\([0-9][0-9]\)/\1 \2 \3/')"
+
+		Y4=$(echo "${UNION_SPACES}" | awk '{print $1}' | sed -e 's/ //g')
+		Y2=$(echo "${UNION_SPACES}" | awk '{print $1}' | sed -e 's/[0-9][0-9]\([0-9][0-9]\)/\1/' -e 's/ //g')
+		M=$(echo "${UNION_SPACES}" | awk '{print $2}' | sed -e 's/ //g')
+		D=$(echo "${UNION_SPACES}" | awk '{print $3}' | sed -e 's/ //g')
+
+		UNION_YEAR4=$(UnionDayBreakDown ${Y4})
+		UNION_YEAR2=$(UnionDayBreakDown ${Y2})
+		UNION_MONTH=$(UnionDayBreakDown ${M})
+		UNION_DAY=$(UnionDayBreakDown ${D})
+
+		UNION_CHECK_4=$(( ${UNION_YEAR4} + ${UNION_MONTH} + ${UNION_DAY} ))
+		UNION_CHECK_2=$(( ${UNION_YEAR2} + ${UNION_MONTH} + ${UNION_DAY} ))
+
+		[ ${#UNION_CHECK_4} -gt 1 ] && UNION_CHECK_4=$(UnionDayBreakDown ${UNION_CHECK_4})
+		[ ${#UNION_CHECK_2} -gt 1 ] && UNION_CHECK_2=$(UnionDayBreakDown ${UNION_CHECK_2})
+
+		if [ ${UNION_CHECK_4} -eq 9 -o ${UNION_CHECK_2} -eq 9 ] ; then
+			UnionCheckLexDay ${UNION_COUNT}
+# 			$(date -d "${UNION_COUNT} + 1 days" +%Y%m%d)
+			UNION_TOTAL_COUNT=$(( ${UNION_TOTAL_COUNT} + 1 ))
+			[ ${DEBUG} ] && echo "UNION_TOTAL_COUNT: ${UNION_TOTAL_COUNT}"
+		fi
+
+		UNION_COUNT=$(date -d "${UNION_COUNT} + 1 day" +%Y%m%d)
+	done
+
+	[ ${DEBUG} ] && echo -e \\v
+
+	echo -e "<BR><div style=\"${STYLE_UNION_IMAGE}\">" >> ${BODY}
+
+	echo -e "<p style=\"${STYLE_UNIONHEAD}\">${UNION_TOTAL_COUNT} Union Day${UNION_S} in $(date -d "@${TODAY}" +%B)</p>" >> ${BODY}
+
+	[ ${DEBUG} ] && echo "UNION_NON_LEX: $(echo ${UNION_NON_LEX} | wc -w)"
+
+	if [ $(echo ${UNION_NON_LEX} | wc -w) -gt 0 ] ; then
+# 		echo "<u><b>Non-Lex Union Days</b></u>"  >> ${BODY}
+		echo -e "<ul style=\"${STYLE_UL}\">" >> ${BODY}
+		echo -e "${UNION_NON_LEX}" >> ${BODY}
+#	else
+#		echo -e "No Union Days this month." >> ${BODY}
+	fi
+
+# 	echo -e "</ul>" >> ${BODY}
+# 
+# 	[ ${DEBUG} ] && echo "UNION_IS_LEX: $(echo ${UNION_IS_LEX} | wc -w)"
+# 
+# 	if [ $(echo ${UNION_IS_LEX} | wc -w) -gt 0 ] ; then
+# 		echo "<u><b>Lex Union Days</b></u>"  >> ${BODY}
+# 		echo -e "<ul style=\"${STYLE_UL}\">" >> ${BODY}
+# 		echo -e "${UNION_IS_LEX}" >> ${BODY}
+# #	else
+# #		echo -e "No Union Days this month." >> ${BODY}
+# 	fi
+
+	echo -e "</ul></div>" >> ${BODY}
+}
+
+
+##########################################
+# EVENT CHECK LEX DAY
+#
+function EventCheckLexDay() {
+
+	EVENT_START_MIN=$(date -d "${1}" +%Y-%m-%d)
+	EVENT_START_MAX=$(date -d "${1} +1 days" +%Y-%m-%d)
+
+# 	echo EVENT_START_MIN: $EVENT_START_MIN
+# 	echo EVENT_START_MAX: $EVENT_START_MAX
+
+	IS_LEX="$(curl -L -s -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
+		-d fields=entry/title,entry/content \
+		-d q=nathan \
+		-d start-min=${EVENT_START_MIN} \
+		-d start-max=${EVENT_START_MAX} | grep -c -i nathan)"
+
+	if [ ${IS_LEX} -gt 0 ] ; then
+
+		EVENT_IS_LEX="<li style=\"${STYLE_LI_CIRCLE}\">Lex Event</li>"
+		echo ${EVENT_IS_LEX} >> ${BODY}
+		[ ${DEBUG} ] && echo "EVENT IS LEX DAY - ${EVENT_IS_LEX}"
+	fi
+}
+
+
+
+##########################################
+# EVENT PROCESSORS
+#
+function Event() {
+
+	EVENT_START=$(date -d "${1}" +%s)
+	EVENT_END=$(date -d "${2}" +%s)
+	EVENT_NAME="${3}"
+
+	EVENT_TIME_UNTIL=$(( ((${EVENT_START} - ${TODAY}) / 86400) ))
+	EVENT_TIME_THERE=$(( ((${EVENT_END} - ${TODAY}) / 86400) ))
+	[ ! ${EVENT_DURATION} ] && EVENT_DURATION=$(( ((${EVENT_END} - ${EVENT_START}) / 86400) ))
+
+	if [ ${DEBUG} ] ; then
+		echo -e \\v"X: ${x}"
+		echo -e "EVENT_NAME: ${EVENT_NAME}"
+		echo -e "TODAY: ${TODAY} ($(date -d @${TODAY} "+%Y-%m-%d %H:%M:%S"))"
+		echo -e "REAL_TODAY: $(date -d "@${TODAY}" "+%Y-%m-%d %H:%M:%S")"
+		echo -e "START: ${START}"
+		echo -e "END: ${END}"
+		echo -e "FIRST_START: ${FIRST_START}"
+		echo -e "EVENT_START: ${EVENT_START} ($(date -d "@${EVENT_START}" "+%Y-%m-%d %H:%M:%S"))"
+		echo -e "EVENT_END: ${EVENT_END} ($(date -d "@${EVENT_END}" "+%Y-%m-%d %H:%M:%S"))"
+		echo -e "EVENT_TIME_UNTIL: ${EVENT_TIME_UNTIL}"
+		echo -e "EVENT_TIME_THERE: ${EVENT_TIME_THERE}"
+		echo -e "EVENT_DURATION: ${EVENT_DURATION}"
+	fi
+
+# 	Google API Key: ${GOOGLE_KEY}
+# 	https://maps.googleapis.com/maps/api/place/textsearch/xml?query=tom%27s%20Cove%Park,%20Chincoteague,%20VA&sensor=false&output=xml&key=${GOOGLE_KEY}
+
+	if [ "${LOCATION}" ] ; then
+
+		CLEAN_LOC="$(echo "${LOCATION}" | sed -e 's/ /+/g')"
+
+		[ ${DEBUG} ] && echo -e "CLEAN_LOC: ${CLEAN_LOC}"
+		[ ${DEBUG} ] && echo -e "LOCATION: ${LOCATION}"
+
+# 		LocationSearch "${CLEAN_LOC}"
+
+		if [ ${PLACE_LINK} ] ; then
+			LOCATION="<a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">Location Information</a>"
+# 			LOCATION="<a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\"><img style=\"${ICON_SIZE}\" src=\"http://fleag.us/images/google_maps.png\"></a>"
+		else
+			URL="https://maps.google.com/maps?q=${CLEAN_LOC}"
+			LOCATION="<a href=\"${URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">Location Information</a>"
+# 			LOCATION="<a href=\"${URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\"><img style=\"${ICON_SIZE}\" src=\"http://fleag.us/images/google_maps.png\"></a>"
+#			LOCATION="<a href=\"${URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\"><img style=\"${ICON_SIZE}\" src=\"http://imageshack.us/a/img713/6100/vxnf.png\"></a>"
+		fi
+	else
+		[ ${DEBUG} ] && echo -e "LOCATION: NO LOCATION"
+	fi
+
+	##################################
+
+	# TODO:  Check for only spaces and ignore if true
+
+	if [ "${CONTENT}" ] ; then
+
+		if [ $(echo "${CONTENT}" | egrep -c "^http://|^www\.|^https://") -gt 0 ] ; then
+			CONTENT_URL="${CONTENT}"
+# 			PAGE_TITLE="$(curl -L -s "${CONTENT}" | grep \<[tT][iI][tT][lL][eE]\> | sed -e 's/.*<[tT][iI][tT][lL][eE]>//g' -e 's/<\/[tT][iI][tT][lL][eE]>.*//g' -e 's/ - .*//g' -e 's/\(.*\)|.*/\1/')"
+			PAGE_TITLE="$(curl -L -s "${CONTENT}" | awk '/<[tT][iI][tT][lL][eE]>/,/<\/[tT][iI][tT][lL][eE]>/' | cut -d \| -f1 | sed -e 's/<[^>]*>//g;s/ - .*//g;s/\(.*\)|.*/\1/')"
+
+			if [ $(echo "${PAGE_TITLE}" | wc -w) -eq 0 ] ; then
+				PAGE_TITLE="Event Details"
+			fi
+			CONTENT="<a href=\"${CONTENT_URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">${PAGE_TITLE}</a>"
+# 			CONTENT="<a href=\"${CONTENT_URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\"><img style=\"${ICON_SIZE}\" src=\"http://fleag.us/images/internet-icon.png\"></a>"
+#			CONTENT="<a href=\"${CONTENT_URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\"><img style=\"${ICON_SIZE}\" src=\"http://img40.imageshack.us/img40/4929/w41.png\"></a>"
+# 			http://img40.imageshack.us/img40/4929/w41.png
+		else
+			CONTENT="${CONTENT}"
+		fi
+		[ ${DEBUG} ] && echo -e "CONTENT: ${CONTENT} - ${TITLE}"
+	else
+		[ ${DEBUG} ] && echo -e "CONTENT: NO CONTENT"
+	fi
+	##################################
+
+	if [ ${EVENT_DURATION} -lt 2 ] ; then
+		STARTS="is"
+	else
+		STARTS="starts"
+	fi
+
+# 	http://maps.googleapis.com/maps/api/staticmap?center=harrisburg+farm+show+complex&zoom=15&size=370x370&markers=color:blue&sensor=false
+# 	https://developers.google.com/maps/documentation/staticmaps
+# 	links -dump http://www.whitepages.com/business?key=quentin+riding+club
+
+# 	########################
+# 	curl -L -s "https://maps.googleapis.com/maps/api/place/textsearch/xml?query=PA%20Farm%20Show%20Complex,%20Harrisburg,%20PA&sensor=false&output=xml&key=${GOOGLE_KEY}"
+# 	https://maps.googleapis.com/maps/api/staticmap?center=2300%20North%20Cameron%20Street,%20Harrisburg,%20PA,%20United%20States&zoom=15&maptype=satellite&size=190x190&markers=color:blue&sensor=false
+
+# 	curl -L -s -G https://maps.googleapis.com/maps/api/place/textsearch/xml?query=PA%20Farm%20Show%20Complex,%20Harrisburg,%20PA \
+# 		-d sensor=false \
+# 		-d output=xml \
+# 		-d key=${GOOGLE_KEY}
+
+# 	########################
+
+	############
+	# Bullet Label
+	[ ${EVENT_TIME_UNTIL} -gt 1 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ${STARTS} in $(HumanizeTime ${TODAY} ${EVENT_START} FUZZY).</b>"
+	[ ${EVENT_TIME_UNTIL} -eq 1 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ${STARTS} tomorrow!</b>"
+	[ ${EVENT_TIME_UNTIL} -eq 0 ] && [ ! ${EVENT_START} -eq ${TODAY} ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ${STARTS} tomorrow!</b>"
+	[ ${EVENT_TIME_UNTIL} -eq 0 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ${STARTS} today!</b>"
+
+	if [ ! ${EVENT_START} -eq ${TODAY} -a ${EVENT_DURATION} -gt 0 ] ; then
+		[ ${EVENT_TIME_UNTIL} -lt 1 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ends in ${EVENT_TIME_THERE} days.</b>"
+		[ ${EVENT_TIME_THERE} -eq 1 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ends tomorrow...</b>"
+		[ ${EVENT_TIME_THERE} -eq 0 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ends today...</b>"
+	fi
+
+
+#	[ ${DEBUG} ] && echo "EVENT_BULLET: ${EVENT_BULLET}"
+
+	############
+
+	############
+	# Bullets
+# 	echo "<ul style=\"${STYLE_UL}\"><li style=\"${STYLE_LI_DISC}\">${EVENT_BULLET}" >> ${BODY}
+
+
+	if [ "${LOCATION}" ] ; then
+		GooglePlaceIcon "${CLEAN_LOC}"
+	else
+		GooglePlaceIcon "$(echo ${EVENT_NAME} | sed 's/ /+/g;s/\// /g')"
+	fi
+
+
+	echo "<table width=\"100%\" style=\"margin-top: 1em;\"><tr>" >> ${BODY}
+	echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\">${EVENT_BULLET}</td>" >> ${BODY}
+	echo "<td width=\"25%\"></td></tr></table>" >> ${BODY}
+# 	echo "<ul style=\"${STYLE_UL_ZERO_PAD}\">" >> ${BODY}
+
+	if [ ${EVENT_DURATION} -gt 1 ] ; then
+		echo "<ul style=\"${STYLE_UL}\"><li style=\"${STYLE_LI_CIRCLE_FIRST}\">Start: $(date -d "$1" '+%A, %B %-d, %Y')" >> ${BODY}
+		echo "<li style=\"${STYLE_LI_CIRCLE}\">End: $(date -d "$2" '+%A, %B %-d, %Y')" >> ${BODY}
+	else
+		echo "<ul style=\"${STYLE_UL}\"><li style=\"${STYLE_LI_CIRCLE_FIRST}\">$(date -d "$1" '+%A, %B %-d, %Y')" >> ${BODY}
+	fi
+
+	[ $(date -d "${START}" +%H) -gt 0 -a $(date -d "${END}" +%H) -gt 0 ] && echo "<li style=\"${STYLE_LI_CIRCLE}\">$(date -d "${START}" +%-I:%M%p) - $(date -d "${END}" +%-I:%M%p)" >> ${BODY}
+
+
+	[ "${CONTENT}" ] && echo "<li style=\"${STYLE_LI_CIRCLE}\">${CONTENT}" >> ${BODY}
+	[ "${LOCATION}" ] && echo "<li style=\"${STYLE_LI_CIRCLE}\">${LOCATION}" >> ${BODY}
+
+	#EVENT_LEX
+# 	EventCheckLexDay $(date -d "${START}" +%Y%m%d)
+
+	#######################
+
+# 	echo "</ul></ul>" >> ${BODY}
+	echo "</ul>" >> ${BODY}
+
+	[ ${DEBUG} ] && echo -e "EVENT_BULLET: ${EVENT_BULLET}"
+
+#	ClearCalVars
+
+	[ ${DEBUG} ] && echo -e ~~~~~~~
+}
+
+
+function AutoEvent() {
+# 	https://developers.google.com/google-apps/calendar/v2/reference#Parameters
+
+#	START_MIN=$(date -d "$(date -d "@${TODAY}" +%Y-%m-%d) -1 day" +%Y-%m-%d)
+#	START_MIN="2013-01-01"
+
+# 	START_MIN=$(date -d "@${TODAY}" +%Y-01-01)
+	START_MIN=$(date -d "$(date -d @${TODAY}) - 1 day" +%Y-%m-%d)
+	START_MAX=$(date -d "${START_MIN} + 1 year" +%Y-%m-%d)
+
+#	CAL_QUERY="\"${MY_CAL}/basic?orderby=starttime&sortorder=a\" -d fields=entry/title,entry/content -d max-results=70 -d start-min=${START_MIN} -d start-max=${START_MAX}"
+
+#	[ ${DEBUG} ] && echo -e "CURL: curl -L -s -G \"${MY_CAL}/basic?orderby=starttime&sortorder=a\" -d fields=entry/title,entry/content -d q=${1} -d start-min=${START_MIN} -d start-max=${START_MAX}" \\v
+	[ ${DEBUG} ] && echo "CURL: curl -L -s -G \"${SHARED_CAL}/basic?orderby=starttime&sortorder=a\" -d fields=entry/title,entry/content -d q=${1} -d start-min=${START_MIN} -d start-max=${START_MAX}"
+#	[ ${DEBUG} ] && echo "CURL: curl -L -s -G \"${CAL_QUERY}\""
+
+
+#-d q=${1} \
+#	curl -L -s -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
+
+	###########################
+	# LAST GOOD
+	# BROKEN AS OF 2015-11
+	# GOOGLE STOPPED XML OUTPUT
+	#
+# 	curl -L -s -G "${SHARED_CAL}/basic?orderby=starttime&sortorder=a" \
+# 			-d max-results=170 \
+# 			-d fields=entry/title,entry/content \
+# 			-d start-min=${START_MIN} \
+# 			-d start-max=${START_MAX} | sed \
+# 			-e 's/<entry>/\n===\n/g' \
+# 			-e 's/&lt;br \/&gt;//g' \
+# 			-e 's/ //g' \
+# 			-e "s/<title type='html'>/!TITLE=\"/g" \
+# 			-e "s/<\/title>.*<content type='html'>/\"\n/g" \
+# 			-e 's/Who: \(.*\)/!WHO="\1"/g' \
+# 			-e 's/Where: \(.*\)/!LOCATION="\1"/g' \
+# 			-e 's/When: \(.*\)/!WHEN_RAW="\1"/g' \
+# 			-e 's/Duration: \(.*\)$/!EVENT_DURATION="\1"/g' \
+# 			-e 's/Event Description: /!CONTENT="/g' \
+# 			-e 's/Event Status: \(.*\)$/!EVENT_STATUS="\1"/g' \
+# 			-e 's/First start: \(.*\) UTC$/!FIRST_START="\1"/g' \
+# 			-e 's/Recurring Event/!EVENT_TYPE="Recurring Event"/g' \
+# 			-e 's/""/"/g' \
+# 			-e 's/<\/content><\/entry><\/feed>/"\n/g' \
+# 			-e 's/<\/content><\/entry>/"/g' \
+# 			-e '/^$/d' \
+# 			-e "s/&amp;#39;/'/g" \
+# 			-e '/E[SD]T/d' | tail -n +3 | tr -d \\n | sed -e 's/===/\n/g' -e 's/""/"/g' > ${AUTOEVENT_DUMP_FILE}
+	###########################
+
+	if [ ${LEX_ONLY} ] ; then PASS_LEX="TRUE" ; else PASS_LEX="FALSE" ; fi
+	if [ ${DEBUG} ] ; then PASS_DEBUG="TRUE" ; else PASS_DEBUG="FALSE" ; fi
+
+	$HOME/Sources/scripts-git/ForeverCount-icalParser.php ${START_MIN} ${START_MAX} ${PASS_LEX} ${PASS_DEBUG}
+
+	TOTAPTS=$(grep -c . ${AUTOEVENT_DUMP_FILE})
+	x=1
+
+	echo -e "<div style=\"${STYLE_BULLETS}\">" >> ${BODY}
+
+	while [[ $x -lt ${TOTAPTS} || $x -eq ${TOTAPTS} ]] ; do
+		head -n$x ${AUTOEVENT_DUMP_FILE} | tail -n1 | sed -e 's/!/\n/g' -e 's/\([0-9]\)$/\1\"/g' -e 's/""/"/g' | tail -n +2 > "${AUTOEVENT_APT_FILE}"
+		[ ${DEBUG} ] && cp "${AUTOEVENT_APT_FILE}" "${AUTOEVENT_APT_FILE}-$x"
+		source "${AUTOEVENT_APT_FILE}"
+
+
+		# Ignore without "TITLE", "SCHOOL", Recurring
+		if [ $(echo ${TITLE} | wc -w) -gt 0 -a ! "$(echo ${TITLE} | grep -i school)" -a ! "${FIRST_START}" ] ; then
+#		if [ $(echo ${TITLE} | wc -w) -gt 0 -a ! "${FIRST_START}" ] ; then
+			if [ "${WHEN_RAW}" -a ! "${FIRST_START}" ] ; then
+				HERE_CHECK="$x IF"
+
+				WHEN_START=$(echo ${WHEN_RAW} | sed -e 's/ to.*//g')
+				WHEN_END=$(echo ${WHEN_RAW} | sed -e 's/.* to//g')
+
+				START=$(date -d "${WHEN_START}")
+
+				if [ $(echo ${WHEN_END} | wc -m) -gt 8 ] ; then
+					END=$(date -d "${WHEN_END}")
+				else
+					END=$(date -d "$(echo ${WHEN_START}| awk '{print $1, $2, $3, $4}') ${WHEN_END}")
+				fi
+
+			elif [ "${FIRST_START}" -a ! "${WHEN_RAW}" ] ; then
+				HERE_CHECK="$x ELIF: ${FIRST_START} - ${WHEN_RAW}"
+
+				WHEN_START=$(date -d $(echo ${FIRST_START} | sed -e 's/[0-9][0-9][0-9][0-9]-\(.*\)/\1/g') +%Y-%m-%d)
+				WHEN_END=$(date -d @$(( $(date -d ${FIRST_START} +%s) + 86400 )) +%Y-%m-%d)
+				START=$(date -d "${WHEN_START}")
+				END=${WHEN_END}
+			fi
+
+			if [ ! $(date -d "${END}" +%Y%m%d) -lt $(date -d @${TODAY} +%Y%m%d) -a "${START}" -a "${END}" ] ; then
+# 			if [ ! $(date -d "${END}" +%Y%m%d) -lt $(date -d @${TODAY} +%Y%m%d) ] ; then
+				Event $(date -d "${START}" +%Y%m%d) $(date -d "${END}" +%Y%m%d) "${TITLE}"
+#				ClearCalVars
+				x=$(( $x + 1 ))
+			else
+				[ ${DEBUG} ] && echo "Skipping: $x - ${TITLE} - $(date -d "${END}" +%Y%m%d) - $(date -d @${TODAY} +%Y%m%d) - ${HERE_CHECK}"
+#				ClearCalVars
+				x=$(( $x + 1 ))
+			fi
+		elif [ $(echo ${DO_SCHOOL} | wc -w) -gt 0 -a $(echo ${TITLE} | wc -w) -gt 0 -a "$(echo ${TITLE} | grep -i school)" ] ; then
+
+				[ ${DEBUG} ] && echo "------------------------------------"
+
+				if [ "$(echo "${WHEN_RAW}" | grep " to ")" ] ; then
+					WHEN_START=$(date -d "$(echo "${WHEN_RAW}" | sed 's/\(.*\) to.*/\1/')" +%Y-%m-%d)
+					WHEN_END=$(date -d "$(echo "${WHEN_RAW}" | sed 's/.* to \(.*\)/\1/')" +%Y-%m-%d)
+				else
+					WHEN_START=$(date -d "${WHEN_RAW}" +%Y-%m-%d)
+# 					WHEN_END=$(date -d @$(( $(date -d ${WHEN_START} +%s) + 86400 )) +%Y-%m-%d)
+					WHEN_END=${WHEN_START}
+				fi
+
+
+				START=${WHEN_START}
+				END=${WHEN_END}
+				SCHOOL_START_EPOCH=$(date -d ${START} +%s)
+				SCHOOL_NOTICE=$(( ${NOTICE_DAYS} * 86400 ))
+				SCHOOL_NOTICE_DIFF=$(( ${SCHOOL_START_EPOCH} - ${TODAY} ))
+
+				if [ ${DEBUG} ] ; then
+# 					echo "------------------------------------"
+					echo "SCHOOL: ${TITLE} - ${FIRST_START} - ${WHEN_RAW}"
+					echo "SCHOOL: WHEN_START: ${WHEN_START}"
+					echo "SCHOOL: WHEN_END: ${WHEN_END}"
+					echo "SCHOOL: END: ${END}"
+					echo "SCHOOL: SCHOOL_NOTICE: ${SCHOOL_NOTICE}"
+					echo "SCHOOL: SCHOOL_START_EPOCH: ${SCHOOL_START_EPOCH}"
+					echo "SCHOOL: TODAY: ${TODAY}"
+					echo "SCHOOL: SCHOOL_NOTICE_DIFF: ${SCHOOL_NOTICE_DIFF}"
+				fi
+
+				# WITHIN NOTICE_DAYS PERIOD ?
+				if [ ${SCHOOL_NOTICE_DIFF} -ge 0 -a ${SCHOOL_NOTICE_DIFF} -lt ${SCHOOL_NOTICE} ] ; then
+
+					Event $(date -d "${START}" +%Y%m%d) $(date -d "${END}" +%Y%m%d) "${TITLE}"
+				else
+
+					[ ${DEBUG} ] && echo "SCHOOL: \"${TITLE}\" in $(( ${SCHOOL_NOTICE_DIFF} / 86400 )) days is longer than ${NOTICE_DAYS} away."
+				fi
+
+# 				[ ${DEBUG} ] && echo "------------------------------------"
+#			else
+#				[ ${DEBUG} ] && echo "Bypassing: $x - ${TITLE} - $(date -d "${END}" +%Y%m%d) - $(date -d @${TODAY} +%Y%m%d) - ${HERE_CHECK}"
+#			fi
+
+
+#			ClearCalVars
+			x=$(( $x + 1 ))
+		####################################
+		# MORE EXCLUDES HERE
+		####################################
+		elif [ "${TITLE}" == "Lex" } ; then
+
+			[ ${DEBUG} ] && echo "Bypassing: $x - ${TITLE} - $(date -d "${END}" +%Y%m%d) - $(date -d @${TODAY} +%Y%m%d) - Custody Schedule"
+
+			x=$(( $x + 1 ))
+		else
+			[ ${DEBUG} ] && echo "Bypassing: $x - ${TITLE} - $(date -d "${END}" +%Y%m%d) - $(date -d @${TODAY} +%Y%m%d) - ${HERE_CHECK}"
+
+			x=$(( $x + 1 ))
+		fi
+
+	ClearCalVars
+
+	done
+
+	echo -e "</div>" >> ${BODY}
+}
+
+
+function ClearCalVars() {
+
+	############
+	# CLEAR FOR OLD ENTRIES
+	unset EVENT_BULLET EVENT_START EVENT_END EVENT_NAME EVENT_TIME_UNTIL EVENT_TIME_THERE EVENT_DURATION
+	unset WHEN_RAW FIRST_START WHEN_START WHEN_END START END REAL_TODAY LOCATION CONTENT
+	unset SCHOOL_START_EPOCH SCHOOL_NOTICE SCHOOL_NOTICE_DIFF
+	############
+}
+
+function LocationSearch() {
+
+	PLACE_LOCATION=$(curl -L -s -G https://maps.googleapis.com/maps/api/place/textsearch/xml?key=${GOOGLE_KEY} -d output=xml -d sensor=false -d query=${CLEAN_LOC} | egrep -m2 'name|formatted_address' | tr -d \\n)
+	PLACE_NAME="$(echo ${PLACE_LOCATION} | sed -e 's/.*<name>\(.*\)<\/name>.*/\1/g')"
+	PLACE_ADDRESS="$(echo ${PLACE_LOCATION} | sed -e 's/.*<formatted_address>\(.*\)<\/formatted_address>.*/\1/g')"
+	PLACE_LINK="https://maps.google.com/maps?q=$(echo ${PLACE_NAME} | sed -e 's/ /+/g'),+$(echo ${PLACE_ADDRESS} | sed -e 's/ /+/g')"
+
+	if [ ${DEBUG} ] ; then
+		[ "${PLACE_LOCATION}" ] && echo PLACE_LOCATION: ${PLACE_LOCATION}
+		[ "${PLACE_NAME}" ] && echo PLACE_NAME: ${PLACE_NAME}
+		[ "${PLACE_ADDRESS}" ] && echo PLACE_ADDRESS: ${PLACE_ADDRESS}
+		[ "${PLACE_LINK}" ] && echo PLACE_LINK: ${PLACE_LINK}
+	fi
+
+}
+##########################################
+
+
+
+##########################################
+# GOOGLE PLACE ICON
+#
+function GooglePlaceIcon() {
+
+	SEARCH_TERM="$(echo "$1" | sed 's/pastor/church/')"
+
+	[ ${DEBUG} ] && echo "SEARCH_TERM: ${SEARCH_TERM}"
+
+	GOOGLE_PLACE=$(curl -L -s "https://maps.googleapis.com/maps/api/place/textsearch/xml?query=${SEARCH_TERM}&sensor=false&output=xml&key=${GOOGLE_KEY}")
+
+	GOOGLE_ICON=$(echo "${GOOGLE_PLACE}" | xmllint -format - | awk '/<result>/,/<\/result>/' | awk '/<icon>/,/<\/icon>/' | head -n1 | sed -e 's/<[^>]*>//g;s/^ *//g;s/ *$//g')
+
+	[ ! "${GOOGLE_ICON}" ] && GOOGLE_ICON="https://maps.gstatic.com/mapfiles/place_api/icons/generic_business-71.png"
+}
+##########################################
+
+
+
+##########################################
+# HOLIDAYS
+#
+function GetHolidays() {
+
+	GOOGLE_ICON="https://maps.gstatic.com/mapfiles/place_api/icons/generic_business-71.png"
+
+	echo "<table width=\"100%\" style=\"margin-top: 1em;\"><tr>" >> ${BODY}
+	echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img Style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\"><b style=\"${STYLE_BULLET_TEXT}\">Holidays today:</b></td>" >> ${BODY}
+	echo "<td width=\"25%\"></td></tr></table>" >> ${BODY}
+	echo "<ul style=\"${STYLE_UL}\">" >> ${BODY}
+
+	curl -s "https://www.checkiday.com" | grep "Today is" | sed "s/.*href=\"\(.*\)\" title=\"Today is \(.*\)\!\" .*/\1,\2/" | while IFS= read -r HOLIDAY ; do
+
+		URL=$(echo ${HOLIDAY} | cut -d , -f 1)
+		NAME="$(echo ${HOLIDAY} | cut -d , -f 2-)"
+
+		if [ ${DEBUG} ] ; then
+			echo "NAME: $NAME"
+			echo "URL: $URL"
+			echo "========="
+		fi
+
+		echo "<li style=\"${STYLE_LI_CIRCLE}\"><a href=\"${URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">${NAME}</a><br>" >> ${BODY}
+	done
+
+	echo "</ul>" >> ${BODY}
+}
+##########################################
+
+
+##########################################
+# BIBLE QUOTE
+#
+function GetQuote() {
+
+	curl -L -s http://www.esvapi.org/v2/rest/verse?key=IP \
+		-d dailyVerse \
+		-d include-footnotes=false \
+		-d output-format=plain-text \
+		-d include-verse-numbers=false \
+		-d include-short-copyright=false \
+		-d include-passage-horizontal-lines=false \
+		-d line-length=0 \
+		-d include-headings=false \
+		-d include-subheadings=false \
+		-d include-selahs=false > ${QUOTE_DUMP_FILE}
+
+	BIBLE_VERSE=$(cat ${QUOTE_DUMP_FILE} | sed -e '1d' -e 's/^[ \t]*//' -e '/^$/d')
+	BIBLE_LOCATION=$(head -n1 ${QUOTE_DUMP_FILE})
+	QUOTE="${BIBLE_VERSE}<br><br>${BIBLE_LOCATION}"
+
+	echo -e "<div style=\"${STYLE_BIBLE_IMAGE}\">" >> ${BODY}
+	echo -e "<p style=\"${STYLE_BIBLE}\">${BIBLE_VERSE}<br><br>${BIBLE_LOCATION}</p></div>" >> ${BODY}
+}
+##########################################
+
+
+
+##########################################
+# SOBRIETY COUNTER
+#
+function SobrietyCount() {
+
+	SOBER_START=$(date -d "20061230" +%s)
+# 	SOBER_EXACT=$(HumanizeTime ${SOBER_START} ${TODAY} EXACT)
+	SOBER_FUZZY=$(HumanizeTime ${SOBER_START} ${TODAY} FUZZY)
+	SOBER_DAYS=$(( ( ${TODAY} - ${SOBER_START} ) / 86400 ))
+
+# 	echo "<p style=\"${STYLE_SOBER}\">${SOBER_EXACT} sober (${SOBER_DAYS} days)</p>" >> ${BODY}
+	echo "<p style=\"${STYLE_SOBER}\">${SOBER_FUZZY^} sober (${SOBER_DAYS} days)</p>" >> ${BODY}
+
+	[ ${DEBUG} ] && echo -e "\\n${SOBER_FUZZY} sober (${SOBER_DAYS} days)\\n"
+}
+
+
+
+##########################################
+# SMOKE COUNTER
+#
+function SmokeCount() {
+
+	SMOKE_START=$(date -d "20150310" +%s)
+# 	SMOKE_EXACT=$(HumanizeTime ${SMOKE_START} ${TODAY} EXACT)
+	SMOKE_FUZZY=$(HumanizeTime ${SMOKE_START} ${TODAY} FUZZY)
+	SMOKE_DAYS=$(( ( ${TODAY} - ${SMOKE_START} ) / 86400 ))
+
+# 	echo "<p style=\"${STYLE_SOBER}\">${SMOKE_EXACT} tobacco free (${SMOKE_DAYS} days)</p>" >> ${BODY}
+	echo "<p style=\"${STYLE_SOBER}\">${SMOKE_FUZZY^} tobacco free (${SMOKE_DAYS} days)</p>" >> ${BODY}
+
+	[ ${DEBUG} ] && echo -e "\\n${SMOKE_FUZZY^} tobacco free (${SMOKE_DAYS} days)\\n"
+}
+
+
+
+##########################################
+# ENDOFTIME COUNTER
+#
+function EndOfTime() {
+
+	SUBJECT="The ${EOT_DAYS}${NUMEND} day until the End of Time"
+
+	EOT_END=$(date -d "2015-10-01 - 1 day" +%s)
+	EOT_EXACT=$(HumanizeTime ${TODAY} ${EOT_END} EXACT)
+	EOT_FUZZY=$(HumanizeTime ${TODAY} ${EOT_END} FUZZY)
+	EOT_DAYS=$(( ( ${EOT_END} - ${TODAY} ) / 86400 ))
+
+	if [ ${DEBUG} ] ; then
+		echo "EOT_EXACT: $EOT_EXACT"
+		echo "EOT_FUZZY: $EOT_FUZZY"
+		echo "EOT_DAYS: $EOT_DAYS"
+	fi
+}
+
+
+##########################################
+# START MAIL
+#
+function StartMail() {
+
+	TOTAL_TIME=$(( ( ${TODAY} - ${START_DATE} ) / 86400 ))
+	NUMLENGTH=${#TOTAL_TIME}
+	unset NUMEND
+
+	if [ ${NUMLENGTH} -eq 1 ] ; then
+		LASTNUM=${TOTAL_TIME}
+	else
+		LASTNUM=$(echo ${TOTAL_TIME} | cut -c ${NUMLENGTH})
+	fi
+
+	case ${LASTNUM} in
+		1) NUMEND="st";;
+		2) NUMEND="nd";;
+		3) NUMEND="rd";;
+		*) NUMEND="th";;
+	esac
+
+	echo -e "<!DOCTYPE html>" > ${BODY}
+	echo -e "<html><head><title>${TODAY_PRETTY}</title><meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\">" >> ${BODY}
+	echo -e "<style type=\"text/css\">a:link${STYLE_A} a:visited${STYLE_A} a:hover${STYLE_A} a:active${STYLE_A}</style>" >> ${BODY}
+
+	echo -e "</head><body style=\"${STYLE_BODY}\">" >> ${BODY}
+
+#	if [ "${END_OF_TIME}" ] ; then
+
+		#############
+		# EndOfTime
+# 		if [ ! ${SOBER_ONLY} ] ; then
+# 			echo -e "<p style=\"text-align:center; padding:1em; border:0px solid;\">We are <B>${EOT_EXACT}</B><br> away from the end of time.</p>" >> ${BODY}
+# 		fi
+		#############
+#	elif [ "${LEX_ONLY}" ] ; then
+	if [ "${LEX_ONLY}" ] ; then
+#		echo -e "<p style=\"text-align:center; padding:1em; border:0px solid;\"><BR><BR></p>" >> ${BODY}
+		echo -e "<br>" >> ${BODY}
+	else
+		#############
+		if [ ! ${SOBER_ONLY} ] ; then
+			[ ! ${BLAND} ] && echo -e "<p style=\"text-align:center; padding:1em; border:0px solid;\">We are <B>$(HumanizeTime ${START_DATE} ${TODAY} EXACT)</B><br>into the rest of our lives.</p>" >> ${BODY}
+		fi
+		#############
+	fi
+}
+
+
+##########################################
+# FINISH MAIL
+#
+function FinishMail() {
+
+	[ ${DEBUG} ] && echo -e \\v~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\\v
+
+	UPSINCE=$(date -d "$(date) - $(cat /proc/uptime | awk '{print $1}') seconds" "+%A %b %-d, %Y at %r")
+
+	echo -e "<BR><BR><center><small>Aragorn last boot:<BR>${UPSINCE}</small></center><BR>" >> ${BODY}
+
+# 	echo -e "<img src=\"http://img15.imageshack.us/img15/667/1pxu.gif\" alt=\"1px\">" >> ${BODY}
+	echo -e "</body></html>" >> ${BODY}
+
+	if [ ${DEBUG} ] ; then
+		echo cat ${BODY}
+		echo ${TOTAL_TIME}${NUMEND} day
+		echo $(HumanizeTime ${START_DATE} ${TODAY} EXACT)
+	else
+#		mutt -s "${SUBJECT}" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+
+ 		if [ ${SOBER_ONLY} ] ; then
+ 			mutt -s "Sober" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+ 		elif [ "${END_OF_TIME}" ] ; then
+
+ 			#########
+ 			# EndOfTime
+ 			mutt -s "The ${EOT_DAYS}${NUMEND} day until the End of Time" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+ 			#########
+ 		elif [ "${LEX_ONLY}" ] ; then
+
+ 			#########
+ 			# LEX
+ 			mutt -s "Daily Shared Calendar Update" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+ 			#########
+ 		elif [ "${BLAND}" ] ; then
+
+ 			#########
+ 			# BLAND
+ 			mutt -s "Daily Email" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+ 			#########
+ 		else
+
+ 			#########
+ 			mutt -s "The ${TOTAL_TIME}${NUMEND} Day of Forever" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+ 			#########
+ 		fi
+	fi
+}
+
+
+##########################################
+# SET STYLES
+#
+function SetStylesAndVariables() {
+
+	###########################
+	#END_OF_TIME="yes"
+	###########################
+
+
+	DO_SCHOOL="yes"
+	NOTICE_DAYS=10
+
+	GOOGLE_KEY="AIzaSyB9w5fBKge4EiWlFZXDYY9DlIYOhvSyZug"
+
+# 	SHARED_CAL_ICAL="https://www.google.com/calendar/ical/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.com/private-2fde973cf30e98a7fa64de507bd8eb56/basic.ics"
+# 	SHARED_CAL_XML="https://www.google.com/calendar/feeds/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.com/private-2fde973cf30e98a7fa64de507bd8eb56/basic"
+
+	MY_CAL="https://www.google.com/calendar/feeds/${EMAIL_URL}/private-0e51e37191f79ffc0cbd55fc86e424bc"
+# 	MY_CAL="https://www.google.com/calendar/feeds/${EMAIL_URL}/private-0e51e37191f79ffc0cbd55fc86e424bc"
+	SHARED_CAL="https://www.google.com/calendar/feeds/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.com/private-2fde973cf30e98a7fa64de507bd8eb56"
+# 	SHARED_CAL="https://www.google.com/calendar/feeds/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.coe-2fde973cf30e98a7fa64de507bd8eb5"
+
+	UNION_TOTAL_COUNT=0
+
+	########################
+	# ALL TEMP FILES
+	#
+	if [ ${LEX_ONLY} ] ; then
+		TMP_DIR="/tmp/ForeverTempLex"
+	else
+		TMP_DIR="/tmp/ForeverTemp"
+	fi
+
+	[ ! -d ${TMP_DIR} ] && mkdir -p ${TMP_DIR}
+
+	BODY="${TMP_DIR}/forever_body.html"
+	QUOTE_DUMP_FILE="${TMP_DIR}/forever_quote.dump"
+	AUTOEVENT_APT_FILE="${TMP_DIR}/forever_tmp.dump"
+	AUTOEVENT_DUMP_FILE="${TMP_DIR}/forever_cal_raw.dump"
+
+	########################
+	# TIME
+	#
+#	START_DATE=$(date -d 20120214 +%s)
+	START_DATE=$(date -d 20041122 +%s)
+	# START_DATE="20121127"
+
+	TODAY=$(date -d "$(date +%Y%m%d)" +%s)
+# 	TODAY=$(date -d "20131202" +%s)
+
+	TODAY_PRETTY=$(date -d @${TODAY} '+%A, %B %-d, %Y')
+
+
+	if [ ${TODAY} -lt ${START_DATE} ] ; then
+		echo -e \\v"$(date -d @${TODAY} '+%A, %B %-d, %Y') is before $(date -d @${START_DATE} '+%A, %B %-d, %Y').\\nSomething is very wrong."\\v
+		exit 1
+	fi
+	########################
+
+
+	########################
+	# STYLES
+	#
+# 	STYLE_BODY="background:#E3C798 url(http://img17.imageshack.us/img17/5757/contentpattern.jpg) repeat; padding:0px; margin:0px; border:0px solid; width: 100%; height: 100%;"
+	STYLE_BODY="background:#E3C798 url(http://s4.postimg.org/bzxvt2arh/contentpattern.jpg) repeat; padding:0px; margin:0px; border:0px solid; width: 100%; height: 100%;"
+	STYLE_WP_HACK="padding:0px; margin:0px; border:1px solid;"
+
+	STYLE_A_COLOR="#000000"
+	STYLE_A_DECO="underline"
+	STYLE_A="{color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};}"
+
+# 	STYLE_BIBLE_IMAGE="background:#CCDEF6 url(http://img3.imageshack.us/img3/2074/jesuscrop2s.jpg) no-repeat top; border:2px; border-style:groove; padding:14pt; margin:2%;"
+	STYLE_BIBLE_IMAGE="background:#CCDEF6 url(http://s11.postimg.org/4ilutakoj/jesus_crop2_s.jpg) no-repeat top; border:2px; border-style:groove; padding:14pt; margin:2%;"
+	STYLE_BIBLE="font-variant:small-caps; font-style:italic; text-align:center; padding:0pt; margin:0pt;"
+
+	STYLE_SOBER="font-style:italic; font-size:small; text-align:center;"
+
+	STYLE_BULLETS="border:0pt solid white; padding:0pt; margin:0pt;"
+
+	STYLE_BULLET_TEXT="vertical-align: top"
+
+# 	STYLE_UL="border:0px solid; padding:5pt; margin-left:1em; margin-right:0pt; margin-top:0pt; margin-bottom:0em;"
+# 	STYLE_UL_ZERO_PAD="border:0px solid; padding:0pt; margin-left:1em; margin-right:0pt; margin-top:0pt; margin-bottom:0em;"
+	STYLE_UL="border:0px solid; padding:3pt; margin-left:2em; margin-right:0pt; margin-top:0pt; margin-bottom:0em;"
+
+# 	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding:0px"
+	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding-left:2pt; padding-right:2pt;"
+
+	STYLE_LI_DISC_FIRST="border:0px solid brown; padding:0pt; margin:0pt; list-style-type:disc;"
+	STYLE_LI_CIRCLE_FIRST="border:0px solid brown; padding:0pt; margin:0pt; list-style-type:circle;"
+	STYLE_LI_DISC="border:0px solid brown; padding:0pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:disc;"
+
+	STYLE_LI_CIRCLE="border:0px solid brown; padding:0pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:circle;"
+# 	STYLE_LI_CIRCLE="border:0px solid brown; padding:0pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-image:url('http://maps.gstatic.com/mapfiles/place_api/icons/camping-71.png');"
+
+
+	STYLE_LI_NONE="border:0px solid brown; padding:0pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:none;"
+	STYLE_LI_DISC_UNION="border:0px solid brown; padding:0pt; margin-left:0pt; list-style-type:disc;"
+	STYLE_LI__CIRCLE_UNION="border:0px solid brown; padding:0pt; margin-left:0pt; list-style-type:circle;"
+
+	STYLE_EVENT_TD="border-left:5px solid brown; border-bottom: 1px solid brown; padding-top: 3pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:none"
+
+# 	STYLE_UNION_IMAGE="background:url(http://imageshack.us/a/img90/6969/hh3smaller.png) no-repeat center rgba(255,255,255,0.5); background-size:auto 100%; border:2px; border-style:groove; padding:7pt;margin:2%;"
+	STYLE_UNION_IMAGE="background:url(http://s30.postimg.org/qfjs54pgh/hh3smaller.png) no-repeat center rgba(255,255,255,0.5); background-size:auto 100%; border:2px; border-style:groove; padding:7pt;margin:2%;"
+	STYLE_UNIONHEAD="font-size:large; font-weight:bold; margin-left:0pt; margin-right:0pt; margin-bottom:1em; margin-top:0; padding:0pt; text-decoration:underline; text-align:center;"
+
+	STYLE_INDENT="text-indent:1em;"
+	ICON_SIZE="width:28px; height:28px;"
+}
+
+
+##########################################
+# CLEAN UP
+#
+function CleanUp() {
+	[ -f "${BODY}" ] && rm -f "${BODY}"
+	[ -f "${QUOTE_DUMP_FILE}" ] && rm -f "${QUOTE_DUMP_FILE}"
+	[ -f "${AUTOEVENT_APT_FILE}" ] && rm -f "${AUTOEVENT_APT_FILE}"
+	[ -f "${AUTOEVENT_DUMP_FILE}" ] && rm -f "${AUTOEVENT_DUMP_FILE}"
+}
+
+
+##########################################
+# DO IT
+#
+
+case $1 in
+	"sober")
+		EMAILS="${EMAIL_MINE}, ${EMAIL_CYN}"
+# 		EMAILS="${EMAIL_MINE}"
+		SUBJECT="Sober"
+		SOBER_ONLY="yes"
+		;;
+	"debug")
+		EMAILS="${EMAIL_MINE}"
+		SUBJECT="The ${TOTAL_TIME}${NUMEND} Day of Forever"
+		DEBUG="TRUE"
+		;;
+	"me")
+		EMAILS="${EMAIL_MINE}"
+		SUBJECT="The ${TOTAL_TIME}${NUMEND} Day of Forever"
+#		ONLY_ME="yes"
+#		SOBER_ONLY="yes"
+#		BLAND="yes"
+#		SetStylesAndVariables
+#		StartMail
+#		GetQuote
+#		SobrietyCount
+#		SmokeCount
+#		GetHolidays
+#		AutoEvent
+#		FinishMail
+#		exit
+		;;
+	"bland")
+		EMAILS="${EMAIL_CYN}"
+		SUBJECT="Daily Email"
+		BLAND="yes"
+		SetStylesAndVariables
+		StartMail
+		GetQuote
+		GetHolidays
+		FinishMail
+		exit
+		;;
+	"lex")
+		EMAILS="${EMAIL_LEX}"
+		SUBJECT="Daily Shared Calendar Update"
+		LEX_ONLY="TRUE"
+		SetStylesAndVariables
+		StartMail
+		GetHolidays
+		AutoEvent
+		FinishMail
+		exit
+		;;
+	*)
+		EMAILS="${EMAIL_MINE}, ${EMAIL_CYN}"
+		SUBJECT="The ${TOTAL_TIME}${NUMEND} Day of Forever"
+		;;
+esac
+
+
+SetStylesAndVariables ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM: SetStylesAndVariables - ${TRAP}" ; TRAP=0
+
+# EndOfTime
+
+StartMail ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM: StartMail - ${TRAP}" ; TRAP=0
+
+GetQuote ; TRAP=$? ; [ ! ${TRAP} -eq 0 ] && echo "BOOM: GetQuote - ${TRAP}" ; TRAP=0
+
+SobrietyCount ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM SobrietyCount - ${TRAP}" ; TRAP=0
+
+SmokeCount ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM SmokeCount - ${TRAP}" ; TRAP=0
+
+GetHolidays ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM GetHolidays - ${TRAP}" ; TRAP=0
+
+if [ ! ${SOBER_ONLY} ] ; then
+#	AutoEvent ${EMAIL_MINE_SHORT} ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM AutoEvent - ${TRAP}" ; TRAP=0
+	AutoEvent ${EMAIL_CYN_SHORT} ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM AutoEvent - ${TRAP}" ; TRAP=0
+
+#	[ ! ${BLAND} ] && UnionFinder ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM UnionFinder - ${TRAP}" ; TRAP=0
+fi
+
+FinishMail ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM FinishMail - ${TRAP}" ; TRAP=0
+
+[ ! ${DEBUG} ] && CleanUp
+# [ ! ${DEBUG} -o ! ${ONLY_ME} ] && rm -rf "${TMP_DIR}"
+# [ ! ${DEBUG} ] && rm -rf "${TMP_DIR}"
+
+exit 0
+##############################################################3

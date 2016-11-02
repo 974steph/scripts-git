@@ -1,0 +1,418 @@
+#!/bin/sh
+
+source $HOME/Sources/scripts-git/secret_stuff.sh
+
+# http://repo.bukkit.org/content/groups/public/org/bukkit/bukkit/
+# curl -s http://repo.bukkit.org/content/groups/public/org/bukkit/bukkit/maven-metadata.xml | grep latest | sed -e 's/ \|>\|<\|latest\|\///g'
+
+##############################################################
+# Variables
+#
+
+DEBUG="yes"
+
+#UA="Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0"
+UA="$(curl -sL "https://techblog.willshouse.com/2012/01/03/most-common-user-agents/" | grep -i "^Mozilla" | shuf -n1)"
+
+TODAY=$(date +%Y%m%d)
+# TODAY="20121101"
+YESTERDAY="$(date -d "${TODAY} -1 days" +%Y%m%d)"
+
+NOW=$(date +%s)
+YESTERDAY=$(date -d "$(date -d @${NOW}) -1 day -1 hour" +%s)
+
+# hostname
+
+#if [ $(hostname) == "blackhole" ] ; then
+# 	echo BLACKHOLE
+#	MOD_TEMP_TANK="/usr/local/bukkit/plugins/TMP"
+	MOD_TEMP_TANK="/tmp/plugins/TMP"
+	[ ! -d "${MOD_TEMP_TANK}" ] && mkdir -p "${MOD_TEMP_TANK}"
+#	URL_LIST="/usr/local/bukkit/MODURLS"
+	URL_LIST="./MODURLS"
+	LIST_LEN=$(grep -c . "${URL_LIST}")
+#else
+# 	hostname
+#	MOD_TEMP_TANK="/tmp/bukkit_tmp"
+#	[ ! -d "${MOD_TEMP_TANK}" ] && mkdir -p "${MOD_TEMP_TANK}"
+#	URL_LIST="$HOME/Packages/modpacks/MODURLS"
+#	LIST_LEN=$(grep -c . "${URL_LIST}")
+#fi
+
+BODY="/tmp/ModMailBody_${TODAY}.html"
+EMAILS="${EMAIL_MINE}"
+UPDATED_COUNT=0
+BUKKIT_RELEASE_UPDATE=0
+
+LAST_MOD_DATE=""
+MOD_VERSION=""
+NAME=""
+URL=""
+MODTMP=""
+##############################################################
+
+
+##############################################################
+# Check Dates
+#
+function CheckDate() {
+# echo CHECKDATE
+# 	$1 = Mod Date
+# 	$2 = Mod Version
+# 	$3 = Mod Name
+# 	$4 = Mod URL
+
+	if [ ${DEBUG} ] ; then
+		if [[ "${3}" == CraftBukkit ]] ; then
+			echo IS BUKKIT
+		else
+			echo NOT BUKKIT
+		fi
+		echo TODAY: ${TODAY} - $(expr length ${TODAY})
+		echo YESTERDAY: ${YESTERDAY} - $(expr length ${YESTERDAY})
+		echo LAST_MOD_DATE: ${1} - $(expr length ${1})
+		echo MOD_VERSION: ${2}
+		echo NAME: ${3}
+		echo URL: ${4}
+	fi
+
+	case ${1} in
+		${TODAY}|${YESTERDAY})
+			[ ${DEBUG} ] && echo UPDATED ${3}: ${2}
+
+			if [ "${3}" = CraftBukkit ] ; then
+				BUKKIT_RELEASE_UPDATE=$(( ${BUKKIT_RELEASE_UPDATE} + 1 ))
+				[ ${DEBUG} ] && echo -e \\vBUKKIT UPDATE: ${BUKKIT_RELEASE_UPDATE}\\v
+			else
+				UPDATED_COUNT=$(( ${UPDATED_COUNT} + 1 ))
+			fi
+
+# 			echo GetJar \"${1}\" \"${2}\" \"${3}\" \"${4}\"
+			GetJar "${1}" "${2}" "${3}" "${4}"
+			;;
+# 		*)
+# 			echo NOT UPDATED
+# 			;;
+	esac
+		[ ${DEBUG} ] && echo ~~~~~~~~~~~~~~~~~~~~~~~
+
+	LAST_MOD_DATE=""
+	MOD_VERSION=""
+	NAME=""
+	URL=""
+
+#	if [ -f ${MODTMP} ] ; then rm -f ${MODTMP} ; fi
+}
+##############################################################
+
+
+##############################################################
+# FRESHNESS
+function freshness() {
+
+#       1: EPOCH
+#       2: NAME
+#       3: URL
+
+
+	echo "FRESHNESS: $1 || $2 || $3"
+	echo "YESTERDAY: ${YESTERDAY} || $(date -d @${YESTERDAY})"
+
+	if [ ${1} -ge ${YESTERDAY} ] ; then
+		echo "UPDATED: $1 at $(date -d @$1)"
+	else
+		echo "CURRENT: $1 at $(date -d @$1)"
+	fi
+
+#	OUTPUT+="EPOCH: $1\\n"
+#	OUTPUT+="CTA:   ${CRON_TIME_AGO}\\n"
+
+#	ls -l ${ADDON_DIR}/.${2}
+
+#	NAME_LOWER=$(echo $2 | tr [:upper:] [:lower:])
+#	STAMP_FILE="${ADDON_DIR}/.${NAME_LOWER}"
+
+#	[ -f ${STAMP_FILE} ] && LAST_TOUCH=$(date -r ${STAMP_FILE} +%s)
+
+#	[ ${DEBUG} ] && echo "LAST_TOUCH: ${LAST_TOUCH} || EPOCH: $1 || NOW: ${NOW}"
+
+#	if [ ${1} -gt ${CRON_TIME_AGO} ] ; then
+##	if [ ${1} -gt ${LAST_TOUCH} ] ; then
+#		OUTPUT+="UPDATING: ${2} will be updated.\\n"
+#		UPDATES="yes"
+#		[ $2 == "GoingPrice_Dawnbringer" ] && touch -t $(date -d @${1} +%Y%m%d%H%M.%S) ${ADDON_DIR}/GoingPrice_US_Dawnbringer/timestamp
+
+#		[ ! ${SHOW} ] && GetPlugin "${3}"
+#	else
+#		OUTPUT+="CURRENT: ${2} is up to date.\\n"
+
+#		if [ ${FORCE} ] ; then
+##			[ $2 == "GoingPrice_Dawnbringer" ] && touch -t $(date -d @${1} +%Y%m%d%H%M.%S) ${ADDON_DIR}/GoingPrice_US_Dawnbringer/timestamp
+#			GetPlugin "${3}"
+#		else
+#			[ ! ${DEBUG} ] && unset OUTPUT
+#		fi
+#	fi
+
+}
+
+##############################################################
+
+
+##############################################################
+# Check Mods
+#
+function CheckModsTwo() {
+
+	MODS="DynMap DynMap-Essentials DynMap-Factions EssentialsX Factions iConomy-7 NoWeather Vault WorldEdit World-Portal"
+	URL_BASE="https://dev.bukkit.org/bukkit-plugins"
+
+
+#curl -sL "https://dev.bukkit.org/bukkit-plugins/worldedit/files/" | awk '/class="col-file"/,/class="col-downloads"/' | tidy -b -wrap 1000 -q -ascii --tidy-mark false --show-warnings false | egrep "col-filename|col-file|col-type|col-date" | head -n4
+#https://dev.bukkit.org/media/files/912/862/Dynmap-Essentials-0.91.jar
+
+	for MOD in ${MODS} ; do
+
+		MOD_LC=$(echo $MOD | tr '[:upper:]' '[:lower:]')
+		URL_MOD="${URL_BASE}/${MOD_LC}"
+		URL_FILES="${URL_BASE}/${MOD_LC}/files"
+
+		echo "MOD: $MOD - $MOD_LC"
+		echo "URL: ${URL_MOD}"
+#		curl -sL --head "${URL_MOD}" | grep ^HTT | tail -n1
+		MOD_FILE_RAW=$(curl -sL -A "${UA}" "${URL_FILES}" | awk '/class="col-file"/,/class="col-downloads"/' | tidy -b -wrap 1000 -q -ascii --tidy-mark false --show-warnings false | egrep "col-filename|col-file|col-type|col-date" | head -n4)
+		MOD_DATE=$(echo ${MOD_FILE_RAW} | grep col-date | sed 's/.*data-epoch=\"\([0-9]\+\).*/\1/')
+		echo "MOD_DATE: $MOD_DATE || $(date -d @${MOD_DATE})"
+		echo "---------"
+
+		freshness $MOD_DATE $MOD_LC ${URL_MOD}
+
+		echo "========="
+
+	done
+}
+##############################################################
+
+
+
+##############################################################
+# Check Mods
+#
+function CheckMods() {
+# echo CheckMods
+	x=1
+
+	while [ ! $x -gt ${LIST_LEN} ] ; do
+		NAME=$(head -n$x "${URL_LIST}" | tail -n1 | awk '{print $1}')
+		URL=$(head -n$x "${URL_LIST}" | tail -n1 | awk '{print $2}')
+
+		MODTMP="/tmp/UpdateMods_${NAME}"
+
+		if [ $(echo "${NAME}" | grep \# | wc -l) -gt 0 ] ; then
+# 			[ ${DEBUG} ] && echo -e "\\vSKIPPING ${NAME}\\v\\n~~~~~~~~~~~~~~~~~~~~~~~"
+			x=$(( $x + 1 ))
+		else
+			curl -s "${URL}/files/" | sed -n -e '/tr class="odd"/,$p' -e '/<\/div><\/div>/q;d' | grep Release -A6 -B2 -m1 > "${MODTMP}"
+
+			LAST_MOD_DATE="$(date -d "$(grep "title=" "${MODTMP}" | sed -e 's/.*title="//g;s/\(.*UTC\)".*/\1/;s/ at / /')" +%Y%m%d)"
+			MOD_VERSION="$(grep -m1 col-file "${MODTMP}" | sed -e 's/<\/a><\/td>$//g;s/.*">//g;s/.*[ \t]//g')"
+
+			if [ ${DEBUG} ] ; then
+				echo "${NAME}: ${URL}"
+				echo LAST_MOD_DATE: "${LAST_MOD_DATE}"
+				echo MOD_VERSION: "${MOD_VERSION}"
+			fi
+			
+			if [ ${DEBUG} ] ; then echo "${NAME}" ; echo ${MOD_VERSION} ; fi
+
+			if [ ! "${LAST_MOD_DATE}" -o ! "${MOD_VERSION}" ] ; then
+# 				echo -e "Can't fetch details for ${NAME}."\\v
+				x=$(( $x + 1 ))
+			else
+				if [ ${FORCE} ] ; then
+					[ ${DEBUG} ] && echo GetJar \"${LAST_MOD_DATE}\" \"${MOD_VERSION}\" \"${NAME}\" \"${URL}\"
+					GetJar "${LAST_MOD_DATE}" "${MOD_VERSION}" "${NAME}" "${URL}"
+				else
+					[ ${DEBUG} ] && echo CheckDate \"${LAST_MOD_DATE}\" \"${MOD_VERSION}\" \"${NAME}\" \"${URL}\"
+					CheckDate "${LAST_MOD_DATE}" "${MOD_VERSION}" "${NAME}" "${URL}"
+				fi
+
+				x=$(( $x + 1 ))
+			fi
+		fi
+	done
+}
+##############################################################
+
+
+##############################################################
+# Check Bukkit
+#
+function CheckBukkit() {
+
+#-http.fake-user-agent "${UA}"
+
+	BUKKIT_RELEASE_VER=$(links -source http://repo.bukkit.org/content/groups/public/org/bukkit/craftbukkit/maven-metadata.xml | grep release | sed -e :a -e 's/<[^>]*>//g;/</N;//ba' -e 's/^[ \t]*//;s/[ \t]*$//')
+
+	[ ${DEBUG} ] && echo BUKKIT_RELEASE_VER: ${BUKKIT_RELEASE_VER}
+
+#	BUKKIT_RELEASE_DATE=$(date -d "$(links -dump http://repo.bukkit.org/content/groups/public/org/bukkit/craftbukkit/${BUKKIT_RELEASE_VER}/ | grep -B1 ${BUKKIT_RELEASE_VER}.jar | tr -d \\n | awk '{print $5,$6,$10}')" +%Y%m%d)
+	BUKKIT_RELEASE_DATE=$(date -d "$(links -dump-width 500 -dump http://repo.bukkit.org/content/groups/public/org/bukkit/craftbukkit/1.7.2-R0.3/ | grep -m1 1.7.2-R0.3.jar | awk '{print $2,$3,$4,$5,$6}')" +%Y%m%d)
+
+	[ ${DEBUG} ] && echo BUKKIT_RELEASE_DATE: ${BUKKIT_RELEASE_DATE}
+
+#	BUKKIT_RELEASE_URL=$(curl -s http://dl.bukkit.org/downloads/craftbukkit/ | grep -m1 -E .*get.*1.5.1-R0.2.*jar | sed -e 's/.*href="/http:\/\/dl.bukkit.org/g' -e 's/"$//g')
+	BUKKIT_RELEASE_URL="http://repo.bukkit.org/content/groups/public/org/bukkit/craftbukkit/${BUKKIT_RELEASE_VER}/craftbukkit-${BUKKIT_RELEASE_VER}.jar"
+
+	[ ${DEBUG} ] && echo BUKKIT_RELEASE_URL: ${BUKKIT_RELEASE_URL}
+
+	[ ${DEBUG} ] && echo CheckDate "${BUKKIT_RELEASE_DATE}" "${BUKKIT_RELEASE_VER}" CraftBukkit "${BUKKIT_RELEASE_URL}"
+
+	LAST_MOD_DATE="${BUKKIT_RELEASE_DATE}"
+
+	[ ${DEBUG} ] && echo LAST_MOD_DATE: ${LAST_MOD_DATE}
+
+	CheckDate "${BUKKIT_RELEASE_DATE}" "${BUKKIT_RELEASE_VER}" CraftBukkit "${BUKKIT_RELEASE_URL}"
+
+	if [ -f ${MAVEN} ] ; then rm -f ${MAVEN} ; fi
+}
+##############################################################
+
+
+##############################################################
+# GET JAR
+#
+function GetJar() {
+# echo GetJar
+
+# 	$1 = Mod Date
+# 	$2 = Mod Version
+# 	$3 = Mod Name
+# 	$4 = Mod URL
+
+	if [ "${3}" == "CraftBukkit" ] ; then
+		MOD_JAR_MINE=$(echo "${4}" | sed -e 's/.*\/\(.*\)$/\1/g')
+		MOD_JAR_PATH="${4}"
+		MOD_JAR_LOCATION="${4}"
+#		URL="http://dl.bukkit.org/downloads/craftbukkit/view/02084_1.5.1-R0.2/"
+		URL=$(curl -s http://dl.bukkit.org/downloads/craftbukkit/ | grep -m1 -E .*view.*${2} | sed -e 's/.*<a href="/http:\/\/dl.bukkit.org/g' -e 's/\/".*//g')
+	else
+		MOD_JAR_LOCATION=$(grep -m1 col-file "${MODTMP}" | sed -e 's/.*href="/http:\/\/dev\.bukkit\.org/g;s/">.*//g')
+		MOD_JAR_NAME=$(tail -n1 "${MODTMP}" | sed -e 's/[ \t]//g;s/\(.*\)[ \t]/\1/g')
+		MOD_JAR_PATH=$(curl -s "${MOD_JAR_LOCATION}" | grep -A1 Filename | tail -n1 | sed -e 's/.*="//g;s/">.*//g')
+		URL="${4}"
+
+		if [ ! "$(echo ${MOD_JAR_NAME} | grep ${MOD_VERSION})" ] ; then
+			MOD_JAR_MINE="${3}-${MOD_VERSION}$(echo "${MOD_JAR_NAME}" | sed -e 's/.*\.\(.*\)$/\.\1/g')"
+		else
+			MOD_JAR_MINE="${MOD_JAR_NAME}"
+		fi
+	fi
+
+	if [ ${DEBUG} ] ; then
+		[ "${MOD_JAR_LOCATION}" ] && echo "MOD_JAR_LOCATION: ${MOD_JAR_LOCATION}"
+		[ "${MOD_JAR_NAME}" ] && echo "MOD_JAR_NAME: ${MOD_JAR_NAME}"
+		[ "${MOD_JAR_MINE}" ] && echo "MOD_JAR_MINE: ${MOD_JAR_MINE}"
+		echo wget -q -O \"${MOD_TEMP_TANK}/${MOD_JAR_MINE}\" \"${MOD_JAR_PATH}\"
+	fi
+
+	[ ! -f "${MOD_TEMP_TANK}/${MOD_JAR_MINE}" ] && wget -q -O "${MOD_TEMP_TANK}/${MOD_JAR_MINE}" "${MOD_JAR_PATH}"
+	
+	MOD_JAR_SERVER_SIZE=$(curl -L -s --head "${MOD_JAR_PATH}" | grep Content-Length | tail -n1 | awk '{print $2}' | tr -d \\r)
+	MOD_JAR_LOCAL_SIZE=$(du -b "${MOD_TEMP_TANK}/${MOD_JAR_MINE}" | awk '{print $1}' | tr -d \\r)
+	
+	if [ ! "${MOD_JAR_LOCAL_SIZE}" -eq "${MOD_JAR_SERVER_SIZE}" ] ; then
+		echo "${3} Failed to download properly:"
+		echo "MOD_JAR_SERVER_SIZE: ${MOD_JAR_SERVER_SIZE}"
+		echo "MOD_JAR_LOCAL_SIZE: ${MOD_JAR_LOCAL_SIZE}"
+	fi
+
+	UPDATED_LINE="$(echo -e ${UPDATED_LINE}\\n$(echo -n "<li type=\"disc\"><a href=\"${URL}\">${3}</a> was updated $(date -d ${LAST_MOD_DATE} '+%A, %B %d, %Y') to <a href=\"${MOD_JAR_LOCATION}\">version ${2}</a></li><br>"))"
+
+	[ ${DEBUG} ] && echo -e \\n
+}
+##############################################################
+
+
+##############################################################
+# Start Mail
+#
+function StartMail() {
+	echo -e "<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN'='http://www.w3.org/TR/html4/loose.dtd'>" > ${BODY}
+	echo -e "<html><head><title>${TODAY}</title></head>" >> ${BODY}
+	echo -e "<body style='padding: 0px;margin:0px;'>" >> ${BODY}
+	#echo -e "These Server Mods have been updated:<br>" >> ${BODY}
+	#echo -e "<div style='padding: 0pt; margin:10pt;'>" >> ${BODY}
+	#echo -e "<ul style='margin-left:0pt; padding-left:14pt;'>" >> ${BODY}
+}
+##############################################################
+
+
+##############################################################
+# Finish Mail
+#
+function FinishMail() {
+	if [[ ${UPDATED_COUNT} -gt 0 || ${BUKKIT_RELEASE_UPDATE} -eq 1 || ${DEBUG} ]] ; then
+		if [ ${UPDATED_COUNT} -eq 1 ] ; then
+			S=""
+			#echo -e "This Server Mod has been updated:<br>" >> ${BODY}
+		else 
+			S="s"
+			#echo -e "These Server Mods have been updated:<br>" >> ${BODY}
+		fi
+
+		SUBJECT=""
+
+		if [ ${BUKKIT_RELEASE_UPDATE} -eq 1 ] ; then
+			if [ "${UPDATED_COUNT}" -eq 0 ] ; then
+				SUBJECT="CraftBukkit Updated"
+			else
+				SUBJECT="CraftBukkit and ${UPDATED_COUNT} Mod${S} Updated"
+			fi
+		else
+			SUBJECT="${UPDATED_COUNT} Bukkit Mod${S} Updated"
+		fi
+
+		echo -e "<div style='padding: 0pt; margin:10pt;'>" >> ${BODY}
+		echo -e "<ul style='margin-left:0pt; padding-left:14pt;'>" >> ${BODY}
+		echo "${UPDATED_LINE}" >> ${BODY}
+		echo -e "</ul></div></div><br></body></html>" >> ${BODY}
+		
+		if [ ${DEBUG} ] ; then
+			cat "${BODY}"
+			echo -e \\v"mutt -s \"${SUBJECT}\" -e \"set content_type=text/html\" -- \"${EMAILS}\" \< ${BODY}"
+		else
+			mutt -s "${SUBJECT}" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+		fi
+	fi
+
+	rm -f "${BODY}"
+}
+##############################################################
+
+
+##############################################################
+# DO IT
+#
+if [ -f "${BODY}" ] ; then rm -f "${BODY}" ; fi
+
+case $1 in
+	force)
+		DEBUG="yes"
+		FORCE="yes"
+		CheckMods
+		;;
+	modtwo)
+		DEBUG="yes"
+		FORCE="yes"
+		CheckModsTwo
+		exit
+		;;
+	*)
+		StartMail
+#		CheckBukkit
+		CheckMods
+		FinishMail
+		;;
+esac
+

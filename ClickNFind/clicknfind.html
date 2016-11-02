@@ -1,0 +1,33 @@
+<HTML>
+<HEAD>
+<TITLE>Click 'N' Find</TITLE>
+
+<SCRIPT src="clicknfind.js"></SCRIPT>
+
+<LINK rel="stylesheet" type="text/css" href="clicknfind.css">
+
+</HEAD>
+<BODY onLoad="setNodes()">
+<!-- <div class="field" id="field" onclick="showCoords(this,event)"> -->
+<div class="field01" id="field01" onMouseMove="showCoords(this,event)" onClick="goHere(this,event)">
+
+
+	<div class="roost01" id="roost01"></div>
+	<div class="unit01" id="unit01"></div>
+	<div class="unit02" id="unit02"></div>
+
+	<div class="node01" id="node01"></div>
+</div>
+
+<!--<BR><BR>
+<div style="top:700px; border:1px solid black;" id="output01">&nbsp;</div>
+<BR><BR>
+<div style="top:750px; border:1px solid black;" id="output02">&nbsp;</div>-->
+
+<P><INPUT type="button" onClick="setNodes()" name="resetNode" value="RESET"></INPUT>&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="button" onClick="moveNode()" name="resetNode" value="NEXT STEP"></INPUT>
+<P><div class="output" id="output01">&nbsp;</div>
+<P><div class="output" id="output02">&nbsp;</div>
+<P><div class="output" id="output03">&nbsp;</div>
+
+</BODY>
+</HTML>

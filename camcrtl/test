@@ -1,0 +1,8 @@
+#!/bin/sh
+
+eval $(curl -GLs http://67.210.198.15:8081/cgi-bin/absget | egrep "PAN|TILT|ZOOM" | sed "s/&nbsp//" | tr \\r\\n \\n)
+
+echo "ZOOM: \"$ZOOM\""
+echo "PAN: \"$PAN\""
+echo "TILT: \"$TILT\""
+

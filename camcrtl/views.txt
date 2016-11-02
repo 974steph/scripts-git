@@ -1,0 +1,116 @@
+====================================
+GET CURRENT ANGLE
+curl 67.204.164.159:9293/cgi-bin/absget
+
+<html>
+PAN=1460&nbsp
+TILT=32&nbsp
+ZOOM=18&nbsp
+FOCUS=9999&nbsp
+STATUS=STOP&nbsp
+</html>
+
+SET PAN/TILT/ZOOM (10 zoom is none)
+curl -Gs 67.204.164.159:9293/cgi-bin/absctrl -d pan=1000 -d tilt=31 -d zoom=10
+====================================
+
+
+====================================
+SUNRISE - OLD MILL
+curl -GLs 67.210.198.15:7271/cgi-bin/absctrl -d zoom=22 -d pan=1920 -d tilt=0
+
+SUNRISE - PAVILION
+curl -GLs 67.210.198.15:8919/cgi-bin/absctrl -d zoom=14 -d pan=2420 -d tilt=0
+
+SUNRISE - RIVER PARK
+curl -GLs 67.210.198.15:9092/cgi-bin/absctrl -d zoom=10 -d pan=2840 -d tilt=0
+
+---------
+
+SUNSET - DOWNTOWN
+curl -GLs 67.210.198.15:8081/cgi-bin/absctrl -d zoom=10 -d pan=1300 -d tilt=0
+
+SUNSET - BPRD
+curl -GLs 67.204.164.159:9293/cgi-bin/absctrl -d zoom=10 -d pan=1890 -d tilt=50
+
+SUNSET - PAVILION
+curl -GLs 67.210.198.15:8919/cgi-bin/absctrl -d zoom=15 -d pan=600 -d tilt=0
+====================================
+
+
+====================================
+RIVER PARK
+
+Park and River
+curl -GLs 67.210.198.15:9092/cgi-bin/absctrl -d pan=2900 -d tilt=120 -d zoom=10
+
+Pavilion accross river
+curl -GLs 67.210.198.15:9092/cgi-bin/absctrl -d tilt=60 -d zoom=40 -d pan=450
+
+Theater
+curl -GLs 67.210.198.15:9092/cgi-bin/absctrl -d tilt=100 -d zoom=40 -d pan=2670
+
+Bridge
+curl -LGs 67.210.198.15:9092/cgi-bin/absctrl -d zoom=20 -d pan=610 -d tilt=120
+
+Bridge2
+curl -LGs 67.210.198.15:9092/cgi-bin/absctrl -d zoom=12 -d pan=180 -d tilt=80
+
+Round A Bout
+curl -LGs 67.210.198.15:9092/cgi-bin/absctrl -d zoom=40 -d pan=2650 -d tilt=60
+====================================
+
+
+====================================
+OLD MILL
+
+Pilot Butte
+curl -GLs 67.210.198.15:7271/cgi-bin/absctrl -d zoom=80 -d pan=1675 -d tilt=30
+
+Mill
+curl -GLs 67.210.198.15:7271/cgi-bin/absctrl -d zoom=30 -d pan=1920 -d tilt=50
+====================================
+
+
+====================================
+DOWNTOWN
+
+Church
+curl -LGs 67.210.198.15:8081/cgi-bin/absctrl -d zoom=80 -d pan=850 -d tilt=20
+
+Mountain
+curl -LGs 67.210.198.15:8081/cgi-bin/absctrl -d zoom=44 -d pan=1560 -d tilt=0
+====================================
+
+====================================
+BRPD
+
+Road
+curl -GLs 67.204.164.159:9293/cgi-bin/absctrl -d zoom=25 -d pan=1400 -d tilt=30
+====================================
+
+
+====================================
+PAVILION
+
+Fish
+curl -GLs 67.210.198.15:8919/cgi-bin/absctrl -d zoom=55 -d pan=2410 -d tilt=124
+
+Pilot Butte
+curl -GLs 67.210.198.15:8919/cgi-bin/absctrl -d zoom=60 -d pan=2275 -d tilt=0
+
+Hill and Mountain
+curl -GLs 67.210.198.15:8919/cgi-bin/absctrl -d zoom=30 -d pan=850 -d tilt=0
+
+PAN=920
+TILT=0
+ZOOM=50
+
+Butte Centered
+PAN=2260
+TILT=49
+ZOOM=10
+FOCUS=15
+
+====================================
+

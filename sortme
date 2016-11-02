@@ -1,0 +1,350 @@
+#!/bin/sh
+
+# DEBUG="yes"
+
+function DumpHelp {
+	echo -e \\n"-~-~-~-~-~- HELP -~-~-~-~-~-"\\v
+	echo -e "$(basename $0) [FILE]"
+	echo -e "Rename and sort an individual file."\\n
+
+	echo -e "$(basename $0) month"
+	echo -e "Grouping all images in the current directory by month."\\n
+
+	echo -e "$(basename $0) day"
+	echo -e "Grouping all images in the current directory by day."\\n
+
+	echo -e "$(basename $0) here"
+	echo -e "Do all the renaming RIGHT HERE ( ./ ), no grouping."\\n
+
+	echo -e "$(basename $0) rename"
+	echo -e "Rename all files in the current directory. (take out spaces and dashes)"\\n
+
+	echo -e "$(basename $0) mega [DIRECTORY]"
+	echo -e "Rename all files in the current directory and ALL subdirectories.  Creates the repository in the CURRENT directory."\\n
+	exit
+}
+
+
+function DoMove {
+
+	FILE_NORMAL="${DIRDATE}/${IMGDATE}_${IMGTIME}.${EXTEN}"
+	FILE_UP="${DIRDATE}/${IMGDATE}_${ONE_UP}.${EXTEN}"
+	FILE_DOWN="${DIRDATE}/${IMGDATE}_${ONE_DOWN}.${EXTEN}"
+
+
+	if [ ! -f "${FILE_NORMAL}" ] ; then
+		mv -i "$1" "${FILE_NORMAL}"
+		touch --date="${IMGSTAMP}" "${FILE_NORMAL}"
+		echo -e "N: Moved $1 to ${FILE_NORMAL}"
+
+	elif [ ! -f "${FILE_UP}" ] ; then
+		mv -i "$1" "${FILE_UP}"
+		touch --date="${IMGSTAMP}" "${FILE_UP}"
+		echo -e "U: Moved $1 to ${FILE_UP}"
+
+	elif [ ! -f "${FILE_DOWN}" ] ; then
+		mv -i "$1" "${FILE_DOWN}"
+		touch --date="${IMGSTAMP}" "${FILE_DOWN}"
+		echo -e "D: Moved $1 to ${FILE_DOWN}"
+	else
+# 		if [ -f "${DIRDATE}"/"${IMGDATE}"_"${IMGTIME}"."${EXTEN}" ] ; then
+		if [ -f "${FILE_NORMAL}" ] ; then
+			echo -e "Cannot move $1 to ${FILE_NORMAL} - already exists..."
+		else
+			echo -e \\n"-------"
+			echo "BOOM"
+			ls -l "$1"
+			ls -l "${FILE_NORMAL}"
+			echo -e \\n"-------"
+		fi
+	fi
+}
+
+
+function MoveImageToDateDir {
+
+	case "${ACTION}" in
+		here)
+			DIRDATE="."
+			;;
+		day)
+			DIRDATE=$(date -d"${IMGSTAMP}" +%Y-%m-%d)
+			;;
+		month)
+			DIRDATE=$(date -d"${IMGSTAMP}" +%Y-%m)
+			;;
+		*)
+			echo -e \\v"Something is wrong with ACTION: $ACTION.  Can't set DIRDATE: \"$DIRDATE\""\\v
+			exit
+	esac
+
+	[ ! -d "${DIRDATE}" ] && mkdir -p "${DIRDATE}"
+
+	IMGDATE=$(date -d "${IMGSTAMP}" +%Y%m%d)
+	IMGTIME=$(date -d "${IMGSTAMP}" +%H%M%S)
+
+	ONE_UP=$(expr ${IMGTIME} + 1)
+	ONE_DOWN=$(expr ${IMGTIME} - 1)
+
+	[ $(expr length ${ONE_UP}) -lt 6 ] && ONE_UP=0${ONE_UP}
+	[ $(expr length ${ONE_DOWN}) -lt 6 ] && ONE_UP=0${ONE_DOWN}
+
+
+	if [ -f "${DIRDATE}/${IMGDATE}_${IMGTIME}.${EXTEN}" ] ; then
+
+		NEW_MD5=$(md5sum "$1" | awk '{print $1}')
+		EXIST_MD5=$(md5sum "${DIRDATE}/${IMGDATE}_${IMGTIME}.${EXTEN}" | awk '{print $1}')
+
+		if [ "${NEW_MD5}" = "${EXIST_MD5}" ] ; then
+			if [ ${ACTION} == "here" ] ; then
+				echo -e "\"$1\" already named correctly - \"${IMGSTAMP}\""
+			else
+				echo -e "\"$1\" and \"${DIRDATE}/${IMGDATE}_${IMGTIME}.${EXTEN}\" are the same file - \"${IMGSTAMP}\""
+			fi
+		else
+# 			echo SAME TIME, DIFFERENT FILES
+# 			echo This one: $1
+# 			echo Existing: "${IMGDATE}"_"${IMGTIME}"
+# 			echo NEW_MD5: "${NEW_MD5}"
+# 			echo EXIST_MD5: "${EXIST_MD5}"
+# 			echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# 			[ "${IMGSTAMP}" ] && touch --date="${IMGSTAMP}" "$1"
+			DoMove "$1"
+		fi
+	else
+# 		[ "${IMGSTAMP}" ] && touch --date="${IMGSTAMP}" "$1"
+		DoMove "$1"
+	fi
+}
+
+
+
+function SlowSortingMethod {
+
+	[ ${DEBUG} ] && echo SlowSortingMethod
+
+	if [ -f "$1" ] ; then
+
+		BROKEN_FILE="BrokenDates.txt"
+		EXTEN=$(echo "$1" | awk -F . '{print tolower ($NF)}')
+		[ ${EXTEN} = jpeg ] && EXTEN="jpg"
+
+		IMG_INFO="/tmp/${1%${EXTEN}}info"
+
+		START_PIC_INFO=$(nice identify -verbose "$1" | grep -i date | cut -d: -f2-)
+
+		if [ "${START_PIC_INFO}" ] ; then
+			# OLD: echo "${START_PIC_INFO}" | sed -e 's/: /="/g' -e 's/$/"/g' -e 's/ /_/g' -e 's/`/_/g' > "${IMG_INFO}"
+			echo "${START_PIC_INFO}" | sed -e 's/: \([0-9][0-9][0-9][0-9]\)[:,-]\([0-9][0-9]\)[:-]\([0-9][0-9]\).\([0-9][0-9]:[0-9][0-9]:[0-9][0-9]\).*/="\1\2\3 \4"/g' | grep = > "${IMG_INFO}"
+			source "${IMG_INFO}"
+		else
+# 			[ ! -d Broken_Dates ] && mkdir Broken_Dates
+				echo "$1" >> "${BROKEN_FILE}"
+# 				mv -vi "$1" Broken_Dates
+			break
+		fi
+
+		if [ -z "${IMGSTAMP}" ] ; then
+			if [ $(echo ${DateTimeDigitized} | wc -c) -gt 15 ] ; then
+				IS1=$(echo "${DateTimeDigitized}" | sed -e 's/_/ /g' | awk '{print $1}' | sed -e 's/:/-/g')
+				IS2=$(echo "${DateTimeDigitized}" | sed -e 's/_/ /g' | awk '{print $2}')
+				IMGSTAMP="${IS1} ${IS2}"
+			fi
+		fi
+
+		if [ -z "${IMGSTAMP}" ] ; then
+			if [ $(echo ${DateTimeOriginal} | wc -c) -gt 15 ] ; then
+				IS1=$(echo "${DateTimeOriginal}" | sed -e 's/_/ /g' | awk '{print $1}' | sed -e 's/:/-/g')
+				IS2=$(echo "${DateTimeOriginal}" | sed -e 's/_/ /g' | awk '{print $2}')
+				IMGSTAMP="${IS1} ${IS2}"
+			fi
+		fi
+
+		if [ -z "${IMGSTAMP}" ] ; then
+			if [ $(echo ${DateTime} | wc -c) -gt 15 ] ; then
+				IS1=$(echo "${DateTime}" | sed -e 's/_/ /g' | awk '{print $1}' | sed -e 's/:/-/g')
+				IS2=$(echo "${DateTime}" | sed -e 's/_/ /g' | awk '{print $2}')
+				IMGSTAMP="${IS1} ${IS2}"
+			fi
+		fi
+
+		if [ -z "${IMGSTAMP}" ] ; then
+			if [ $(echo ${modify} | wc -c) -gt 15 ] ; then
+				IMGSTAMP="${modify}"
+			fi
+		fi
+
+		if [ -z "${IMGSTAMP}" ] ; then
+			if [ $(echo ${create} | wc -c) -gt 15 ] ; then
+				IMGSTAMP="${create}"
+			fi
+		fi
+
+		MoveImageToDateDir "$1"
+
+	else
+		echo -e \\v+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		echo -e SOMETHING IS WRONG.
+		echo -e "$1" does not exist anymore.
+		echo -e +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-\\v
+	fi
+
+	unset IMGSTAMP IMGDATE IMGTIME DIRDATE DateTimeDigitized DateTimeOriginal DateTime modify create IS1 IS2
+	rm -f "${IMG_INFO}"
+}
+
+
+
+function exifSortingMethod {
+
+	EXTEN=$(echo "$1" | awk -F . '{print tolower ($NF)}')
+# 	[ ${EXTEN} = "jpeg" ] && EXTEN="jpg"
+
+	METHODS="DateTimeOriginal DateTime ModifyDate FileModifyDate modify"
+
+	for METHOD in ${METHODS} ; do
+
+		IMGSTAMP="$(exiftool -s3 -${METHOD} -d "%Y%m%d %H:%M:%S" "$1")"
+
+		[ ${DEBUG} ] && echo "METHOD: ${METHOD} - ${IMGSTAMP}"
+
+		[ "${IMGSTAMP}" ] && break
+	done
+
+
+# 	if [ -z "${IMGSTAMP}" ] ; then
+	if [ ! "${IMGSTAMP}" ] ; then
+		[ ${DEBUG} ] && echo UGLY WAY
+
+		SlowSortingMethod "$1"
+	else
+		if [ ! "${ACTION}" == "touch" ] ; then
+			MoveImageToDateDir "$1"
+		else
+			if [ "${IMGSTAMP}" ] ; then
+				touch -d "${IMGSTAMP}" "$1"
+				echo "Touched $1 - ${IMGSTAMP}"
+			else
+				echo "No image stamp supplied: \"${IMGSTAMP}\""
+			fi
+		fi
+	fi
+
+
+	unset IMGSTAMP IMGDATE IMGTIME EXTEN
+}
+
+
+function FixNames() {
+
+	find . -depth -type f -name '* *' | while read f ; do mv -i "$f" "$(dirname "$f")/$(basename "$f"|tr ' ' _)" ; done
+	find . -depth -type f -name '-*' | while read f ; do mv -i "$f" "$(dirname "$f")/$(basename "$f"|tr '-' _)" ; done
+#	find . -depth -type f -name '*.jpe' | while read f ; do mv -i "$f" "$(dirname "$f")/$(basename "$f"|tr '.jpe' '.jpg')" ; done
+	find . -depth -type f -name '*.jpe' | while read f ; do mv -i "$f" "${f%jpe}jpg" ; done
+#	find . -depth -type f -name '*.jpeg' | while read f ; do mv -i "$f" "$(dirname "$f")/$(basename "$f"|tr '.jpeg' '.jpg')" ; done
+	find . -depth -type f -name '*.jpeg' | while read f ; do mv -i "$f" "${f%jpeg}jpg" ; done
+
+}
+
+############################################
+if [ -z "$1" -o "$1" = poop -o "$1" = "--help" -o "$1" = "-h" ] ; then
+	DumpHelp
+	exit 1
+fi
+
+
+if [ -f "$1" ] ; then
+	exifSortingMethod "$1"
+	exit $?
+else
+	case "$1" in
+		touch)
+			ACTION="$1"
+			[ ${DEBUG} ] && echo ACTION: "$1"
+
+			FixNames
+
+			for FILE in *.[bBgGjJ][iImMpP][eEfFgGpP] ; do
+# 				EXTEN=$(echo "${FILE}" | awk -F . '{print tolower ($NF)}')
+				exifSortingMethod "${FILE}"
+			done
+			;;
+
+		here)
+			ACTION="$1"
+			[ ${DEBUG} ] && echo ACTION: "$1"
+
+			FixNames
+
+			for FILE in *.[bBgGjJpP][iImMpPnN][eEfFgGpPgG] ; do
+# 				EXTEN=$(echo "${FILE}" | awk -F . '{print tolower ($NF)}')
+				exifSortingMethod "${FILE}"
+			done
+			;;
+
+		rename)
+			[ ${DEBUG} ] && echo ACTION: "$1"
+
+			FixNames
+			;;
+
+		month|day)
+			ACTION="$1"
+			[ ${DEBUG} ] && echo ACTION: "$1"
+
+			FixNames
+
+			for FILE in *.[bBgGjJpP][iImMpPnN][eEfFgGpPgG] ; do
+# 				EXTEN=$(echo "${FILE}" | awk -F . '{print tolower ($NF)}')
+				exifSortingMethod "${FILE}"
+			done
+			;;
+
+		mega)
+			[ ${DEBUG} ] && echo ACTION: "$1"
+			[ ! "$2" -o ! -d "$2" ] && DumpHelp
+
+			DUMP_FILE="all_files"
+			NOT_IMAGES="NotImages.txt"
+
+			[ -f "${DUMP_FILE}" ] && rm -fv "${DUMP_FILE}"
+			[ -f "${NOT_IMAGES}" ] && rm -fv "${NOT_IMAGES}"
+
+			DIRECTORY="$2"
+# 			find "${DIRECTORY}" -type f | egrep '.jpg|.JPG|.jpeg|.JPEG|.png|.PNG|.bmp|.BMP|.gif|.GIF' | sort > "${DUMP_FILE}"
+			find "${DIRECTORY}" -type f | sort > "${DUMP_FILE}"
+			while read FILE ; do
+				FILE_TYPE=$(file -b -i "${FILE}" | grep image | grep -v icon)
+				EXTEN=$(echo "${FILE}" | sed 's/\(.*\)\.\([a-zA-Z][a-zA-Z][a-zA-Z]\)$/\2/g')
+				EXTEN_LEN=$(expr length "${EXTEN}")
+
+				if [ ! "${FILE_TYPE}" ] ; then
+					echo "${FILE}: ${FILE_TYPE}" >> "${NOT_IMAGES}"
+# 					echo "${FILE}": NOT an image. "${FILE_TYPE}"
+				elif [ "${EXTEN_LEN}" -gt 3 ] ; then
+					echo -n "${FILE}": NO or BAD EXTENSION.
+						if [ "${FILE_TYPE}" ] ; then
+							echo "${FILE}": is an image, though.
+# 							exifSortingMethod "${FILE}"
+						else
+# 							echo "${FILE}": is NOT an image.
+							echo "${FILE}: ${FILE_TYPE}" >> "${NOT_IMAGES}"
+						fi
+# 					echo "${FILE}": IS an image
+				else
+					exifSortingMethod "${FILE}"
+					#echo "${EXTEN_LEN}"
+				fi
+			done < "${DUMP_FILE}"
+
+			rm -fv "${DUMP_FILE}"
+			;;
+
+		*)
+			DumpHelp
+			;;
+	esac
+fi
+
+exit $?

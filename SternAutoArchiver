@@ -1,0 +1,194 @@
+#!/bin/sh -e
+
+##########################################
+# Main Stuff
+source $HOME/Sources/scripts-git/secret_stuff.sh
+DEBUG="YES"
+REPO="$HOME/Stern"
+MAILTO_ADDR="${EMAIL_MINE}"
+WORKDIR="/tmp"
+##########################################
+
+
+function doit {
+	[ ${DEBUG} ] && echo "DO IT"
+	##########################################
+	# Quick syntax check.
+	#
+
+# 	echo "$1"
+
+	if [ -z "$1" ] ; then
+		echo -e "\\vSyntax: $0 [The File]\\v"
+		exit
+	fi
+	##########################################
+
+
+	##########################################
+	WS=$(echo $1 | awk '{print $1}' | sed -e 's/\.mp3//g' -e 's/[^a-zA-Z]//g')
+# 	DATE=$(echo $1 | cut -d. -f1 | sed 's/[^0-9]//g')
+
+	JUST_DATE=$(echo $1 | awk '{print $1}' | cut -d'.' -f-1 | sed 's/[^0-9]//g')
+# 	PRETTY_DATE=$(date --date="$JUST_DATE" "+%A, %B %d, %Y")
+	NUMBER_DATE=$(date --date="$JUST_DATE" "+%m/%d/%Y, %A")
+	MONTH_YEAR=$(date --date="$JUST_DATE" "+%B - %Y")
+	YEAR=$(date --date="$JUST_DATE" +%Y)
+	MONTH=$(date --date="$JUST_DATE" "+%m-%B")
+	TRACK=$(date --date="$JUST_DATE" "+%d")
+
+	MONTH_REPO="$REPO/$YEAR/$MONTH"
+	##########################################
+
+
+###################################
+#
+function MakeAFist() {
+
+	FIST="$HOME/Pictures/Fist.png"
+	FIST_MONTH_PNG="${WORKDIR}/fmonth.png"
+	FIST_YEAR_PNG="${WORKDIR}/fyear.png"
+	FIST_FISTED="${WORKDIR}/fist.png"
+
+# 	JUST_DATE=140801
+
+	FIST_A_MONTH=$(date -d ${JUST_DATE} +%B)
+	FIST_A_YEAR=$(date -d ${JUST_DATE} +%Y)
+
+	MONTH_ROT=$(( $(expr length "${FIST_A_MONTH}") * 7 ))
+	YEAR_ROT=$(( $(expr length "${FIST_A_YEAR}") * 7 ))
+
+	#echo DATE_ROT: ${DATE_ROT}
+	#echo DAY_ROT: ${DAY_ROT}
+
+	convert \
+		-virtual-pixel Background \
+		-background none \
+		-pointsize 18 label:"${FIST_A_MONTH}" \
+		-distort Arc ${MONTH_ROT} \
+		"${FIST_MONTH_PNG}"
+
+	convert \
+		-virtual-pixel Background \
+		-background none \
+		-pointsize 18 label:"${FIST_A_YEAR}" \
+		-rotate 180 \
+		-distort Arc "${YEAR_ROT} 180" \
+		"${FIST_YEAR_PNG}"
+
+	composite -gravity north -geometry +0+1 "${FIST_MONTH_PNG}" "${FIST}" "${FIST_FISTED}"
+	composite -gravity south -geometry +0+1 "${FIST_YEAR_PNG}" "${FIST_FISTED}" "${FIST_FISTED}"
+	mv "${FIST_FISTED}" "${MONTH_REPO}/.folder.png"
+	echo "[Desktop Entry]" > "${MONTH_REPO}/.directory"
+	echo "Icon=./.folder.png" >> "${MONTH_REPO}/.directory"
+	rm -f "${FIST_MONTH_PNG}" "${FIST_YEAR_PNG}"
+}
+###################################
+# MakeAFist
+# exit 0
+
+##########################################
+# If the repo's not there, make it
+#
+if [ ! -d "$MONTH_REPO" ] ; then 
+	mkdir -p "$MONTH_REPO"
+	MakeAFist
+fi
+##########################################
+
+
+##########################################
+# If the target file exists, bail
+
+[ ${DEBUG} ] && echo "If the target file exists, bail"
+
+if [ -e "$MONTH_REPO/$JUST_DATE.mp3" ] ; then
+	echo -e "$MONTH_REPO/$JUST_DATE.mp3" already exists
+	continue
+fi
+##########################################
+
+
+##########################################
+# Make wavs
+# -S
+[ ${DEBUG} ] && echo "Make wavs"
+ionice -c3 sox -S "$1" "$MONTH_REPO/$JUST_DATE.wav"
+##########################################
+
+
+##########################################
+# Make mp3
+#
+[ ${DEBUG} ] && echo "Make mp3"
+# nice lame --resample 24 -mj -q2 --abr 32 -b24 -B56 --lowpass 8047 --scale 1.5 \
+# 	"$MONTH_REPO/$JUST_DATE.wav" "$MONTH_REPO/$JUST_DATE.mp3"
+
+sox --multi-threaded -S "$MONTH_REPO/$JUST_DATE.wav" -r 16k -C -7 "$MONTH_REPO/$JUST_DATE.mp3" lowpass 8k
+
+rm -f "$MONTH_REPO/$JUST_DATE.wav"
+##########################################
+
+
+##########################################
+# Retag
+#
+[ ${DEBUG} ] && echo "Retag"
+$HOME/Sources/scripts-git/Retag "$MONTH_REPO/$JUST_DATE.mp3"
+##########################################
+
+
+##########################################
+# Send the mail
+if [ $DOMAIL = "yes" ] ; then
+	OLDSIZE=$(ls -sh "$1" | awk '{print $1}' | sed -e 's/[a-zA-Z]//g')
+	NEWSIZE=$(ls -sh "$MONTH_REPO/$JUST_DATE.mp3" | awk '{print $1}' | sed -e 's/[a-zA-Z]//g')
+	PERCENT=$(echo "(1-($NEWSIZE/$OLDSIZE)) * 100" | bc -l | sed -e 's/\(\.[0-9]\).*/\1/g')
+
+	echo -e "Name: ${NUMBER_DATE}" > /tmp/sternmail
+	echo -e "Album: Howard Stern - $MONTH_YEAR" >> /tmp/sternmail
+	echo -e "Old size: ${OLDSIZE}M" >> /tmp/sternmail
+	echo -e "New size: ${NEWSIZE}M" >> /tmp/sternmail
+	echo -e "$PERCENT% reduction" >> /tmp/sternmail
+	mutt -s "Success: $JUST_DATE.mp3" "${MAILTO_ADDR}" < /tmp/sternmail
+	rm -f /tmp/sternmail
+fi
+##########################################
+}
+
+##########################################
+# See if I should mail results
+#
+#DOMAIL="no"
+
+
+case $1 in
+	mail)
+		DOMAIL="yes"
+		;;
+	month)
+		DOMAIL="no"
+		MakeAFist
+		exit
+		;;
+	*)
+		DOMAIL="no"
+esac
+
+#if [ $1 ] ; then
+#	if [ -n "$1" ] ; then
+#		if [ "$1" = "mail" ] ; then
+#			DOMAIL="yes"
+#		else
+#			DOMAIL="no"
+#		fi
+#	fi
+#else
+#	DOMAIL="no"
+#fi
+##########################################
+
+
+cd "$REPO/Weekly"
+
+for FILE in *.mp3 ; do doit "$FILE" ; done

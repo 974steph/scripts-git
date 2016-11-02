@@ -1,0 +1,421 @@
+#!/bin/sh
+
+###################################
+#
+#   DEBUG=yes
+#  DUMPINFO=yes
+#
+###################################
+
+
+WORKDIR="/tmp/stern"
+MAILFILE="${WORKDIR}/SternMail.html"
+FRIGGIN_DUMP="${WORKDIR}/FrigginDumpFile"
+THEFILE="$1"
+
+EXTEN=$(echo $(basename "${THEFILE}") | sed -e 's/.*\././g')
+#NAME=$(echo $(basename "${THEFILE}") | sed -e 's/\..*//g')
+NAME=$(echo $(basename "${THEFILE}") | sed -e "s/$EXTEN//g")
+WS=$(echo $(basename "${THEFILE}") | sed -e 's/ //g' | grep -i WrapUp | wc -w)
+ONLYNUMBERS=$(echo "${NAME}" | sed -e 's/[0-9\.]//g' | wc -w)
+WHERENOW=$(dirname "${THEFILE}")
+
+FIST="$HOME/Pictures/Fist.png"
+FIST_DATE_PNG="${WORKDIR}/fdate.png"
+FIST_DAY_PNG="${WORKDIR}/fday.png"
+FIST_FISTED="${WORKDIR}/fist.png"
+
+WEEKLYDIR="$HOME/Stern/Weekly"
+if [ ! -d "${WEEKLYDIR}" ] ; then mkdir -p "${WEEKLYDIR}" ; fi
+[ ! -d "${WORKDIR}" ] && mkdir -p "${WORKDIR}"
+
+if [ ${DEBUG} ] ; then
+	echo WORKDIR: ${WORKDIR}
+	echo MAILFILE: ${MAILFILE}
+	echo THEFILE: ${THEFILE}
+	echo EXTEN: ${EXTEN}
+	echo NAME: ${NAME}
+	echo WS: ${WS}
+	echo ONLYNUMBERS: ${ONLYNUMBERS}
+	echo WHERENOW: ${WHERENOW}
+#	exit
+fi
+###################################
+
+
+###################################
+#
+function CountTime() {
+
+	TIME_RAW=$1
+	TIME_COUNT=0
+	TIME_HOURS=0
+	TIME_MINUTES=0
+	TIME_SECONDS=0
+
+	while [ ! "${TIME_COUNT}" -gt "${TIME_RAW}" ] ; do
+
+		if [ ! $(( ${TIME_COUNT} + 60 )) -gt ${TIME_RAW} ] ; then
+			TIME_COUNT=$(( ${TIME_COUNT} + 60 ))
+			TIME_MINUTES=$(( ${TIME_MINUTES} + 1 ))
+
+			if [ ${TIME_MINUTES} -gt 1 ] ; then TIME_MINUTES_S="s" ; fi
+
+			if [ ${TIME_MINUTES} -eq 60 ] ; then
+				TIME_HOURS=$(( ${TIME_HOURS} + 1 ))
+				TIME_MINUTES=0
+
+				if [ ${TIME_HOURS} -gt 1 ] ; then TIME_HOURS_S="s" ; fi
+			fi
+
+			TIME_SECONDS=$(( ${TIME_RAW} - ${TIME_COUNT} ))
+
+			if [ ${TIME_SECONDS} -gt 1 ] ; then TIME_SECONDS_S="s" ; fi
+		else
+
+			TIME_SECONDS=$(( ${TIME_RAW} - ${TIME_COUNT} ))
+			[ ${TIME_SECONDS} -gt 1 ] && TIME_SECONDS_S="s"
+
+			[ "${TIME_HOURS}" -gt 0 ] && DURATION="${TIME_HOURS} hour${TIME_HOURS_S}"
+			[ "${TIME_MINUTES}" -gt 0 ] && DURATION="$( [ "${DURATION}" ] && echo "${DURATION}, ")${TIME_MINUTES} minute${TIME_MINUTES_S}"
+			[ "${TIME_SECONDS}" -gt 0 ] && DURATION="$( [ "${DURATION}" ] && echo "${DURATION}, ")${TIME_SECONDS} second${TIME_SECONDS_S}"
+
+			echo "${DURATION}"
+			DURATION=""
+			break
+		fi
+	done
+}
+###################################
+
+
+###################################
+#
+function FrigginSed() {
+
+# 	LENGTH=$(midentify "$1" | grep LENGTH | sed -e 's/.*=//g;s/\..*//g')
+	TIME_LEFT=${LENGTH}
+# 	DATE="02/27/13"
+
+	x=0
+
+	while read FRIGGIN_LINE ; do
+		if [ ! "${TIME_1}" ] ; then
+			TIME_1=$(date -d "${DATE} $(echo "${FRIGGIN_LINE}" | sed -e 's/.* \(.*\)/\1/g')" +%s)
+			[ ! "${FRIGGIN_LINE_1}" ] && FRIGGIN_LINE_1="${FRIGGIN_LINE}"
+
+			[ ${x} -eq 0 ] && SHOW_ENDS=$(date -d @"$(( ${TIME_1} + ${LENGTH} ))" +%s)
+		else
+			TIME_2=$(date -d "${DATE} $(echo "${FRIGGIN_LINE}" | sed -e 's/.* \(.*\)/\1/g')" +%s)
+			FRIGGIN_LINE_2="${FRIGGIN_LINE}"
+
+			x=$(( $x + 1 ))
+
+			SEGMENT=$(( ${TIME_2} - ${TIME_1} ))
+
+			FRIGGIN_DISPLAY="$(echo ${FRIGGIN_LINE_1} | cut -d. -f-1)"
+
+			echo "$(date -d @${TIME_1} +%-H:%M%P): ${FRIGGIN_DISPLAY} - $(CountTime ${SEGMENT})"
+
+			TIME_ADD=$(( ${TIME_1} + ${SEGMENT} ))
+
+			FRIGGIN_LINE_1="${FRIGGIN_LINE_2}"
+			FRIGGIN_LINE_2=""
+			TIME_1="${TIME_2}"
+			TIME_2=""
+		fi
+	done < "${FRIGGIN_DUMP}"
+
+	# LAST LINE (Robin's News)
+	FRIGGIN_DISPLAY="$(echo ${FRIGGIN_LINE_1} | cut -d. -f-1)"
+	echo "$(date -d @${TIME_1} +%-H:%M%P): ${FRIGGIN_DISPLAY} - $(CountTime $(( ${SHOW_ENDS} - ${TIME_ADD} )))"
+}
+###################################
+
+
+###################################
+#
+function MakeAFist() {
+
+	FIST_A_DATE=$(date -d ${DATE} "+%B %d, %Y")
+	FIST_A_DAY=$(date -d${DATE} +%A)
+
+	DATE_ROT=$(( $(expr length "${FIST_A_DATE}") * 7 ))
+	DAY_ROT=$(( $(expr length "${FIST_A_DAY}") * 7 ))
+
+	convert \
+		-virtual-pixel Background \
+		-background none \
+		-pointsize 18 label:"${FIST_A_DATE}" \
+		-distort Arc ${DATE_ROT} \
+		"${FIST_DATE_PNG}"
+
+	convert \
+		-virtual-pixel Background \
+		-background none \
+		-pointsize 18 label:"${FIST_A_DAY}" \
+		-rotate 180 \
+		-distort Arc "${DAY_ROT} 180" \
+		"${FIST_DAY_PNG}"
+
+	composite -gravity north -geometry +0+1 "${FIST_DATE_PNG}" "${FIST}" "${FIST_FISTED}"
+	composite -gravity south -geometry +0+1 "${FIST_DAY_PNG}" "${FIST_FISTED}" "${FIST_FISTED}"
+	rm -f "${FIST_DATE_PNG}" "${FIST_DAY_PNG}"
+}
+###################################
+
+
+###################################
+#
+function sanitize() {
+
+	ISWDM=$(echo "${THEFILE}" | grep WDM | wc -w)
+
+	if [ "${ONLYNUMBERS}" = 0 ] ; then
+		DATE="${NAME}"
+		PRETTY_DATE=$(date -d ${DATE} "+%A, %B %d, %Y")
+		NUMBER_DATE=$(date -d ${DATE} "+%m/%d/%Y, %A")
+		MONTH_YEAR=$(date -d ${DATE} "+%B - %Y")
+		YEAR=$(date -d ${DATE} +%Y)
+		#MONTH=$(date -d ${DATE} "+%m - %B")
+		TRACK=$(date -d ${DATE} "+%d")
+
+		if [ ${DEBUG} ] ; then
+			echo ON DATE: ${DATE}
+			echo ON PRETTY_DATE: ${PRETTY_DATE}
+			echo ON NUMBER_DATE: ${NUMBER_DATE}
+			echo ON MONTH_YEAR: ${MONTH_YEAR}
+			echo ON YEAR: ${YEAR}
+			echo ON TRACK: ${TRACK}
+		fi
+
+
+	else
+
+		SHOWDATE_FILE=$(echo "${NAME}" | sed -e "s/.CF.*//g;s/[a-zA-Z.]//g")
+		SHOWDATE_YEAR=$(echo ${SHOWDATE_FILE} | cut -d- -f3)
+
+		if [ $(expr length ${SHOWDATE_YEAR} ) -eq 4 ] ; then
+			SHOWDATE_YEAR=$(echo ${SHOWDATE_YEAR} | sed 's/20//')
+		fi
+
+		DATE_YEAR=${SHOWDATE_YEAR}
+		DATE_MONTH=$(echo ${SHOWDATE_FILE} | cut -d- -f1)
+		DATE_DAY=$(echo ${SHOWDATE_FILE} | cut -d- -f2)
+
+			DATE=${DATE_YEAR}${DATE_MONTH}${DATE_DAY}
+
+			if [ ${DEBUG} ] ; then
+				echo DATE_YEAR: ${DATE_YEAR}
+				echo DATE_MONTH: ${DATE_MONTH}
+				echo DATE_DAY: ${DATE_DAY}
+				echo DATE: ${DATE}
+			fi
+
+			[ ${DEBUG} ] && echo DATE IF: ${DATE} - ${NAME}
+
+		PRETTY_DATE=$(date -d ${DATE} "+%A, %B %d, %Y")
+		NUMBER_DATE=$(date -d ${DATE} "+%m/%d/%Y, %A")
+		MONTH_YEAR=$(date -d ${DATE} "+%B - %Y")
+		YEAR=$(date -d ${DATE} +%Y)
+		TRACK=$(date -d ${DATE} "+%d")
+
+		if [ ${DEBUG} ] ; then
+			echo PRETTY_DATE: ${PRETTY_DATE}
+			echo NUMBER_DATE: ${NUMBER_DATE}
+			echo MONTH_YEAR: ${MONTH_YEAR}
+			echo YEAR: ${YEAR}
+			echo TRACK: ${TRACK}
+		fi
+
+	fi
+
+# 	tagging
+}
+###################################
+
+
+###################################
+#
+function friggin() {
+
+	FRIGGIN_WEEK=$(date -d "${DATE}" +%-V)
+
+	if [[ $(date -d "${DATE}" +%A) = "Monday" && $(date +%A) = "Monday" ]] ; then
+		WHICH_MON="this"
+	else
+		WHICH_MON="last"
+	fi
+
+	FRIGGIN_TODAY=$(date -d "${WHICH_MON} monday" +%-m-%-d.htm)
+	FRIGGIN_YEAR=$(date -d "${WHICH_MON} monday" +%y)
+	FRIGGIN_DAY=$(date -d "${DATE}" +%a | sed 's/\(.*\)/\U\1/')
+	FRIGGIN_SHOW=$(echo "${WORKDIR}/${FRIGGIN_TODAY}" | sed 's/.htm/.friggin/')
+	FRIGGIN_DATE=$(date -d ${DATE} +%D)
+
+	if [ ${DEBUG} ] ; then
+		echo DATE: ${DATE}
+		echo WHICH_MON: ${WHICH_MON}
+		echo FRIGGIN_WEEK: ${FRIGGIN_WEEK}
+		echo FRIGGIN_TODAY: ${FRIGGIN_TODAY}
+		echo FRIGGIN_DATE: ${FRIGGIN_DATE}
+		echo FRIGGIN_YEAR: ${FRIGGIN_YEAR}
+		echo FRIGGIN_DAY: ${FRIGGIN_DAY}
+		echo FRIGGIN_SHOW: ${FRIGGIN_SHOW}
+		echo  wget -q -O "${FRIGGIN_SHOW}" http://www.marksfriggin.com/news${FRIGGIN_YEAR}/${FRIGGIN_TODAY}
+	fi
+
+	wget -q -O "${FRIGGIN_SHOW}" http://www.marksfriggin.com/news${FRIGGIN_YEAR}/${FRIGGIN_TODAY}
+
+
+	if [ $(ls -s "${FRIGGIN_SHOW}" | awk '{print $1}') != 0 ] ; then
+#		RUNDOWN=$(sed -n "/<\!--  "${FRIGGIN_DAY}"/,/<\/TD>/p" "${FRIGGIN_SHOW}" | grep -v "Wrap Up Show" | sed -n '/<ul>/,/<\/ul>/p' | sed -e :a -e 's/<[^>]*>//g;/</N;//ba' | grep -v '^$')
+		RUNDOWN=$(grep "^<li.*${FRIGGIN_DATE}" "${FRIGGIN_SHOW}" | sed 's/. '"$(echo $FRIGGIN_DATE | sed 's/\//\\\//g')"'. / /;s/<li>//' | awk 'BEGIN {OFS=FS=" ";} {temp=$NF; $NF = ""; sub("$", ""); print temp " -", $0}')
+		echo "${RUNDOWN}" > "${FRIGGIN_DUMP}"
+	else
+		RUNDOWN="Unable to get Rundown for ${PRETTY_DATE}"
+	fi
+}
+###################################
+
+
+###################################
+#
+function tagging() {
+
+	friggin
+	MakeAFist
+
+	if [ ${WS} -gt 0 ] ; then
+		if [ ! ${DEBUG} ] ; then
+			if [ ! -f "${WHERENOW}/${DATE} - WrapUp${EXTEN}" ] ; then
+				mv -fv "${THEFILE}" "${WHERENOW}/${DATE} - WrapUp${EXTEN}"
+			fi
+		fi
+		THESHOW="${WHERENOW}/${DATE} - WrapUp${EXTEN}"
+		SHOWTITLE="${NUMBER_DATE} - Wrap-Up"
+	else
+		if [ ! ${DEBUG} ] ; then
+			if [ ! -f "${WHERENOW}/${DATE}${EXTEN}" ] ; then
+#				echo "============== THE MOVE =============="
+				mv -fv "${THEFILE}" "${WHERENOW}/${DATE}${EXTEN}"
+			fi
+		fi
+		THESHOW="${WHERENOW}/${DATE}${EXTEN}"
+		SHOWTITLE="${NUMBER_DATE}"
+	fi
+
+	if [ ${DEBUG} ] ; then
+		echo -e \\v~~~~~~~~~~~~~~~~~~~~~
+		echo THEFILE: ${THEFILE}
+		echo WS: ${WS}
+		echo ISWDM: ${ISWDM}
+		echo ONLYNUMBERS: ${ONLYNUMBERS}
+		echo WHERENOW: ${WHERENOW}
+		echo DATE: ${DATE}
+		echo PRETTY_DATE: ${PRETTY_DATE}
+		echo NUMBER_DATE: ${NUMBER_DATE}
+		echo MONTH_YEAR: ${MONTH_YEAR}
+		echo YEAR: ${YEAR}
+		echo TRACK: ${TRACK}
+		echo THESHOW: $THESHOW
+		echo SHOWTITLE: ${SHOWTITLE}
+		echo RUNDOWN: $(echo ${RUNDOWN} | sed -e 's/\./\.\n/g')
+		echo -e ~~~~~~~~~~~~~~~~~~~~~\\v
+	fi
+
+
+	if [ ! "${RUNDOWN}" -o "$(file ${FIST_FISTED} | grep PNG.image.data,.191.x.191)" ] ; then
+		echo "Missing either RUNDOWN or FIST.  Bailing..."
+		echo ls -l ${FIST_FISTED}
+		echo "${RUNDOWN}"
+		exit 1
+	fi
+
+#	echo -e "RUNDOWN\\n${RUNDOWN}\\n\\n"
+#	echo -e "FRIGGIN_DUMP\\n${FRIGGIN_DUMP}\\n\\n"
+
+#	exit
+
+	/usr/bin/id3convert -s "${THESHOW}"
+
+#		--no-tagging-time-frame \
+#		--add-lyrics="eng::${RUNDOWN}" \
+
+
+# echo	"/usr/bin/eyeD3 --add-image=\"${FIST_FISTED}\":FRONT_COVER:\"Howard Stern Show\" --add-lyrics=\"${FRIGGIN_DUMP}:Rundown:eng\" --text-frame=\"TPOS:\" -t \"${SHOWTITLE}\" -G Comedy --text-frame=\"TYER:${YEAR}\" -A \"Howard Stern - ${MONTH_YEAR}\" -a \"Howard Stern Show\" -n \"${TRACK}\" \"${THESHOW}\""
+
+ 	/usr/bin/eyeD3 \
+		--add-image="${FIST_FISTED}":FRONT_COVER:"Howard Stern Show" \
+		--add-lyrics="${FRIGGIN_DUMP}:Friggin Rundown:eng" \
+		--text-frame="TYER:${YEAR}" \
+		--text-frame="TPOS:" \
+		-t "${SHOWTITLE}" \
+		-G Comedy \
+		-A "Howard Stern - ${MONTH_YEAR}" \
+		-a "Howard Stern Show" \
+		-n "${TRACK}" \
+		"${THESHOW}" &>/dev/null
+
+	if [ -f "${MAILFILE}" ] ; then
+		SHOW_SIZE="$(ls -sh "${THESHOW}" | awk '{print $1}')"
+		LENGTH=$(midentify "${THESHOW}" | grep LENGTH | sed -e 's/.*=//g;s/\..*//g')
+		echo -e "${PRETTY_DATE}"\\n\\n >> "${MAILFILE}"
+
+		FrigginSed >> "${MAILFILE}"
+
+		echo -e \\n >> "${MAILFILE}"
+
+		echo -e "Show Size: ${SHOW_SIZE}" >> "${MAILFILE}"
+
+		echo -e "Show Duration: $(CountTime ${LENGTH})" >> "${MAILFILE}"
+
+		echo -e "${FRIGGIN_DUMP}" >> "${MAILFILE}"
+
+		if [ ${DUMPINFO} ] ; then
+			echo ~~~~~~~~~~~~~~~~~~~~~
+			echo THEFILE: ${THEFILE}
+			echo WS: ${WS}
+			echo ISWDM: ${ISWDM}
+			echo ONLYNUMBERS: ${ONLYNUMBERS}
+			echo WHERENOW: ${WHERENOW}
+			echo DATE: ${DATE}
+			echo PRETTY_DATE: ${PRETTY_DATE}
+			echo NUMBER_DATE: ${NUMBER_DATE}
+			echo MONTH_YEAR: ${MONTH_YEAR}
+			echo YEAR: ${YEAR}
+			echo TRACK: ${TRACK}
+			echo THESHOW: $THESHOW
+			echo SHOWTITLE: ${SHOWTITLE}
+			echo RUNDOWN: $(echo ${RUNDOWN} | sed -e 's/\./\.\n/g')
+			echo -e ~~~~~~~~~~~~~~~~~~~~~\\n\\n
+		fi
+	fi
+
+
+	eyeD3 "${THESHOW}"
+
+
+	if [[ ! -f "${WEEKLYDIR}/$(basename "${THESHOW}")" && "${WHERENOW}" != $(pwd .) && "${WHERENOW}" != "." ]] ; then
+		mv -vf "${THESHOW}" "${WEEKLYDIR}"
+	fi
+
+#	[ -f "${FRIGGIN_SHOW}" ] && rm -f "${FRIGGIN_SHOW}"
+#	[ -f "${FIST_FISTED}" ] && rm -f "${FIST_FISTED}"
+#	[ -f "${FRIGGIN_DUMP}" ] && rm -f "${FIST_FISTED}"
+}
+###################################
+
+
+###################################
+#
+if [ ! -f "$1" ] ; then
+	echo -e \\v"FILE DOESN'T EXIST"
+	echo -e "$1"\\v
+	echo -e $(basename $0) [The Show]\\v
+	ls -l "$1"
+	exit 1
+else
+	sanitize && tagging
+fi
+###################################

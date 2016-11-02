@@ -1,0 +1,82 @@
+#!/bin/sh
+#
+# /etc/init.d/zabbix-disable-host
+# init script to disable this host in zabbix.
+#
+### BEGIN INIT INFO
+# Provides: zabbix-disable-host
+# Required-Start: $local_fs $network
+# Required-Stop: $local_fs $network
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Script to disable this host in zabbix.
+# Description: Script to disable this host in zabbix.
+### END INIT INFO
+#
+RETVAL=0
+
+DEF="/etc/default/zabbix-disable-host"
+
+if [ -f ${DEF} ] ;then
+        . ${DEF}
+else
+        echo "${DEF} file not supplied"
+        exit 1
+fi
+
+if [ ! ${HOST} ] ; then
+	HOST=$(hostname)
+else
+	echo "\"HOST\" not supplied in ${DEF}"
+	exit 1
+fi
+
+start() {
+	if [ ${DO_START} = "yes" ] ; then
+		echo "Sending Enable to Zabbix... "
+		/usr/local/bin/set_host_status.py $HOST enable
+		RETVAL=$?
+	else
+		echo "Returning zero... "
+		return 0
+	fi
+}
+
+stop() {
+	echo "Sending DISABLE to zabbix... "
+	/usr/local/bin/set_host_status.py $HOST disable
+	RETVAL=$?
+}
+
+reset() {
+	echo "Sending RESET to zabbix... "
+	/usr/local/bin/set_host_status.py $HOST reset
+	RETVAL=$?
+}
+
+status() {
+	echo "Host status in Zabbix: "
+	/usr/local/bin/set_host_status.py $HOST
+	RETVAL=$?
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status
+		;;
+	reset)
+		reset
+		;;
+	*)
+		echo "Usage: $0 {start|stop|status|reset}"
+		exit 1
+		;;
+esac
+
+exit $RETVAL

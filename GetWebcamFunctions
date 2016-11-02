@@ -1,0 +1,550 @@
+#!/bin/sh
+
+TANK_BASE="$HOME/Pictures"
+
+####################
+# MAKE TANKS
+#
+function MakeTanks() {
+	[ ${DEBUG} ] && echo -e "---------\nMakeTanks"\\v
+
+	MAX_WIDTH="640"
+
+	TANK="${TANK_BASE}/Cams/Tank${WHERE}"
+	TANK_CURRENT="${TANK_BASE}/Cams/Current${WHERE}"
+
+	TMP_DIR="/var/tmp/${WHERE}Cams"
+	TMP_PIC_1="${TMP_DIR}/camera.jpg"
+	TMP_PIC_2="${TMP_DIR}/tmp.jpg"
+	DATE_PIC="${TMP_DIR}/date.png"
+	TMP_COMPOSITE="${TMP_DIR}/composite.jpg"
+
+	if [ ${DEBUG} ] ; then
+		echo -e "TMP_DIR: $TMP_DIR"
+		echo -e "TANK_CURRENT: $TANK_CURRENT"
+		echo -e "TMP_PIC_1: $TMP_PIC_1"
+	fi
+
+	[ ! -d "${TANK}" ] && mkdir -p "${TANK}"
+	[ ! -d "${TMP_DIR}" ] && mkdir -p "${TMP_DIR}"
+	[ ! -d "${TANK_CURRENT}" ] && mkdir -p "${TANK_CURRENT}"
+
+	# Needed because autowhite will use ~ for tmp space otherwise
+	cd ${TMP_DIR}
+}
+####################
+
+
+
+####################
+# CHECK TIME
+#
+function CheckTime() {
+
+	INCOMING="$1"
+
+	WHERE=$(echo -e "${INCOMING}" | awk -F, '{print $1}')
+	VIEW=$(echo -e "${INCOMING}" | awk -F, '{print $2}')
+	URL=$(echo -e "${INCOMING}" | awk -F, '{print $3}')
+	LAT=$(echo -e "${INCOMING}" | awk -F, '{print $4}')
+	LON=$(echo -e "${INCOMING}" | awk -F, '{print $5}')
+	TZ=$(echo -e "${INCOMING}" | awk -F, '{print $6}')
+	ZIP=$(echo -e "${INCOMING}" | awk -F, '{print $7}')
+
+	[ ${DEBUG} ] && echo -e \\v"CheckTime: ${WHERE} - ${VIEW} - ${URL} - ${LAT} - ${LON} - ${TZ} - ${ZIP}"\\v
+
+	TIME_THERE=$(TZ=${TZ} date -d @${NOW} +%s)
+	eval $($HOME/Sources/scripts-git/phprisenset_tz.php ${LAT} ${LON} ${TZ} | tr [:lower:] [:upper:] | sed "s/: /=\"/;s/$/\"/")
+#	SUNRISE=$($HOME/Sources/scripts-git/phprisenset_tz.php -a ${LAT} -o "${LON}" -t ${TZ} | grep Sunrise: | awk '{print $2}')
+#	SUNSET=$($HOME/Sources/scripts-git/phprisenset_tz.php -a ${LAT} -o "${LON}" -t ${TZ} | grep Sunset: | awk '{print $2}')
+
+	if [ ${DEBUG} ] ; then
+		echo -e "TIME_THERE: $TIME_THERE - $(TZ=${TZ} date -d @${TIME_THERE} "+%Y-%m-%d %r")"
+		echo -e "SUNRISE: $SUNRISE - $(TZ=${TZ} date -d @${SUNRISE} "+%Y-%m-%d %r")"
+		echo -e "SUNSET: $SUNSET - $(TZ=${TZ} date -d @${SUNSET} "+%Y-%m-%d %r")"
+	fi
+
+ 	if [ ${SUNRISE} -ge ${TIME_THERE} -o ${SUNSET} -le ${TIME_THERE} ] ; then
+ 		[ ${DEBUG} ] && echo -e \\v"DARK TIME - BAILING...\\n====================="
+ 		unset INCOMING VIEW URL LAT LON TZ
+ 	else
+ 		GetCurlInfo ${VIEW} ${URL}
+ 	fi
+}
+####################
+
+
+
+####################
+# SAVE BAD IMAGE
+function SaveBadImage() {
+
+	MSG="$1"
+	ERR="$2"
+	IMG="$3"
+
+	cp -av "${IMG}" "/tmp/${NOW}_$(basename ${IMG})"
+	echo "\"$MSG\" wrote \"/tmp/${NOW}_$(basename ${IMG})\""
+	echo "ERROR: \"$ERR\""
+}
+####################
+
+
+
+####################
+# CURL INFO
+#
+function GetCurlInfo() {
+
+	[ ${DEBUG} ] && echo -e "---------\nGetCurlInfo"\\v
+
+	CURL_OUT=$(curl -A "${UA}" -X GET -sL --head ${URL})
+
+	CURL_LENGTH=$(echo -e "${CURL_OUT}" | grep -i Content-Length: | awk '{print $2}' | tr -d \\r)
+	CURL_TYPE=$(echo -e "${CURL_OUT}" | grep -i Content-Type: | awk '{print $2}' | tr -d \\r)
+	CURL_DATE=$(echo -e "${CURL_OUT}" | grep -i Last-Modified: | tr -d \\r | cut -d ' ' -f2-)
+
+	if [ ${DEBUG} ] ; then
+		echo -e "VIEW: ${VIEW}"
+		echo -e "URL: ${URL}"
+		echo -e "CURL_LENGTH: ${CURL_LENGTH}"
+		echo -e "CURL_TYPE: ${CURL_TYPE}"
+		echo -e "CURL_DATE: ${CURL_DATE}"
+		echo -e "---------"
+	fi
+
+	if [[ "${CURL_TYPE}" =~ .*jpeg.* ]] ; then
+		[ ${DEBUG} ] && echo "IS JPEG \"${CURL_TYPE}\"."
+		MakeTanks
+		CheckFreshness
+	else
+# 		[ ${DEBUG} ] && echo -e "NOT JPEG \"${CURL_TYPE}\".  Bailing...\\n====================="
+		[ ${DEBUG} ] && echo -e "${URL} is a ${CURL_TYPE}.  Skipping...\\n====================="
+	fi
+}
+####################
+
+
+
+####################
+# CHECK FRESHNESS
+#
+function CheckFreshness() {
+
+	[ ${DEBUG} ] && echo -e "---------\nCheckFreshness"\\v
+
+	if [ -f "${TANK_CURRENT}/${VIEW}.jpg" ] ; then
+		CURR_EPOCH=$(TZ=${TZ} date -r "${TANK_CURRENT}/${VIEW}.jpg" +%s)
+		CURL_EPOCH=$(TZ=${TZ} date -d "${CURL_DATE}" +%s)
+
+		if [ ${DEBUG} ] ; then
+			echo "CURR_EPOCH: $CURR_EPOCH"
+			echo "CURL_EPOCH: $CURL_EPOCH"
+		fi
+
+		if [ ${CURL_EPOCH} -gt ${CURR_EPOCH} ] ; then
+			[ ${DEBUG} ] && echo "NEWER"
+			GetRawPics
+		else
+			[ ${DEBUG} ] && echo "OLDER"
+		fi
+	else
+		[ ${DEBUG} ] && echo "NO CURRENT VIEW: ${TANK_CURRENT}/${VIEW}.jpg"
+		GetRawPics
+	fi
+
+	[ ! "${CURL_DATE}" ] && GetRawPics
+}
+####################
+
+
+
+####################
+# GET RAW PICS
+#
+function GetRawPics() {
+
+	[ ${DEBUG} ] && echo -e "---------\nGetRawPics"\\v
+
+	wget --user-agent="${UA}" -q ${URL} -O "${TMP_PIC_1}"
+
+	MIME_TYPE=$(file -b --mime-type "${TMP_PIC_1}")
+
+	JPEG_OK=$(jpeginfo -c "${TMP_PIC_1}" | egrep "OK")
+#	JPEG_OK=$(jpeginfo -c "${TMP_PIC_1}" | egrep "OK|WARNING")
+
+	if [ "${JPEG_OK}" ] && [[ "${MIME_TYPE}" =~ .*jpeg.* ]] ; then
+
+		unset JPEG_OK
+
+		GetEXIF "${TMP_PIC_1}" ${VIEW}
+
+		KurtosisCheck
+
+		[ ${DEBUG} ] && ls -l "${TMP_PIC_1}"
+
+# 		if [ "${MIME_TYPE}" == "image/jpeg" -a "${COLORSPACE}" != "Gray" -a ${KURTOSIS_BC} -eq 0 -a ${BAIL} == "no" ] ; then
+#		if [ "${MIME_TYPE}" == "image/jpeg" -a "${COLORSPACE}" != "Gray" -a ${KURTOSIS_BC} -eq 0 -a -f "${TANK_CURRENT}/${VIEW}.jpg" ] ; then
+		if [ "${MIME_TYPE}" == "image/jpeg" -a "${COLORSPACE}" != "Gray" -a ${KURTOSIS_BC} -eq 0 ] ; then
+
+			if [ ${EXIF_WIDTH} -gt ${MAX_WIDTH} ] ; then
+				OUTPUT="$(convert -resize ${MAX_WIDTH} "${TMP_PIC_1}" "${TMP_PIC_2}" 2>&1 > /dev/null)"
+# 				TRAP=$?
+
+# 				[ ${TRAP} -ne 0 ] && SaveBadImage "convert resize" ${TMP_PIC_1}
+				[ ! -z "${OUTPUT}" ] && SaveBadImage "convert resize" "$OUTPUT" ${TMP_PIC_1}
+
+# 				unset TRAP
+				unset OUTPUT
+
+				mv -f "${TMP_PIC_2}" "${TMP_PIC_1}"
+			fi
+
+			EnhancePhoto "${TANK_CURRENT}/${VIEW}.jpg" ${VIEW}
+
+# 			WriteEXIF "${TANK_CURRENT}/${VIEW}.jpg"
+
+			################
+			# Storage
+			#
+			if [ ${KEEP_ALL} ] ; then
+
+				THIS_TANK="${TANK}/${TODAY}-${VIEW}"
+				KeepPhoto "${TANK_CURRENT}/${VIEW}.jpg" ${VIEW}
+				[ ! $? -eq 0 ] && echo -e "${VIEW} KeepPhoto"
+
+				unset THIS_TANK
+			fi
+			################
+		else
+			if [ ${DEBUG} ] ; then
+				echo -e "\033[1mBAD CAM.  SKIPPING...\033[0m"
+				echo -e "\"${TANK_CURRENT}/${VIEW}.jpg\": $(ls -s1 "${TANK_CURRENT}/${VIEW}.jpg")"
+				echo -e "BAD MIME_TYPE: $MIME_TYPE"
+				echo -e "BAD COLORSPACE: $COLORSPACE"
+				echo -e "KURTOSIS_BC: ${KURTOSIS_BC}"
+			fi
+		fi
+	else
+		if [ ${DEBUG} ] ; then
+			echo -e "\033[1mBAD CAM.  SKIPPING...\033[0m"
+			echo -e "BAD MIME_TYPE: $MIME_TYPE"
+			echo -e "JPEG_OK: $JPEG_OK"
+		fi
+	fi
+
+	[ ${DEBUG} ] && echo -e "====================="
+}
+####################
+
+
+
+####################
+# MakeHTML
+#
+function MakeHTML() {
+
+	[ ${DEBUG} ] && echo -e "---------\nMakeHTML"\\v
+
+	WHERE_LC=$(echo ${WHERE} | tr '[:upper:]' '[:lower:]')
+	WEB_DIR="/var/www/${WHERE_LC}.fleag.us/htdocs"
+	WEB_FILE="${WEB_DIR}/index.html"
+
+	if [ ${DEBUG} ] ; then
+		echo "WEB_FILE: ${WEB_FILE}"
+	fi
+
+	echo -e "<html><head><title>${WHERE}</title></head><body bgcolor=\"black\"><center>" > "${WEB_FILE}"
+	echo -e "<!-- a href=\"http://www.wunderground.com/cgi-bin/findweather/getForecast?query=zmw:${ZIP}.1.99999&bannertypeclick=wu_bluestripes\" title=\"${WHERE}\" target=\"_blank\"><img style=\"left: 0px; top: 0px; position: fixed;\" src=\"http://weathersticker.wunderground.com/weathersticker/cgi-bin/banner/ban/wxBanner?bannertype=wu_bluestripes&zip=${ZIP}&language=EN\" alt=\"${WHERE}\" width=\"160\" /></a -->" >> "${WEB_FILE}"
+
+	for CAM in ${ALL_THESE_CAMS} ; do
+
+		WHERE=$(echo -e "${CAM}" | awk -F, '{print $1}')
+		VIEW=$(echo -e "${CAM}" | awk -F, '{print $2}')
+		URL=$(echo -e "${INCOMING}" | awk -F, '{print $3}')
+		LAT=$(echo -e "${CAM}" | awk -F, '{print $4}')
+		LON=$(echo -e "${CAM}" | awk -F, '{print $5}')
+		TZ=$(echo -e "${INCOMING}" | awk -F, '{print $6}')
+		ZIP=$(echo -e "${INCOMING}" | awk -F, '{print $7}')
+
+		TANK="${TANK_BASE}/Cams/Tank${WHERE}"
+		TANK_CURRENT="${TANK_BASE}/Cams/Current${WHERE}"
+
+		BNAME="${VIEW}.jpg"
+
+		if [ -f "${TANK_CURRENT}/${BNAME}" ] ; then
+
+			cp -af "${TANK_CURRENT}/${BNAME}" "${WEB_DIR}/${BNAME}"
+
+			echo -e "<a href=\"https://maps.google.com/maps?q=${LAT},${LON}\" target=\"_blank\"><img border=\"0\" src=\"${BNAME}\" width=\"800px\" alt=\"${VIEW}, ${WHERE}\"></img></a><BR>" >> "${WEB_FILE}"
+
+			[ ${DEBUG} ] && echo -e "${VIEW}.jpg: q=${LAT},${LON}"
+		else
+			[ ${DEBUG} ] && echo -e "NOT FOUND: ${TANK_CURRENT}/${BNAME} - ${VIEW}.jpg: q=${LAT},${LON}"
+		fi
+	done
+
+	echo -e "</center></body></html>" >> "${WEB_FILE}"
+}
+####################
+
+
+
+####################
+# EnhancePhoto
+#
+function EnhancePhoto() {
+
+	[ ${DEBUG} ] && echo -e "---------\nEnhancePhoto ${1}"\\v
+
+	if [ ${DEBUG} ] ; then
+		echo -e "TMP_PIC_1: $TMP_PIC_1"
+		echo -e "TMP_PIC_2: $TMP_PIC_2"
+	fi
+
+	$HOME/Scripts/autowhite -m 1 -p 0.1 "${TMP_PIC_1}" "${TMP_PIC_2}" $2
+
+	TRAP=$?
+	if [ ${TRAP} -gt 0 ] ; then
+		echo -e "BOOM EnhancePhoto \"$2\""
+		echo -e "---------"\n
+		file -k "${TMP_PIC_1}"
+		echo -e "---------"\n
+		ls -l "${TMP_PIC_1}"
+		echo -e "---------"\n
+		head "${TMP_PIC_1}"
+		echo -e "---------"\n
+	fi
+
+	unset TRAP
+
+#	x14
+
+	mv -f "${TMP_PIC_2}" "${TMP_PIC_1}"
+	OUTPUT="$(convert -quality 100 -background gray -fill white -gravity center -size x19 label:"$(TZ=${TZ} date -d "${EXIF_TOUCH_DATE}" '+%-I:%M%P - %D %A')" "${DATE_PIC}" 2>&1 > /dev/null)"
+# 	TRAP=$?
+
+# 	[ ${TRAP} -ne 0 ] && SaveBadImage "convert add label" ${TMP_PIC_1}
+	[ ! -z "${OUTPUT}" ] && SaveBadImage "convert add label" "$OUTPUT" ${TMP_PIC_1}
+
+# 	unset TRAP
+	unset OUTPUT
+
+	composite -quality 100 -gravity northwest -geometry +0+0 "${DATE_PIC}" "${TMP_PIC_1}" "$1"
+
+	touch -d "${EXIF_TOUCH_DATE}" "${TMP_PIC_1}"
+	touch -d "${EXIF_TOUCH_DATE}" "${TANK_CURRENT}/${VIEW}.jpg"
+}
+####################
+
+
+
+####################
+# KURTOSIS CHECK
+#
+function KurtosisCheck() {
+
+	[ ${DEBUG} ] && echo -e "---------\nKurtosisCheck ${1}"\\v
+
+	unset KURTOSIS_BC
+
+	KURTOSIS=0
+
+	for I in $(echo -e "${IDENIFY_RAW}" | grep kurtosis: | awk '{print $2}' | tr \\n\\r ' ' ) ; do
+		KURTOSIS=$(echo "$KURTOSIS + $I" | bc -l)
+	done
+
+	if [ ${KURTOSIS} == 0 ] ; then
+		KURTOSIS=$(( ${KURTOSIS_LIMIT} + 1 ))
+		[ ${DEBUG} ] && echo "Fake Kurtosis of ${KURTOSIS}"
+	fi
+
+	KURTOSIS_BC=$(echo -e "${KURTOSIS} > ${KURTOSIS_LIMIT}" | bc)
+
+	if [ ${DEBUG} ] ; then
+# 		echo -e "EXPRE FINAL: ${EXPRE}"
+		echo -e "KURTOSIS: $KURTOSIS"
+		echo -e "KURTOSIS_BC: $KURTOSIS_BC"
+	fi
+
+	unset EXPRE KURTOSIS
+}
+####################
+
+
+
+####################
+# GetEXIF
+#
+function GetEXIF() {
+
+	[ ${DEBUG} ] && echo -e "---------\nGetEXIF ${1}"\\v
+
+# 	IDENIFY_RAW=$(identify -ping -quiet -verbose ${1} | egrep "Colorspace|modify|kurtosis")
+	IDENIFY_RAW=$(identify -ping -quiet -verbose ${1})
+	TRAP=$?
+
+	[ ${TRAP} -ne 0 ] && echo -e "${TRAP}: ${VIEW} MISC"
+	unset TRAP
+
+	EXIF_STAMP=$(echo -e "${IDENIFY_RAW}" | grep "date:modify:" | awk '{print $2}')
+	COLORSPACE=$(echo -e "${IDENIFY_RAW}" | grep "Colorspace:" | awk '{print $2}')
+	MIME_TYPE=$(echo -e "${IDENIFY_RAW}" | grep "Mime type:" | awk '{print $3}')
+	EXIF_WIDTH=$(echo -e "${IDENIFY_RAW}" | grep "Geometry:" | awk '{print $2}' | sed 's/x.*//')
+
+	EXIF_TOUCH_DATE=$(TZ=${TZ} date -d "${EXIF_STAMP}" "+%Y-%m-%d %H:%M:%S")
+	EXIF_FILE_STAMP=$(TZ=${TZ} date -d "${EXIF_STAMP}" +%Y%m%d_%H%M%S)
+	EXIF_EPOCH=$(TZ=${TZ} date -d "${EXIF_STAMP}" +%s)
+
+	if [ ${DEBUG} ] ; then
+		echo EXIF_STAMP: $EXIF_STAMP
+		echo EXIF_TOUCH_DATE: $EXIF_TOUCH_DATE
+		echo EXIF_FILE_STAMP: $EXIF_FILE_STAMP
+		echo EXIF_EPOCH: $EXIF_EPOCH
+		echo EXIF_WIDTH: $EXIF_WIDTH
+		echo MIME_TYPE: $MIME_TYPE
+		echo COLORSPACE: $COLORSPACE
+	fi
+}
+####################
+
+
+
+####################
+# WriteEXIF
+#
+function WriteEXIF() {
+
+	exiftool -overwrite_original -GPSLatitude=${LAT} -GPSLongitude=${LON} "${TANK_CURRENT}/${VIEW}.jpg"
+	TRAP=$?
+
+	if [ ${TRAP} -eq 0 ] ; then
+		echo "WriteEXIF passed: ${TRAP}"
+	else
+		echo "WriteEXIF FAILED: ${TRAP}"
+	fi
+
+	unset TRAP
+}
+####################
+
+
+
+####################
+# KeepPhoto
+#
+function KeepPhoto() {
+
+	[ ${DEBUG} ] && echo -e "---------\nKeepPhoto: ${1}"\\v
+
+	if [ "${TODAY}" == "$(TZ=${TZ} date -d "${EXIF_STAMP}" +%Y%m%d)" ] ; then
+
+		if [ ${DEBUG} ] ; then
+			echo -e "KEEP TODAY: ${TODAY}"
+			echo -e "KEEP FILE: $(TZ=${TZ} date -d "${EXIF_STAMP}" +%Y%m%d)"
+		fi
+
+		[ ! -d "${THIS_TANK}" ] && mkdir -p "${THIS_TANK}"
+
+		PREV_PIC="${THIS_TANK}/$(ls -1t "${THIS_TANK}/" | head -n1)"
+
+		if [ -f ${PREV_PIC} ] ; then
+			PREV_SHA=$(sha1sum ${PREV_PIC} | awk '{print $1}')
+			EXIF_PREV_EPOCH=$(TZ=${TZ} date -r "${PREV_PIC}" +%s)
+		else
+			PREV_SHA="${PREV_PIC} IS NOT A FILE"
+			EXIF_PREV_EPOCH="${PREV_PIC} IS NOT A FILE"
+		fi
+
+		CURR_SHA=$(sha1sum ${TMP_PIC_1} | awk '{print $1}')
+
+		if [ ${DEBUG} ] ; then
+			echo THIS_TANK: $THIS_TANK
+			echo PREV_PIC: $PREV_PIC
+			echo EXIF_PREV_EPOCH: $EXIF_PREV_EPOCH
+			echo PREV_SHA: $PREV_SHA
+			echo CURR_SHA: $CURR_SHA
+		fi
+
+		if [ ! "${EXIF_EPOCH}" == "${EXIF_PREV_EPOCH}" -a ! "${PREV_SHA}" == "${CURR_SHA}" ] ; then
+
+			if [ ${DEBUG} ] ; then
+				echo "Keeping ${WHERE} ${VIEW}'s pic ${EXIF_FILE_STAMP}.jpg"
+				echo "cp -a \"${TMP_PIC_1}\" \"${THIS_TANK}/${EXIF_FILE_STAMP}.jpg\""
+				echo "touch -d \"${EXIF_TOUCH_DATE}\" \"${THIS_TANK}/${EXIF_FILE_STAMP}.jpg\""
+			fi
+
+			cp -a "${TMP_PIC_1}" "${THIS_TANK}/${EXIF_FILE_STAMP}.jpg"
+			touch -d "${EXIF_TOUCH_DATE}" "${THIS_TANK}/${EXIF_FILE_STAMP}.jpg"
+		fi
+
+		unset PREV_PIC EXIF_PREV_EPOCH
+		unset EXIF_TOUCH_DATE EXIF_FILE_STAMP EXIF_EPOCH
+	else
+		if [ ${DEBUG} ] ; then
+
+			echo "NOT KEEPING"
+			echo "TODAY: ${TODAY}"
+			echo "$(TZ=${TZ} date -d "${EXIF_STAMP}" +%Y%m%d)"
+		fi
+	fi
+}
+####################
+
+
+####################
+# GLOBALS
+#
+
+KEEP_ALL="YES"
+
+NOW=$(date +%s)
+TODAY=$(date -d "$(date -d @${NOW})" +%Y%m%d)
+
+KURTOSIS_LIMIT=50
+#UA="$(curl -s "https://github.com/gorhill/uMatrix/wiki/Latest-user-agent-strings" | grep -i chrome | head -n3 | tail -n1)"
+#UA="$(curl -sL "https://techblog.willshouse.com/2012/01/03/most-common-user-agents/" | grep -i "^Mozilla" | shuf -n1)"
+UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36"
+
+HOST=$(hostname | cut -d. -f1)
+
+case ${HOST} in
+
+	aragorn)
+		DO_HTML="yes"
+		;;
+	*)
+		unset DO_HTML
+		;;
+esac
+####################
+
+
+
+####################
+# MAIN
+case $1 in
+	debug)
+		DEBUG="yes"
+		for CAM in ${ALL_THESE_CAMS} ; do
+			unset BAIL
+			CheckTime $CAM
+		done
+		;;
+	html)
+		DEBUG="yes"
+		HTML_FORCED="yes"
+		MakeHTML
+		;;
+	*)
+		for CAM in ${ALL_THESE_CAMS} ; do
+			unset BAIL
+			CheckTime $CAM
+		done
+		;;
+esac
+
+[ ${DO_HTML} ] && [ ! ${HTML_FORCED} ] && MakeHTML
+
+[ ! ${DEBUG} ] && rm -rf ${TMP_DIR}
+####################

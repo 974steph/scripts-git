@@ -1,0 +1,9 @@
+# OldMill
+curl -GLs 67.210.198.15:7271/cgi-bin/absctrl -d zoom=50 -d pan=1920 -d tilt=20
+
+#Pavilion
+curl -GLs 67.210.198.15:8919/cgi-bin/absctrl -d zoom=500 -d pan=2360 -d tilt=93
+
+#RiverPark
+#curl -LGs 67.210.198.15:9092/cgi-bin/absctrl -d zoom=170 -d pan=2620 -d tilt=60
+

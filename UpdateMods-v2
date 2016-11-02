@@ -1,0 +1,161 @@
+#!/bin/sh
+
+##############################################################
+# Variables
+#
+
+source $HOME/Sources/scripts-git/secret_stuff.sh
+
+DEBUG="yes"
+
+
+#MODS="DynMap DynMap-Essentials DynMap-Factions EssentialsX Factions iConomy-7 NoWeather Vault WorldEdit World-Portal"
+MODS="DynMap DynMap-Essentials DynMap-Factions EssentialsX Factions iConomy-7 NoWeather Vault WorldEdit"
+
+
+UA="Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0"
+
+NOW=$(date +%s)
+YESTERDAY=$(date -d "$(date -d @${NOW}) -1 day -1 hour" +%s)
+
+BODY="/tmp/ModMailBody_${TODAY}.html"
+EMAILS="${EMAIL_MINE}"
+UPDATED_COUNT=0
+
+
+DIR_PLUGINS="/usr/local/bukkit/plugins"
+#MOD_TEMP_TANK="/tmp/plugins/TMP"
+MOD_TEMP_TANK="${DIR_PLUGINS}/TMP"
+[ ! -d "${MOD_TEMP_TANK}" ] && mkdir -p "${MOD_TEMP_TANK}"
+
+B=$(tput bold)
+W=$(tput setaf 7)
+N=$(tput sgr0)
+##############################################################
+
+
+##############################################################
+# GET MOD
+function GetMod() {
+
+#	1: NAME
+#	2. MOD_JAR
+
+	FILE_NAME=$(basename ${MOD_JAR})
+	wget -O ${MOD_TEMP_TANK}/${FILE_NAME}
+
+	curl -sL -X GET --head ${MOD_JAR}
+}
+##############################################################
+
+
+##############################################################
+# FRESHNESS
+function freshness() {
+
+#       1: EPOCH
+#       2: NAME
+#       3: URL
+#	4: MOD_JAR
+
+	EPOCH=$1
+	NAME=$2
+	URL=$3
+
+	echo "FRESHNESS: $1 || $2 || $3"
+
+	if [ -f ${DIR_PLUGINS}/.${NAME} ] ; then
+		echo USE FILE
+		CURRENT_EPOCH=$(date -r ${DIR_PLUGINS}/.${NAME} +%s)
+	else
+		CURRENT_EPOCH=0
+	fi
+
+#	echo "YESTERDAY: ${YESTERDAY} || $(date -d @${YESTERDAY})"
+
+#	if [ ${1} -ge ${YESTERDAY} ] ; then
+#		echo "UPDATED: $1 at $(date -d @$1)"
+#	else
+#		echo "CURRENT: $1 at $(date -d @$1)"
+#	fi
+
+	if [ ${EPOCH} -gt ${CURRENT_EPOCH} ] ; then
+		echo -e "${W}${B}${NAME} needs to be updated"
+		echo "MINE: $(date -d @$CURRENT_EPOCH)"
+		echo "THEIR: $(date -d @$EPOCH)${N}"
+
+echo		GetMod ${NAME} ${MOD_JAR}
+	else
+		echo "${W}${NAME} is current"
+		echo "MINE: $(date -d @$CURRENT_EPOCH)"
+		echo "THEIR: $(date -d @$EPOCH)${N}"
+	fi
+
+}
+
+##############################################################
+
+
+##############################################################
+# Check Mods
+#
+function CheckModsTwo() {
+
+	URL_BASE="https://dev.bukkit.org/bukkit-plugins"
+
+
+#curl -sL "https://dev.bukkit.org/bukkit-plugins/worldedit/files/" | awk '/class="col-file"/,/class="col-downloads"/' | tidy -b -wrap 1000 -q -ascii --tidy-mark false --show-warnings false | egrep "col-filename|col-file|col-type|col-date" | head -n4
+#https://dev.bukkit.org/media/files/912/862/Dynmap-Essentials-0.91.jar
+
+
+	for MOD in ${MODS} ; do
+
+		MOD_LC=$(echo $MOD | tr '[:upper:]' '[:lower:]')
+		URL_MOD="${URL_BASE}/${MOD_LC}"
+		URL_FILES="${URL_BASE}/${MOD_LC}/files"
+
+		echo "MOD: $MOD - $MOD_LC"
+		echo "URL: ${URL_MOD}"
+		MOD_FILE_RAW=$(curl -sL -A "${UA}" "${URL_FILES}" | awk '/class="col-file"/,/class="col-downloads"/' | tidy -b -wrap 1000 -q -ascii --tidy-mark false --show-warnings false | egrep "col-filename|col-file|col-type|col-date" | head -n4)
+		MOD_DATE=$(echo ${MOD_FILE_RAW} | grep col-date | sed 's/.*data-epoch=\"\([0-9]\+\).*/\1/')
+		MOD_FILE=$(echo ${MOD_FILE_RAW} | grep col-filename | sed 's/.*">\(.*\)<\/.*/\1/')
+		MOD_PATH=$(echo ${MOD_FILE_RAW} | sed 's/.*href="\(.*\)">.*<\/a.*/\1/;s/\/$//')
+		MOD_JAR=$(dirname ${URL_BASE})${MOD_PATH}/${MOD_FILE}
+		echo "MOD_DATE: $MOD_DATE || $(date -d @${MOD_DATE})"
+#		echo "MOD_FILE_RAW: $MOD_FILE_RAW"
+#		echo "MOD: $(dirname ${URL_BASE})${MOD_PATH}/${MOD_FILE}"
+		echo "MOD: ${MOD_JAR}"
+		echo "---------"
+#exit
+		freshness ${MOD_DATE} ${MOD_LC} ${URL_MOD} ${MOD_JAR}
+
+		echo "========="
+
+	done
+}
+##############################################################
+
+
+
+##############################################################
+# DO IT
+#
+if [ -f "${BODY}" ] ; then rm -f "${BODY}" ; fi
+
+case $1 in
+	force)
+		DEBUG="yes"
+		FORCE="yes"
+		CheckMods
+		;;
+	modtwo)
+		DEBUG="yes"
+		FORCE="yes"
+		CheckModsTwo
+		exit
+		;;
+	*)
+		CheckModsTwo
+		;;
+esac
+

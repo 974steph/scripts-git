@@ -1,0 +1,168 @@
+#!/bin/sh
+
+source $HOME/Sources/scripts-git/secret_stuff.sh
+
+#DEBUG="yes"
+
+
+NOW=$(date)
+#NOW="06-06-2012"
+# NOW="2014-10-08"
+
+case $1 in
+	yesterday)
+		NOW=$( date -d "${NOW} - 1 day")
+		;;
+esac
+
+
+TODAY=$(date -d "${NOW}" +%m-%d-%y)
+STERN_DAY=$(date -d "${NOW}" "+ %-d, %Y")
+SHORT_DAY=$(date -d "${NOW}" "+%y%m%d")
+
+HOME_DIR="$HOME"
+TMPDIR="/tmp"
+TORRENTDIR="${HOME_DIR}/Packages/Torrents"
+
+KILLSCRIPT="${HOME_DIR}/Sources/scripts-git/killtrans"
+
+MAILFILE="${TMPDIR}/SternMail.html"
+TIMEFILE="${TMPDIR}/${TODAY}_timeittook"
+# RSSFILE="${TMPDIR}/${TODAY}.rss"
+
+
+function CheckMagLink() {
+
+	if [ ! -d "${TMPDIR}" ] ; then mkdir -p "${TMPDIR}" ; fi
+	if [ -f "${TIMEFILE}" ] ; then rm -f "${TIMEFILE}" ; touch "${TIMEFILE}" ; fi
+	if [ -f "${MAILFILE}" ] ; then rm -f "${MAILFILE}" ; touch "${MAILFILE}" ; fi
+# 	if [ -f "${RSSFILE}" ] ; then rm -f "${RSSFILE}" ; touch "${RSSFILE}" ; fi
+
+
+	#http://thepiratebay.se/search/howard%20stern/0/3/0
+
+# 	wget -q -O "${RSSFILE}" http://thepiratebay.se/user/wushdishmeen
+# 	wget -q -O "${RSSFILE}" http://thepiratebay.se/search/howard%20stern/0/99/100
+#	MAGLINK=$(grep "${TODAY}" "${RSSFILE}" | grep 128K | head -n2 | tail -n1 | cut -d\" -f2)
+# 	MAGLINK=$(grep "${TODAY}" "${RSSFILE}" | grep -i magnet.*howard.*stern.*wrap.*up | sed -e "s/.*magnet:/magnet:/;s/\" title=\"Download.*//")
+
+# 	MAGLINK="$(curl -s http://thepiratebay.se/search/howard%20stern/0/99/0 | grep -A2 " 29, 2014" | grep href=\"magnet | sed -e 's/\" title.*//g;s/.*magnet/magnet/')"
+#	MAGLINK="$(curl -s http://thepiratebay.se/search/howard%20stern/0/99/0 | grep -A2 "${STERN_DAY}" | grep href=\"magnet | sed -e 's/\" title.*//g;s/.*magnet/magnet/')"
+	MAGLINK="$(curl -s http://thepiratebay.org/search/howard%20stern/0/99/0 | grep -A2 "${STERN_DAY}" | grep href=\"magnet | sed -e 's/\" title.*//g;s/.*magnet/magnet/')"
+
+
+#	[ ! -z "${MAGLINK}" ] && doit
+
+# 	echo $MAGLINK
+
+	if [ "${MAGLINK}" ] ; then
+		if [ "${DEBUG}" ] ; then
+			echo "DOIT"
+			echo -e "MAGLINK: ${MAGLINK}"\\v
+		fi
+		doit
+	else
+		if [ "${DEBUG}" ] ; then
+			echo "DON'T DOIT"
+			echo -e "MAGLINK: ${MAGLINK}"\\v
+		fi
+		exit
+	fi
+}
+
+
+function doit() {
+	echo "<HTML><HEAD><TITLE>${TODAY} Stern Show Done</TITLE></HEAD><BODY><BR><PRE>" > "${MAILFILE}"
+
+	/usr/bin/time -a -o "${TIMEFILE}" -f%e transmission-cli -D -u 70 -w "${TORRENTDIR}" --finish "${KILLSCRIPT}" "${MAGLINK}" 1>&- 2>&-
+
+# 	STERNDIR=$(ls -1 "${TORRENTDIR}" | grep "${TODAY}")
+# 	SHOWFILE=$(ls -1 "${TORRENTDIR}/${STERNDIR}" | grep mp3 | grep -v Wrap)
+	SHOWFILE=$(find "${TORRENTDIR}" -iname THSS.*)
+	STERNDIR=$(dirname "${SHOWFILE}")
+	NEWFILE="${STERNDIR}/${SHORT_DAY}.mp3"
+
+	if [ "${DEBUG}" ] ; then
+		echo STERN_DAY: $STERN_DAY
+		echo SHORT_DAY: $SHORT_DAY
+		echo TORRENTDIR: $TORRENTDIR
+		echo STERNDIR: $STERNDIR
+		echo SHOWFILE: $SHOWFILE
+	fi
+
+	if [[ ! "${STERNDIR}" || ! "${SHOWFILE}" ]] ; then
+		echo "<br><br><b><u>MAJOR ISSUE</u>" >> "${MAILFILE}"
+		echo "TODAY: ${TODAY}" >> "${MAILFILE}"
+# 		echo "TORRENTDIR: ${TORRENTDIR}" >> "${MAILFILE}"
+# 		echo "STERNDIR: ${STERNDIR}" >> "${MAILFILE}"
+# 		echo "SHOWFILE: ${SHOWFILE}" >> "${MAILFILE}"
+
+		echo "STERN_DAY: $STERN_DAY" >> "${MAILFILE}"
+		echo "SHORT_DAY: $SHORT_DAY" >> "${MAILFILE}"
+		echo "TORRENTDIR: $TORRENTDIR" >> "${MAILFILE}"
+		echo "STERNDIR: $STERNDIR" >> "${MAILFILE}"
+		echo "SHOWFILE: $SHOWFILE" >> "${MAILFILE}"
+		echo "</PRE><BR><BR><BR><BR><BR></BODY></HTML>" >> "${MAILFILE}"
+		mutt -s "Stern Show ERROR - ${TODAY}" -e "set content_type=text/html" -- ${EMAIL_MINE} < "${MAILFILE}"
+		exit 1
+	else
+
+		if [ "${DEBUG}" ] ; then
+			cp -av "${SHOWFILE}" "${NEWFILE}"
+			echo "---------"
+			echo -e \\v"${SHOWFILE}"\\n"${NEWFILE}"\\v
+			echo "---------"
+		else
+			cp -a "${SHOWFILE}" "${NEWFILE}"
+		fi
+
+# 		${HOME_DIR}/Scripts/Retag "${TORRENTDIR}/${STERNDIR}/${SHOWFILE}" > /dev/null
+		${HOME_DIR}/Sources/scripts-git/Retag "${NEWFILE}" > /dev/null
+	fi
+
+# 	/usr/bin/time -a -o "${TIMEFILE}" -f%e rm -rf "${TORRENTDIR}/${STERNDIR}"
+	/usr/bin/time -a -o "${TIMEFILE}" -f%e rm -rf "${STERNDIR}"
+
+	MailResults
+}
+
+function MailResults() {
+	SECS=$(cat ${TIMEFILE} | awk '{ sum+=$1} END {print sum}' | cut -d\. -f-1)
+	TIMEITTOOK=$(printf ""%dh:%dm:%ds"\n" $(($SECS/3600)) $(($SECS%3600/60)) $(($SECS%60)))
+
+	echo "It took "${TIMEITTOOK}" to complete.<br>" >> "${MAILFILE}"
+	echo "</PRE><BR><BR><BR><BR><BR></BODY></HTML>" >> "${MAILFILE}"
+	mutt -s "Stern Show Done - ${TODAY}" -e "set content_type=text/html" -- ${EMAIL_MINE} < "${MAILFILE}"
+	rm -f "${MAILFILE}" "${TIMEFILE}" 
+# 	"${RSSFILE}"
+
+# 	rm -rf 
+}
+
+
+#TODAY_SHOW=$(date +%y%m%d.mp3)
+
+if [ "${DEBUG}" ] ; then
+#	echo "TODAY_SHOW: ${TODAY_SHOW}"
+	echo "NOW: ${NOW}"
+	echo "TODAY: ${TODAY}"
+	echo "STERN_DAY: ${STERN_DAY}"
+	echo -e "SHORT_DAY: ${SHORT_DAY}"\\v
+fi
+
+#exit
+
+#CheckMagLink
+#exit
+
+# if [ ! "$(ps ax | grep transmission | grep -i howard.stern)" -a ! -f "${MAILFILE}" -a ! -f "$HOME/Stern/Weekly/${TODAY_SHOW}" ] ; then
+if [ ! "$(ps ax | grep transmission | grep -i howard.stern)" -a ! -f "${MAILFILE}" -a ! -f "$HOME/Stern/Weekly/${SHORT_DAY}.mp3" ] ; then
+
+	CheckMagLink
+else
+	if [ ${DEBUG} ] ; then
+		ps ax | grep transmission | grep -i howard.stern
+		ls -lh ${MAILFILE}
+		ls -lh $HOME/Stern/Weekly/${SHORT_DAY}.mp3
+	fi
+fi

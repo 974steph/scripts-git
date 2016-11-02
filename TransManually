@@ -1,0 +1,37 @@
+#!/bin/sh
+
+source $HOME/Sources/scripts-git/secret_stuff.sh
+
+#SHORT="$(echo "$1" | awk -F: '{print $4}' | sed -e "s/\(.*\)&dn.*/\1/g")"
+#SHORT="$(echo "$1" | awk -F\& '{print $2}' | sed 's/.*=//')"
+
+# SHORT="$(echo "$1" | sed -e 's/.*dn=//;s/\(.*\)\&.*/\1/')"
+#SHORT="$(echo "$1" | cut -d: -f4 | cut -d\& -f1)"
+
+#echo $SHORT
+#exit
+
+[ ! -f /var/run/transmission/transmission.pid ] && sudo /etc/init.d/transmission-daemon start
+
+sleep 2
+
+# transmission-cli -D -u 70 -w $HOME/Packages/Torrents/ --finish ${DIR_SCRIPTS}/killtrans "$1"
+#transmission-cli -D -u 70 -w $HOME/Packages/Torrents/ --finish ${DIR_SCRIPTS}/killtrans "${SHORT}"
+
+transmission-remote --uplimit=60 --utp --dht --no-downlimit --trash-torrent --no-start-paused --torrent-done-script ${DIR_SCRIPTS}/killtrans -a "$1"
+#--no-lds
+# --encryption-preferred --dht
+
+#[ -f /var/run/transmission/transmission.pid ] && sudo /etc/init.d/transmission-daemon stop
+
+case $2 in
+	mail)
+		echo "" | mutt -s "Torrent Done - $(basename $1)" -- ${EMAIL_MINE}
+esac
+
+# if [ "$2" ] ; then
+# 	if [ "$2" == "mail" ] ; then
+# 		echo "" | mutt -s "Torrent Done - $(basename $1)" -- ${EMAIL_MINE}
+# 	fi
+# fi
+

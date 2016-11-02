@@ -1,0 +1,68 @@
+#!/bin/bash
+
+function DoHerem3u() {
+	ALBUM_LIST="/tmp/m3uMaker_albumlist"
+	X=0
+
+	[ ! -f "${ALBUM_LIST}" ] && ls -1 > "${ALBUM_LIST}"
+
+	rm -f *.m3u
+	find -maxdepth 1 -mindepth 1 -type d -exec basename "{}" \; > "${ALBUM_LIST}"
+
+	while read ALBUM ; do
+		echo -n "${ALBUM} "
+		find "${ALBUM}" -iname '*.mp3' | sort > "${ALBUM}.m3u"
+		X=$(( ${X} +1 ))
+	done < "${ALBUM_LIST}"
+
+	echo "(${X})"
+
+	cd ..
+
+	rm -f "${ALBUM_LIST}"
+}
+
+function DoWorldm3u() {
+	cd /usr/local/music
+
+	GROUP_LIST="/tmp/m3uMaker_grouplist"
+	ALBUM_LIST="/tmp/m3uMaker_albumlist"
+
+	ls -1 > "${GROUP_LIST}"
+
+	while read DIR ; do 
+		cd "${DIR}"
+		echo -n "${DIR} "
+		rm -f *.m3u
+		find -maxdepth 1 -mindepth 1 -type d -exec basename "{}" \; > "${ALBUM_LIST}"
+
+		X=0
+
+		while read ALBUM ; do
+			find "${ALBUM}" -iname '*.mp3' | sort > "${ALBUM}.m3u"
+			X=$(( ${X} + 1 ))
+		done < "${ALBUM_LIST}"
+
+		echo "(${X})"
+
+		cd ..
+	done < ${GROUP_LIST}
+
+	rm -f "${ALBUM_LIST}" "${GROUP_LIST}"
+}
+
+case "$1" in
+	here)
+		DoHerem3u
+		;;
+	*)
+		if [ ! "$1" ] ; then
+			DoWorldm3u
+		else
+			echo -e \\v"WTF"\\v
+			echo -e "$(basename $0) rename"
+			echo -e \\v"or"\\v
+			echo -e"$(basename $0) (nothing)"\\v
+		fi
+		;;
+esac

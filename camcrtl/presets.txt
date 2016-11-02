@@ -1,0 +1,77 @@
+DOWNTOWN
+
+BOND NORTH
+curl "http://67.210.198.15:8081/cgi-bin/camctrl?preset=1"
+
+TOWER FAR
+curl "http://67.210.198.15:8081/cgi-bin/camctrl?preset=2"
+
+BND & FRNKLN
+curl "http://67.210.198.15:8081/cgi-bin/camctrl?preset=3"
+
+STANDARD SHOT 1
+curl "http://67.210.198.15:8081/cgi-bin/camctrl?preset=4"
+
+777 BUILDING
+curl "http://67.210.198.15:8081/cgi-bin/camctrl?preset=5"
+
+TOWER MARQUIS
+curl "http://67.210.198.15:8081/cgi-bin/camctrl?preset=6"
+
+RIVER
+curl "http://67.210.198.15:8081/cgi-bin/camctrl?preset=7"
+
+DNTWN STRT COND
+curl "http://67.210.198.15:8081/cgi-bin/camctrl?preset=8"
+
+STREET CORNER
+curl "http://67.210.198.15:8081/cgi-bin/camctrl?preset=9"
+
+LIBRARY
+curl "http://67.210.198.15:8081/cgi-bin/camctrl?preset=10"
+===============================================================
+
+PAVILION
+
+MAIN
+curl "http://67.210.198.15:8919/cgi-bin/camctrl?preset=1"
+
+CIRCBUTTE
+curl "http://67.210.198.15:8919/cgi-bin/camctrl?preset=1"
+
+===============================================================
+
+BPRD
+
+MAIN
+curl "http://67.204.164.159:9293/cgi-bin/camctrl?preset=1"
+
+BEACH
+curl "http://67.204.164.159:9293/cgi-bin/camctrl?preset=2"
+
+BOTH
+curl "http://67.204.164.159:9293/cgi-bin/camctrl?preset=3"
+
+WV1
+curl "http://67.204.164.159:9293/cgi-bin/camctrl?preset=4"
+
+WV2
+curl "http://67.204.164.159:9293/cgi-bin/camctrl?preset=5"
+
+WV3
+curl "http://67.204.164.159:9293/cgi-bin/camctrl?preset=6"
+
+WV4
+curl "http://67.204.164.159:9293/cgi-bin/camctrl?preset=7"
+
+SEC
+curl "http://67.204.164.159:9293/cgi-bin/camctrl?preset=8"
+curl "http://67.204.164.159:9293/cgi-bin/camctrl?atmode=atpan"
+curl "http://67.204.164.159:9293/cgi-bin/camctrl?atmode=seq"
+curl "http://67.204.164.159:9293/cgi-bin/camctrl?atpan=on"
+
+???
+curl "http://67.204.164.159:9293/cgi-bin/camctrl?preset=9"
+
+===============================================================
+

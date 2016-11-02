@@ -1,0 +1,55 @@
+#########
+# ICAL STUFF
+
+# curl -L -sG "https://www.google.com/calendar/ical/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.com/private-2fde973cf30e98a7fa64de507bd8eb56/basic.ics" d start-min=20151001 -d start-max=20151031 -d orderby=starttime -d sortorder=a > ~/calendar_ical.txt
+# sed -i "s/BEGIN:VEVENT/\nBEGIN:VEVENT/" ~/calendar_ical.txt
+#########
+
+
+
+# awk '/<summary.*>/,/<\/summary>/' forever_web_dump_xml_chinco | sed -e 's/<[^>]*>//g'
+# awk '/<content.*>/,/<\/content>/' forever_web_dump_xml_chinco | sed -e 's/<[^>]*>//g' | sed -n -e '/Event Description: /,$p' | sed -e "s/Event Description: //g"
+
+# perl -MHTML::Entities -pe 'decode_entities($_);'
+
+# cat forever_web_dump | perl -MHTML::Entities -pe 'decode_entities($_);' | sed "s/<\([a-z]\)/\n<\1/g;s/<br>//g;s/<br \/>//g;s/ *//g" | grep -v '^$' | sed "s/^\(<entry\)/\n\n\1/g"
+
+# cat forever_web_dump | perl -MHTML::Entities -pe 'decode_entities($_);' | sed "s/<\([a-z]\)/\n<\1/g;s/<br>//g;s/<br \/>//g" | egrep -v '^$|<name|<email|<author' | sed "s/^\(<entry>\)/\n\n\1/g"
+
+# sed "s/<br>//g;s/<br \/>//g;s/&nbsp\;/ /g" chinc | xmllint -format - | egrep 'title|content|duration' | grep -v '<link' | sed -e 's/<[^>]*>//g' | sed -n -e '/Event Description: /,$p' | sed -e "s/Event Description: //g"
+
+
+# FINAL
+
+#cat forever_web_dump | sed "s/<br>/ /g;s/<br \/>/ /g;s/&nbsp\;/ /g" | xmllint -format - | tr -d \\n | sed "s/<entry/\n<entry/g;s/> *</></g" > forever_web_dump_xml_entry
+
+# while read ENTRY ; do
+#	if [  "$(echo $ENTRY | grep ^\<entry)" ] ; then
+#		echo $ENTRY | xmllint --format --nsclean - | grep -v \<link > forever_xml/forever_entry_${X}
+#		cat forever_xml/forever_entry_${X}
+#		echo "---- ${X} -----"
+#	fi
+#	X=$(( $X + 1 ))
+#done < forever_web_dump_xml_entry
+
+
+# cat forever_entry_1 | awk '/<title.*>/,/<\/title>/' | sed -e 's/<[^>]*>//g;s/^ *//g;s/ *$//g'
+
+
+
+# NO RECURRING!
+#X=00
+#cat forever_web_dump | sed "s/<br>/ /g;s/<br \/>/ /g;s/&nbsp\;/ /g" | xmllint -format - | tr -d \\n | sed "s/<entry/\n<entry/g;s/> *</></g" | while read ENTRY ; do
+#	if [  "$(echo $ENTRY | grep ^\<entry | grep -vi "Recurring Event")" ] ; then
+#		echo $ENTRY | xmllint --format --nsclean - | grep -v \<link > forever_xml/forever_entry_${X}
+#		cat forever_xml/forever_entry_${X}
+#		echo "---- ${X} -----"
+#		X=$(( $X + 1 ))
+#	fi
+#done
+
+
+
+# google calendar list -d 01/01/2013,12/31/2013 -q ${EMAIL_CYN}
+
+
