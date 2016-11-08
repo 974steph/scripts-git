@@ -393,7 +393,7 @@ function DoIt() {
 	GPDawnbringer
 
 	if [ ${UPDATES} ] ; then
-		UpdateGit
+#		UpdateGit
 		exit 1
 	fi
 }
