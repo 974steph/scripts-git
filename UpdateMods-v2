@@ -9,7 +9,6 @@ source $HOME/Sources/scripts-git/secret_stuff.sh
 DEBUG="yes"
 
 
-#MODS="DynMap DynMap-Essentials DynMap-Factions EssentialsX Factions iConomy-7 NoWeather Vault WorldEdit World-Portal"
 MODS="DynMap DynMap-Essentials DynMap-Factions EssentialsX Factions iConomy-7 NoWeather Vault WorldEdit"
 
 
