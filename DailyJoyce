@@ -732,7 +732,8 @@ case $1 in
 		;;
 	*)
 # 		EMAILS="${EMAIL_MINE}"
-		EMAILS="${EMAIL_MINE}, ${EMAIL_CYN}"
+#		EMAILS="${EMAIL_MINE}, ${EMAIL_CYN}"
+		EMAILS="${EMAIL_CYN}"
 		SetStylesAndVariables
 		StartMail
 		GetDevotional
