@@ -7,7 +7,7 @@ MONTH=$(date -d @${NOW} +%b)
 
 MODEL="netgear-r6400"
 
-DEPOT="$HOME/Backups/Router"
+DEPOT="$HOME/Backups/Router/Netgear_R6400"
 
 echo "NOW:  ${NOW}"
 echo "YDAY: ${YDAY}"
