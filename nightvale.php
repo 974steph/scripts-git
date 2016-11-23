@@ -1,5 +1,8 @@
 #!/usr/bin/env php
 <?php
+
+include $_SERVER['HOME'] ."/Sources/scripts-git/secret_stuff.php";
+
 date_default_timezone_set('US/Eastern');
 libxml_use_internal_errors(true);
 
