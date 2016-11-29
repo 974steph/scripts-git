@@ -267,6 +267,7 @@ function friggin() {
 
 	wget -q -O "${FRIGGIN_SHOW}" http://www.marksfriggin.com/news${FRIGGIN_YEAR}/${FRIGGIN_TODAY}
 
+	echo "Friggin URL: http://www.marksfriggin.com/news${FRIGGIN_YEAR}/${FRIGGIN_TODAY}"
 
 	if [ $(ls -s "${FRIGGIN_SHOW}" | awk '{print $1}') != 0 ] ; then
 #		RUNDOWN=$(sed -n "/<\!--  "${FRIGGIN_DAY}"/,/<\/TD>/p" "${FRIGGIN_SHOW}" | grep -v "Wrap Up Show" | sed -n '/<ul>/,/<\/ul>/p' | sed -e :a -e 's/<[^>]*>//g;/</N;//ba' | grep -v '^$')
