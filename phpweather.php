@@ -17,6 +17,7 @@ $lon = "-75.572458";
 
 ///////////////////////////
 // FLUSH CURL
+//
 function flushCurl() {
 
 	global $verbose, $fh;
@@ -45,6 +46,7 @@ function flushCurl() {
 
 ///////////////////////////
 // POST CURL SMART
+//
 function postCurlSmart($session, $data, $url) {
 
 	$curl = flushCurl();
@@ -91,11 +93,10 @@ function postCurlSmart($session, $data, $url) {
 ///////////////////////////
 
 
-
 ///////////////////////////
-// DO ACTUAL CHECK
-// function getCurl($session, $thisServer) {
-function getCurl($lat, $lon) {
+// GET WEATHER
+//
+function getWeather($lat, $lon) {
 
 	$curl = flushCurl();
 
@@ -114,7 +115,30 @@ function getCurl($lat, $lon) {
 }
 ///////////////////////////
 
-$weatherArray = getCurl($lat, $lon);
+
+///////////////////////////
+// GET QUOTE
+//
+function getQuote() {
+
+	$curl = flushCurl();
+
+	$url = "http://forecast.weather.gov/MapClick.php?lat=". $lat ."&lon=". $lon ."&unit=0&lg=english&FcstType=dwml";
+//curl -s http://www.motivationalquotes101.com/ | grep 'id="quote"' | sed 's/</\n</g' | egrep "^<strong>|href.*quotes" | tail -n2 | sed 's/<[^>]\+>//g'
+
+	curl_setopt($curl, CURLOPT_URL, "$url");
+	curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "GET");
+
+	$outputRAW = curl_exec($curl);
+
+	$output = json_decode(json_encode(simplexml_load_string($outputRAW)), TRUE);
+
+	return $output;
+}
+///////////////////////////
+
+
+$weatherArray = getWeather($lat, $lon);
 
 //print_r($weatherArray['data'][0]['parameters']['wordedForecast']['text']);
 
