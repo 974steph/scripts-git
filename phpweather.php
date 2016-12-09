@@ -45,55 +45,6 @@ function flushCurl() {
 
 
 ///////////////////////////
-// POST CURL SMART
-//
-function postCurlSmart($session, $data, $url) {
-
-	$curl = flushCurl();
-
-	$curlHeaders = array(
-		"localId: ". $session['localID_SHA']. "",
-		"partnerId: ". $session['partnerID_SHA']. "",
-		"date: ". $session['requestDate']. "",
-		"sessionKey: ". $session['sessionKey']. "",
-		"sessionSecret: ". $session['sessionSecret_SHA']. "");
-
-	if ( is_string($data) && ! empty($data) ) {
-//		file_put_contents('/tmp/dump', "IS STRING\n");
-		array_push($curlHeaders, "Content-Type: application/xml");
-	}
-
-	curl_setopt($curl, CURLOPT_URL, "$url");
-	curl_setopt($curl, CURLOPT_POST, true);
-	curl_setopt($curl, CURLOPT_HTTPHEADER, $curlHeaders);
-
-//	file_put_contents('/tmp/dump',"DATA: $data\n",FILE_APPEND);
-
-	if ( ! empty($data) ) {
-		curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-	}
-
-	$outputRAW = curl_exec($curl);
-
-//	file_put_contents('/tmp/dump', print_r($outputRAW),FILE_APPEND);
-
-	$output = json_decode(json_encode(simplexml_load_string($outputRAW)), TRUE);
-	$result = curl_getinfo($curl);
-	curl_close($curl);
-
-//	print_r($output);
-//	print_r($result);
-
-	if ( ! is_array($output) ) {
-        	return FALSE;
-	} else {
-        	return array($output, $result);
-	}
-}
-///////////////////////////
-
-
-///////////////////////////
 // GET WEATHER
 //
 function getWeather($lat, $lon) {
@@ -123,20 +74,95 @@ function getQuote() {
 
 	$curl = flushCurl();
 
-	$url = "http://forecast.weather.gov/MapClick.php?lat=". $lat ."&lon=". $lon ."&unit=0&lg=english&FcstType=dwml";
-//curl -s http://www.motivationalquotes101.com/ | grep 'id="quote"' | sed 's/</\n</g' | egrep "^<strong>|href.*quotes" | tail -n2 | sed 's/<[^>]\+>//g'
+	$url = "http://www.motivationalquotes101.com";
+
+//	print "URL: ". $url ."\n";
+
+//	curl -s http://www.motivationalquotes101.com/ | grep 'id="quote"' | sed 's/</\n</g' | egrep "^<strong>|href.*quotes" | tail -n2 | sed 's/<[^>]\+>//g'
 
 	curl_setopt($curl, CURLOPT_URL, "$url");
 	curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "GET");
 
 	$outputRAW = curl_exec($curl);
+//	print "outputRAW: ". $outputRAW."\n";
+//	print_r($outputRAW);
+//	exit();
 
-	$output = json_decode(json_encode(simplexml_load_string($outputRAW)), TRUE);
+//	$output = json_decode(json_encode(simplexml_load_string($outputRAW)), TRUE);
+
+	$dom = new DOMDocument;
+	$dom->loadHTML($outputRAW);
+
+/*
+	$array = array();
+	foreach($dom as $node){
+		$array[] = $node;
+	}
+
+	print_r($array);
+	exit();
+*/
+
+//	print "STRONG\n";
+
+	foreach($dom->getElementsByTagName('strong') as $node) {
+
+//		print_r($node);
+
+		if ($node->textContent) {
+//			print "textContent: ". $node->textContent ."\n";
+			$output[] = $node->textContent;
+		}
+	}
+
+//	print "HREF\n";
+
+	foreach($dom->getElementsByTagName('a') as $node) {
+
+		if ( strlen($node->textContent) > 0) {
+//		if ($node->attributes->name == "href") {
+//			print_r($node);
+//			print "textContent: ". $node->textContent ."\n";
+
+
+			$textContent = $node->textContent;
+
+
+			foreach ($node->attributes as $n) {
+//				print_r($n);
+
+//				$name = $n->name;
+//				print "NAME2: \"". $name ."\"\n";
+
+				$value = $n->value;
+
+/*
+				print "VALUE2: \"". $value ."\"\n";
+				print "LOWER: ". strtolower($textContent) ."\n";
+				print "REPLACE: ". str_replace(' ', '-', $textContent) ."\n";
+				print "MANGLED: ". str_replace(' ', '-', strtolower($textContent)) ."\n";
+*/
+				if ( stripos(strtolower($value), 'quotes-by-') ) {
+					$output[] = $textContent;
+//					print "FOUND: ". $textContent ." - ". $value ."\n";
+				} else {
+//					print "SKIPPING: $name\n";
+					unset($name);
+				}
+
+//				print "---------\n";
+			}
+
+//		print "========\n";
+
+		}
+	}
 
 	return $output;
 }
 ///////////////////////////
 
+$quoteArray = getQuote();
 
 $weatherArray = getWeather($lat, $lon);
 
@@ -145,7 +171,11 @@ $weatherArray = getWeather($lat, $lon);
 $city = $weatherArray['data'][0]['location']['city'];
 $today = $weatherArray['data'][0]['parameters']['wordedForecast']['text'][0];
 $tonight = $weatherArray['data'][0]['parameters']['wordedForecast']['text'][1];
+$quote = $quoteArray[0];
+$author = $quoteArray[1];
 
 print $day ."'s forecast for $city is ";
 print strtolower($today) ."\n";
-print "Tonight will be ". strtolower($tonight) ."\n";
+print "Tonight will be ". strtolower($tonight) ."\n\n";
+print "$author once said:\n";
+print "$quote\n";
