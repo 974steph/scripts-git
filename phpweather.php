@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
 
+include $_SERVER['HOME'] ."/Sources/scripts-git/secret_stuff.php";
+
 date_default_timezone_set('UTC');
 // echo date("h:i:s A");
 $day = date("l");
@@ -162,9 +164,11 @@ function getQuote() {
 }
 ///////////////////////////
 
-$quoteArray = getQuote();
-
 $weatherArray = getWeather($lat, $lon);
+
+//$quoteArray = getQuote();
+
+$sillyQuote = shell_exec($myhome ."/Sources/scripts-git/randomquote.sh");
 
 //print_r($weatherArray['data'][0]['parameters']['wordedForecast']['text']);
 
@@ -177,5 +181,7 @@ $author = $quoteArray[1];
 print $day ."'s forecast for $city is ";
 print strtolower($today) ."\n";
 print "Tonight will be ". strtolower($tonight) ."\n\n";
-print "$author once said:\n";
-print "$quote\n";
+//print "$author once said:\n";
+//print "$quote\n\n";
+print "Today's thought:\n";
+print "$sillyQuote\n";
