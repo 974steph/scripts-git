@@ -12,7 +12,8 @@ PAGE=$(( ( RANDOM % ${MAX_PAGE} )  + 1 ))
 
 QUOTE_URL="${BASE_URL}/?page=${PAGE}"
 
-QUOTE=$(curl -sL "${QUOTE_URL}" | awk '/thumbnails/,/javascript/' | grep image.*lolsotrue | sed 's/.*alt=\"\(.*\)\"\/>.*/\1/')
+#QUOTE=$(curl -sL "${QUOTE_URL}" | awk '/thumbnails/,/javascript/' | grep image.*lolsotrue | sed 's/.*alt=\"\(.*\)\"\/>.*/\1/')
+QUOTE=$(curl -sL "${QUOTE_URL}" | awk '/thumbnails/,/javascript/' | grep image.*lolsotrue | sed "s/.*alt=\"\(.*\)/\1/;s/\"\/>.*//")
 
 #echo "QUOTE: ${QUOTE}"
 echo "${QUOTE}"
