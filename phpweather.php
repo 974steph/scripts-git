@@ -167,6 +167,8 @@ function getQuote() {
 $weatherArray = getWeather($lat, $lon);
 
 //$quoteArray = getQuote();
+//$quote = $quoteArray[0];
+//$author = $quoteArray[1];
 
 $sillyQuote = shell_exec($myhome ."/Sources/scripts-git/randomquote.sh");
 
@@ -175,13 +177,13 @@ $sillyQuote = shell_exec($myhome ."/Sources/scripts-git/randomquote.sh");
 $city = $weatherArray['data'][0]['location']['city'];
 $today = $weatherArray['data'][0]['parameters']['wordedForecast']['text'][0];
 $tonight = $weatherArray['data'][0]['parameters']['wordedForecast']['text'][1];
-$quote = $quoteArray[0];
-$author = $quoteArray[1];
 
 print $day ."'s forecast for $city is ";
 print strtolower($today) ."\n";
 print "Tonight will be ". strtolower($tonight) ."\n\n";
+
 //print "$author once said:\n";
 //print "$quote\n\n";
+
 print "Today's thought:\n";
 print "$sillyQuote\n";
