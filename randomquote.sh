@@ -11,6 +11,7 @@ PAGE=$(( ( RANDOM % ${MAX_PAGE} )  + 1 ))
 #echo "PAGE: $PAGE"
 
 QUOTE_URL="${BASE_URL}/?page=${PAGE}"
+echo $QUOTE_URL
 
 #QUOTE=$(curl -sL "${QUOTE_URL}" | awk '/thumbnails/,/javascript/' | grep image.*lolsotrue | sed 's/.*alt=\"\(.*\)\"\/>.*/\1/')
 QUOTE=$(curl -sL "${QUOTE_URL}" | awk '/thumbnails/,/javascript/' | grep image.*lolsotrue | sed "s/.*alt=\"\(.*\)/\1/;s/\"\/>.*//")
