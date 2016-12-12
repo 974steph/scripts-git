@@ -70,93 +70,45 @@ function getWeather($lat, $lon) {
 
 
 ///////////////////////////
-// GET QUOTE
+// GET SERIOUS QUOTE
 //
-function getQuote() {
+function getSeriousQuote() {
 
 	$curl = flushCurl();
 
 	$url = "http://www.motivationalquotes101.com";
 
-//	print "URL: ". $url ."\n";
-
-//	curl -s http://www.motivationalquotes101.com/ | grep 'id="quote"' | sed 's/</\n</g' | egrep "^<strong>|href.*quotes" | tail -n2 | sed 's/<[^>]\+>//g'
-
 	curl_setopt($curl, CURLOPT_URL, "$url");
 	curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "GET");
 
 	$outputRAW = curl_exec($curl);
-//	print "outputRAW: ". $outputRAW."\n";
-//	print_r($outputRAW);
-//	exit();
-
-//	$output = json_decode(json_encode(simplexml_load_string($outputRAW)), TRUE);
 
 	$dom = new DOMDocument;
 	$dom->loadHTML($outputRAW);
 
-/*
-	$array = array();
-	foreach($dom as $node){
-		$array[] = $node;
-	}
-
-	print_r($array);
-	exit();
-*/
-
-//	print "STRONG\n";
-
 	foreach($dom->getElementsByTagName('strong') as $node) {
 
-//		print_r($node);
-
 		if ($node->textContent) {
-//			print "textContent: ". $node->textContent ."\n";
 			$output[] = $node->textContent;
 		}
 	}
 
-//	print "HREF\n";
-
 	foreach($dom->getElementsByTagName('a') as $node) {
 
 		if ( strlen($node->textContent) > 0) {
-//		if ($node->attributes->name == "href") {
-//			print_r($node);
-//			print "textContent: ". $node->textContent ."\n";
-
 
 			$textContent = $node->textContent;
 
-
 			foreach ($node->attributes as $n) {
-//				print_r($n);
-
-//				$name = $n->name;
-//				print "NAME2: \"". $name ."\"\n";
 
 				$value = $n->value;
 
-/*
-				print "VALUE2: \"". $value ."\"\n";
-				print "LOWER: ". strtolower($textContent) ."\n";
-				print "REPLACE: ". str_replace(' ', '-', $textContent) ."\n";
-				print "MANGLED: ". str_replace(' ', '-', strtolower($textContent)) ."\n";
-*/
 				if ( stripos(strtolower($value), 'quotes-by-') ) {
 					$output[] = $textContent;
-//					print "FOUND: ". $textContent ." - ". $value ."\n";
 				} else {
-//					print "SKIPPING: $name\n";
 					unset($name);
 				}
-
-//				print "---------\n";
 			}
-
-//		print "========\n";
-
 		}
 	}
 
@@ -164,9 +116,55 @@ function getQuote() {
 }
 ///////////////////////////
 
+
+
+///////////////////////////
+// GET SILLY QUOTE
+//
+function getSillyQuote() {
+
+	$curl = flushCurl();
+
+	$url = "http://www.lolsotrue.com";
+
+	curl_setopt($curl, CURLOPT_URL, "$url");
+	curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "GET");
+
+	$outputRAW = curl_exec($curl);
+
+	$dom = new DOMDocument;
+	$dom->loadHTML($outputRAW);
+
+
+//	print_r($dom);
+
+	foreach($dom->getElementsByTagName('image') as $node) {
+
+
+		print_r($node);
+
+		if ($node->textContent) {
+			$output[] = $node->textContent;
+		}
+	}
+
+//	return $outputRAW;
+	return $output;
+}
+///////////////////////////
+
+
+$fortune = shell_exec('fortune chalkboard | head -n1');
+//print "FORTUNE: $fortune\n";
+
+//$sillyQuote = getSillyQuote();
+//print_r($sillyQuote);
+//exit();
+
+
 $weatherArray = getWeather($lat, $lon);
 
-//$quoteArray = getQuote();
+//$quoteArray = getSeriousQuote();
 //$quote = $quoteArray[0];
 //$author = $quoteArray[1];
 
@@ -185,5 +183,7 @@ print "Tonight will be ". strtolower($tonight) ."\n\n";
 //print "$author once said:\n";
 //print "$quote\n\n";
 
-print "Today's thought:\n";
-print "$sillyQuote\n";
+//print "Today's thought:\n";
+//print "$sillyQuote\n";
+
+print "$fortune\n";
