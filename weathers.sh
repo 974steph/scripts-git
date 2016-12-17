@@ -100,22 +100,24 @@ function Normal() {
 function Hourly() {
 
 
-	if [ "${NOW}" -a "${DATE}" -a "${TIME}" -a "${CURR_TEMP}" -a "${CURR_HUMID}" -a "${CURR_BARO}" -a "${CURR_COND}" ] ; then
+#	if [ "${NOW}" -a "${DATE}" -a "${TIME}" -a "${CURR_TEMP}" -a "${CURR_HUMID}" -a "${CURR_BARO}" -a "${CURR_COND}" ] ; then
+	[ "${NOW}" ] && [ "${DATE}" ] && [ "${TIME}" ] && [ "${CURR_TEMP}" ] && [ "${CURR_HUMID}" ] && [ "${CURR_BARO}" ] && [ "${CURR_COND}" ] && GOT_EVERYTHING="yes"
+	if [ "${GOT_EVERYTHING}" ] ; then
 		[ ! -f ${FILE_CSV} ] && echo "Epoch,Date & Time,Temp,Humidity,Pressure,Wind,Gusts,Direction,Conditions" >> ${FILE_CSV}
 		[ ! ${DEBUG} ] && echo "${NOW},${DATE} ${TIME},${CURR_TEMP},${CURR_HUMID},${CURR_BARO},${WIND_SUST},${WIND_GUST},${WIND_DIRECT},${CURR_COND}" >> ${FILE_CSV}
 	else
 		if [ ${DEBUG} ] ; then
 			echo "Missing info"
-			echo "NOW: ${NOW}"
-			echo "DATE: ${DATE}"
-			echo "TIME: ${TIME}"
-			echo "CURR_TEMP: ${CURR_TEMP}"
-			echo "CURR_HUMID: ${CURR_HUMID}"
-			echo "CURR_BARO: ${CURR_BARO}"
-			echo "WIND_SUST: ${WIND_SUST}"
-			echo "WIND_GUST: ${WIND_GUST}"
-			echo "WIND_DIRECT: ${WIND_DIRECT}"
-			echo "CURR_COND: ${CURR_COND}"
+			echo "NOW: \"${NOW}\""
+			echo "DATE: \"${DATE}\""
+			echo "TIME: \"${TIME}\""
+			echo "CURR_TEMP: \"${CURR_TEMP}\""
+			echo "CURR_HUMID: \"${CURR_HUMID}\""
+			echo "CURR_BARO: \"${CURR_BARO}\""
+			echo "WIND_SUST: \"${WIND_SUST}\""
+			echo "WIND_GUST: \"${WIND_GUST}\""
+			echo "WIND_DIRECT: \"${WIND_DIRECT}\""
+			echo "CURR_COND: \"${CURR_COND}\""
 		fi
 	fi
 
@@ -141,6 +143,7 @@ case $1 in
 			GetWeather ${WEATHER}
 			Normal
 			Hourly
+			echo -e "\\v---------\\v"
 		done
 		exit
 		;;
