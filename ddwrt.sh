@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# UNCOMMENT TO ENABLE
+GET_WEB_FLASH="YES"
+
+# UNCOMMENT TO ENABLE
+# GET_FACTORY_FLASH="YES"
+
 NOW=$(date +%s)
 YDAY=$(date -d "$(date -d @${NOW}) - 1 day" +%s)
 YEAR=$(date -d @${NOW} +%Y)
@@ -66,14 +72,21 @@ else
 	echo "OK - \"${DEPOT}/DD-WRT-${DVER}\""
 fi
 
-if [ ! -f ${DEPOT}/DD-WRT-${DVER}/${BIN_FACTORY_OUT} ] ; then
-	wget ${BIN_FACTORY} -O ${DEPOT}/DD-WRT-${DVER}/${BIN_FACTORY_OUT}
-else
-	echo "OK - \"${DEPOT}/DD-WRT-${DVER}/${BIN_FACTORY_OUT}\""
+if [ ${GET_FACTORY_FLASH} ] ; then
+	if [ ! -f ${DEPOT}/DD-WRT-${DVER}/${BIN_FACTORY_OUT} ] ; then
+		wget ${BIN_FACTORY} -O ${DEPOT}/DD-WRT-${DVER}/${BIN_FACTORY_OUT}
+	else
+		echo "OK - \"${DEPOT}/DD-WRT-${DVER}/${BIN_FACTORY_OUT}\""
+	fi
 fi
 
-if [ ! -f ${DEPOT}/DD-WRT-${DVER}/${BIN_WEBFLASH_OUT} ] ; then
-	wget ${BIN_WEBFLASH} -O ${DEPOT}/DD-WRT-${DVER}/${BIN_WEBFLASH_OUT}
-else
-	echo "OK - \"${DEPOT}/DD-WRT-${DVER}/${BIN_WEBFLASH_OUT}\""
+if [ ${GET_WEB_FLASH} ] ; then
+	if [ ! -f ${DEPOT}/DD-WRT-${DVER}/${BIN_WEBFLASH_OUT} ] ; then
+		wget ${BIN_WEBFLASH} -O ${DEPOT}/DD-WRT-${DVER}/${BIN_WEBFLASH_OUT}
+	else
+		echo "OK - \"${DEPOT}/DD-WRT-${DVER}/${BIN_WEBFLASH_OUT}\""
+	fi
 fi
+
+
+echo -e "\\vFiles saved to: ${DEPOT}/DD-WRT-${DVER}\\v"
