@@ -1,0 +1,11 @@
+#!/bin/sh
+
+
+upnpc -a 192.168.11.241 5900 5900 tcp
+
+#x11vnc -noipv6 -nopw -forever -display :0 -zeroconf -shared -xrandr -noxrecord -noxfixes -noxdamage
+x11vnc -noipv6 -nopw -forever -display :0 -zeroconf -shared -xrandr -noxrecord -noxfixes -xdamage
+
+
+#upnpc -d 5900 tcp 192.168.11.241
+upnpc -d 5900 tcp
