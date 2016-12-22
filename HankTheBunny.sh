@@ -13,11 +13,11 @@ else
 fi
 
 #HankTheBunny
-RAW=$(curl -s http://bitbin.it/Z550BXAq/raw/ | grep -A1 THSS.*$(date -d @${TODAY} +%Y-%m-%d))
-#RAW=$(curl -s http://bitbin.it/tvxwQNy1/raw/ | grep -A1 THSS.*$(date -d @${TODAY} +%Y-%m-%d))
+RAW=$(curl -sL http://bitbin.it/Z550BXAq/raw/ | grep -A1 THSS.*$(date -d @${TODAY} +%Y-%m-%d))
+#RAW=$(curl -sL http://bitbin.it/tvxwQNy1/raw/ | grep -A1 THSS.*$(date -d @${TODAY} +%Y-%m-%d))
 
 #BeetThePimp
-#RAW=$(curl -s "http://paste4btc.com/raw.php?p=LJdPE3Sx" | grep -A1 THSS.*$(date -d @${TODAY} +%Y-%m-%d))
+#RAW=$(curl -sL "http://paste4btc.com/raw.php?p=LJdPE3Sx" | grep -A1 THSS.*$(date -d @${TODAY} +%Y-%m-%d))
 
 RAW_TITLE=$(echo "${RAW}" | head -n1 | tr -d \\r\\n)
 RAW_URL=$(echo "${RAW}" | tail -n1 | tr -d \\r\\n | sed 's/ //g')
@@ -38,9 +38,9 @@ RAW_NEXT="http://paste4btc.com/raw.php?p=$(basename ${RAW_URL})"
 echo "RAW_NEXT: \"${RAW_NEXT}\""
 echo "========="
 
-#ROCKFILE=$(curl -s "${RAW_NEXT}" | grep rockfile | tr -d \\r\\n | sed 's/ //g')
+#ROCKFILE=$(curl -sL "${RAW_NEXT}" | grep rockfile | tr -d \\r\\n | sed 's/ //g')
 
-ROCKFILE=$(curl -s "${RAW_NEXT}" | grep -A1 THSS.*$(date -d @${TODAY} +%Y-%m-%d) | tail -n1 | tr -d \\r\\n | sed 's/ //g')
+ROCKFILE=$(curl -sL "${RAW_NEXT}" | grep -A1 THSS.*$(date -d @${TODAY} +%Y-%m-%d) | tail -n1 | tr -d \\r\\n | sed 's/ //g')
 
 
 echo -e "ROCKFILE: \"${ROCKFILE}\"\\v"
