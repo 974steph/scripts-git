@@ -418,11 +418,11 @@ case $1 in
 # 		WoWAuction
 # 		exit
 # 		;;
-# 	gp)
-# 		DEBUG="yes"
-# 		GPDawnbringer
-# 		exit
-# 		;;
+ 	gp)
+ 		DEBUG="yes"
+ 		GPDawnbringer
+ 		exit
+ 		;;
 	keep)
 		KEEP="yes"
 		FORCE="yes"
