@@ -37,6 +37,11 @@ function GetPlugin() {
 #	3: URL
 #	4: VERSION
 
+#	echo "EPOCH: \"$1\""
+#	echo "NAME: \"$2\""
+#	echo "URL: \"$3\""
+#	echo "VERSION: \"$4\""
+
 	URL="$3"
 
 	PLUGIN_FILE=$(basename "${URL}")
@@ -49,11 +54,12 @@ function GetPlugin() {
 	[ ${DEBUG} ] && OUTPUT+="PLUGIN_FILE: \"${ADDON_DIR}/$PLUGIN_FILE\"\\n"
 
 	if [ ${DEBUG} ] ; then
+		echo "${ADDON_DIR}/${PLUGIN_FILE}"
 		echo "PLUGIN_SERVER_SIZE: ${PLUGIN_SERVER_SIZE}"
 		echo "PLUGIN_LOCAL_SIZE: ${PLUGIN_LOCAL_SIZE}"
 	fi
 
-	if [ ${PLUGIN_SERVER_SIZE} -eq ${PLUGIN_LOCAL_SIZE} ] ; then
+	if [ "${PLUGIN_SERVER_SIZE}" -eq "${PLUGIN_LOCAL_SIZE}" ] ; then
 		OUTPUT+="GOOD DOWNLOAD: Server: ${PLUGIN_SERVER_SIZE}K Local: ${PLUGIN_LOCAL_SIZE}K\\n"
 		cd ${ADDON_DIR}
 		unzip -q -o "${PLUGIN_FILE}"
@@ -216,7 +222,7 @@ function Plugins() {
 		PLUGIN_PRETTY=$(date -d @${PLUGIN_EPOCH} "+%Y-%m-%d %r")
 		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE}" | grep newest-file | sed "s/.* \(.*\)<.*/\1/g")
 		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/")
-		PLUGIN_URL=$(curl -Ls ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/')
+		PLUGIN_URL=$(curl -Ls ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
 
 		unset PLUGIN_PAGE
 
