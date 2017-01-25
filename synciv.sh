@@ -9,7 +9,7 @@ PROJECTS="crs vcs"
 
 function doSync() {
 	echo -e "\\viv-${PROJ}-bin-stg\\n---------------------------"
-	$HOME/Sources/s3cmd/s3cmd --stats -v -r -c ${IVTANK}/s3cfg --rexclude='/*Build2015*/' --rexclude='/*Ops*/' --rexclude='/*AMS*/' sync s3://iv-${PROJ}-bin-stg/ ${IVTANK}/iv-${PROJ}-bin-stg/
+	$HOME/Sources/s3cmd/s3cmd --stats -v -r -c ${IVTANK}/s3cfg --rexclude='/*Build2015*/' --rexclude='/*Ops*/' --rexclude='/*AMS*/' sync --no-check-md5 s3://iv-${PROJ}-bin-stg/ ${IVTANK}/iv-${PROJ}-bin-stg/
 #	$HOME/Sources/s3cmd/s3cmd --stats -v -r -c ${IVTANK}/s3cfg --rexclude="/*\/Build2015*/" sync s3://iv-${PROJ}-bin-stg/ ${IVTANK}/iv-${PROJ}-bin-stg/
 }
 
