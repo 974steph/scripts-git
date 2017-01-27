@@ -885,6 +885,7 @@ function FinishMail() {
 		echo $(HumanizeTime ${START_DATE} ${TODAY} EXACT)
 	else
 #		mutt -s "${SUBJECT}" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+#		mailx -s "${SUBJECT}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 
  		if [ ${SOBER_ONLY} ] ; then
  			mutt -s "Sober" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
