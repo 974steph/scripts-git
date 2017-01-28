@@ -26,7 +26,7 @@ TORRENTDIR="${HOME_DIR}/Packages/Torrents"
 
 KILLSCRIPT="${HOME_DIR}/Sources/scripts-git/killtrans"
 
-MAILFILE="${TMPDIR}/SternMail.html"
+BODY="${TMPDIR}/SternMail.html"
 TIMEFILE="${TMPDIR}/${TODAY}_timeittook"
 # RSSFILE="${TMPDIR}/${TODAY}.rss"
 
@@ -35,7 +35,7 @@ function CheckMagLink() {
 
 	if [ ! -d "${TMPDIR}" ] ; then mkdir -p "${TMPDIR}" ; fi
 	if [ -f "${TIMEFILE}" ] ; then rm -f "${TIMEFILE}" ; touch "${TIMEFILE}" ; fi
-	if [ -f "${MAILFILE}" ] ; then rm -f "${MAILFILE}" ; touch "${MAILFILE}" ; fi
+	if [ -f "${BODY}" ] ; then rm -f "${BODY}" ; touch "${BODY}" ; fi
 # 	if [ -f "${RSSFILE}" ] ; then rm -f "${RSSFILE}" ; touch "${RSSFILE}" ; fi
 
 
@@ -72,7 +72,7 @@ function CheckMagLink() {
 
 
 function doit() {
-	echo "<HTML><HEAD><TITLE>${TODAY} Stern Show Done</TITLE></HEAD><BODY><BR><PRE>" > "${MAILFILE}"
+	echo "<HTML><HEAD><TITLE>${TODAY} Stern Show Done</TITLE></HEAD><BODY><BR><PRE>" > "${BODY}"
 
 	/usr/bin/time -a -o "${TIMEFILE}" -f%e transmission-cli -D -u 70 -w "${TORRENTDIR}" --finish "${KILLSCRIPT}" "${MAGLINK}" 1>&- 2>&-
 
@@ -91,19 +91,20 @@ function doit() {
 	fi
 
 	if [[ ! "${STERNDIR}" || ! "${SHOWFILE}" ]] ; then
-		echo "<br><br><b><u>MAJOR ISSUE</u>" >> "${MAILFILE}"
-		echo "TODAY: ${TODAY}" >> "${MAILFILE}"
-# 		echo "TORRENTDIR: ${TORRENTDIR}" >> "${MAILFILE}"
-# 		echo "STERNDIR: ${STERNDIR}" >> "${MAILFILE}"
-# 		echo "SHOWFILE: ${SHOWFILE}" >> "${MAILFILE}"
+		echo "<br><br><b><u>MAJOR ISSUE</u>" >> "${BODY}"
+		echo "TODAY: ${TODAY}" >> "${BODY}"
+# 		echo "TORRENTDIR: ${TORRENTDIR}" >> "${BODY}"
+# 		echo "STERNDIR: ${STERNDIR}" >> "${BODY}"
+# 		echo "SHOWFILE: ${SHOWFILE}" >> "${BODY}"
 
-		echo "STERN_DAY: $STERN_DAY" >> "${MAILFILE}"
-		echo "SHORT_DAY: $SHORT_DAY" >> "${MAILFILE}"
-		echo "TORRENTDIR: $TORRENTDIR" >> "${MAILFILE}"
-		echo "STERNDIR: $STERNDIR" >> "${MAILFILE}"
-		echo "SHOWFILE: $SHOWFILE" >> "${MAILFILE}"
-		echo "</PRE><BR><BR><BR><BR><BR></BODY></HTML>" >> "${MAILFILE}"
-		mutt -s "Stern Show ERROR - ${TODAY}" -e "set content_type=text/html" -- ${EMAIL_MINE} < "${MAILFILE}"
+		echo "STERN_DAY: $STERN_DAY" >> "${BODY}"
+		echo "SHORT_DAY: $SHORT_DAY" >> "${BODY}"
+		echo "TORRENTDIR: $TORRENTDIR" >> "${BODY}"
+		echo "STERNDIR: $STERNDIR" >> "${BODY}"
+		echo "SHOWFILE: $SHOWFILE" >> "${BODY}"
+		echo "</PRE><BR><BR><BR><BR><BR></BODY></HTML>" >> "${BODY}"
+#		mutt -s "Stern Show ERROR - ${TODAY}" -e "set content_type=text/html" -- ${EMAILS} < "${BODY}"
+		mailx -s "Stern Show ERROR - ${TODAY}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 		exit 1
 	else
 
@@ -130,10 +131,11 @@ function MailResults() {
 	SECS=$(cat ${TIMEFILE} | awk '{ sum+=$1} END {print sum}' | cut -d\. -f-1)
 	TIMEITTOOK=$(printf ""%dh:%dm:%ds"\n" $(($SECS/3600)) $(($SECS%3600/60)) $(($SECS%60)))
 
-	echo "It took "${TIMEITTOOK}" to complete.<br>" >> "${MAILFILE}"
-	echo "</PRE><BR><BR><BR><BR><BR></BODY></HTML>" >> "${MAILFILE}"
-	mutt -s "Stern Show Done - ${TODAY}" -e "set content_type=text/html" -- ${EMAIL_MINE} < "${MAILFILE}"
-	rm -f "${MAILFILE}" "${TIMEFILE}" 
+	echo "It took "${TIMEITTOOK}" to complete.<br>" >> "${BODY}"
+	echo "</PRE><BR><BR><BR><BR><BR></BODY></HTML>" >> "${BODY}"
+#	mutt -s "Stern Show Done - ${TODAY}" -e "set content_type=text/html" -- ${EMAILS} < "${BODY}"
+	mailx -s "Stern Show Done - ${TODAY}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+	rm -f "${BODY}" "${TIMEFILE}" 
 # 	"${RSSFILE}"
 
 # 	rm -rf 
@@ -155,14 +157,14 @@ fi
 #CheckMagLink
 #exit
 
-# if [ ! "$(ps ax | grep transmission | grep -i howard.stern)" -a ! -f "${MAILFILE}" -a ! -f "$HOME/Stern/Weekly/${TODAY_SHOW}" ] ; then
-if [ ! "$(ps ax | grep transmission | grep -i howard.stern)" -a ! -f "${MAILFILE}" -a ! -f "$HOME/Stern/Weekly/${SHORT_DAY}.mp3" ] ; then
+# if [ ! "$(ps ax | grep transmission | grep -i howard.stern)" -a ! -f "${BODY}" -a ! -f "$HOME/Stern/Weekly/${TODAY_SHOW}" ] ; then
+if [ ! "$(ps ax | grep transmission | grep -i howard.stern)" -a ! -f "${BODY}" -a ! -f "$HOME/Stern/Weekly/${SHORT_DAY}.mp3" ] ; then
 
 	CheckMagLink
 else
 	if [ ${DEBUG} ] ; then
 		ps ax | grep transmission | grep -i howard.stern
-		ls -lh ${MAILFILE}
+		ls -lh ${BODY}
 		ls -lh $HOME/Stern/Weekly/${SHORT_DAY}.mp3
 	fi
 fi
