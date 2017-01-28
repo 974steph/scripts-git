@@ -377,12 +377,14 @@ function FinishMail() {
 		echo -e "<ul style='margin-left:0pt; padding-left:14pt;'>" >> ${BODY}
 		echo "${UPDATED_LINE}" >> ${BODY}
 		echo -e "</ul></div></div><br></body></html>" >> ${BODY}
-		
+
 		if [ ${DEBUG} ] ; then
 			cat "${BODY}"
-			echo -e \\v"mutt -s \"${SUBJECT}\" -e \"set content_type=text/html\" -- \"${EMAILS}\" \< ${BODY}"
+#			echo -e \\v"mutt -s \"${SUBJECT}\" -e \"set content_type=text/html\" -- \"${EMAILS}\" \< ${BODY}"
+			echo -e \\v"mailx -s \"${SUBJECT}\" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}"
 		else
-			mutt -s "${SUBJECT}" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+#			mutt -s "${SUBJECT}" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+			mailx -s "${SUBJECT}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 		fi
 	fi
 
