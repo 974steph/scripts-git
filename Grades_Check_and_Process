@@ -328,9 +328,10 @@ function UpdateGrades {
 		# Send Email
 		#
 # 		if [ ! ${DEBUG} ] ; then
-# 			mutt -a "${GFILE}" -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -e "set content_type=text/html" -- "${EMAILS}" < ${EMAILBODY}
-			mutt -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -e "set content_type=text/html" -- "${EMAILS}" < ${EMAILBODY}
-			[ ! ${DEBUG} ] && rm -f ${EMAILBODY}
+# 			mutt -a "${GFILE}" -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+#			mutt -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+			mailx -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+			[ ! ${DEBUG} ] && rm -f ${BODY}
 # 		fi
 		#######
 
@@ -348,9 +349,10 @@ function UpdateGrades {
 			GRADES="$(grep -A1 PERIOD "${RAWDIR}/${FILE_DATE}" | tr '\r\n' ' ' | sed -e 's/PERIOD/\nPERIOD/g' | egrep -v 'Homeroom|Lunch|Study Hall' | sed -e '/^$/d' -e 's/.*Grade: //g' -e 's/  Absences.*/,/g' -e 's/--//g' | tr -d '\n' | sed -e 's/,$/\n/')"
 			MakeChart
 			MakeHTML
-			echo mutt -a "${GFILE}" -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -e "set content_type=text/html" -- "${EMAILS}" < ${EMAILBODY}
+#			echo mutt -a "${GFILE}" -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+			cat "${GFILE}" | mailx -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 			echo FILE USED: "${RAWDIR}/${THIS_FILE}"
-			echo HTML FILE: echo ${EMAILBODY}
+			echo HTML FILE: echo ${BODY}
 			echo GFILE: ${GFILE}
 		fi
 
@@ -361,7 +363,7 @@ function UpdateGrades {
 }
 
 function MakeHTML() {
-		EMAILBODY="${RAWDIR}/GradesEmailBody_${TODAY_ZERO}.html"
+		BODY="${RAWDIR}/GradesBODY_${TODAY_ZERO}.html"
 
 		THREE_WEEKS=$(date -d "monday 3 weeks ago" +%s)
 
@@ -371,18 +373,18 @@ function MakeHTML() {
 		STYLE_TD="text-overflow:clip;border:1px solid;border-color:#AAAAAA;min-width:25px;word-break:break-word;font-family:sans-serif;font-size:7pt;text-align:center;vertical-align:middle;"
 		STYLE_HR="width:100%";
 
-		echo "<!DOCTYPE html><html><head><title>Lex's Grades - ${THIS_AS_OF_DATE}</title></head><body style=\"${STYLE_BODY}\"><center>" > ${EMAILBODY}
-		echo "<a href=\"http://aragorn.fleag.us/chart/${CHART_PLOT_NAME}\"><img alt=\"Lex's Grades - ${THIS_AS_OF_DATE}\" src=\"http://aragorn.fleag.us/chart/${CHART_PLOT_NAME}\" style=\"border:1px solid;border-style:raised;\"></a>" >> ${EMAILBODY}
-		echo "<hr style=\"${STYLE_HR}\"><table summary=\"Lex's Grades - ${THIS_AS_OF_DATE}\" style=\"${STYLE_TABLE}\">" >> ${EMAILBODY}
+		echo "<!DOCTYPE html><html><head><title>Lex's Grades - ${THIS_AS_OF_DATE}</title></head><body style=\"${STYLE_BODY}\"><center>" > ${BODY}
+		echo "<a href=\"http://aragorn.fleag.us/chart/${CHART_PLOT_NAME}\"><img alt=\"Lex's Grades - ${THIS_AS_OF_DATE}\" src=\"http://aragorn.fleag.us/chart/${CHART_PLOT_NAME}\" style=\"border:1px solid;border-style:raised;\"></a>" >> ${BODY}
+		echo "<hr style=\"${STYLE_HR}\"><table summary=\"Lex's Grades - ${THIS_AS_OF_DATE}\" style=\"${STYLE_TABLE}\">" >> ${BODY}
 
 		LINE_COUNT=0
 		LINE_TOTAL=$(( $(grep . "${GFILE}" | wc -l) - 1 ))
 
 		[ ${DEBUG} ] && echo "LINE_TOTAL: ${LINE_TOTAL}"
 
-		echo -n "<tr><td style=\"${STYLE_TD_HEAD}\">" >> ${EMAILBODY}
+		echo -n "<tr><td style=\"${STYLE_TD_HEAD}\">" >> ${BODY}
 
-		head -n1 "${GFILE}" | sed -e 's/[0-9][0-9][0-9][0-9]-//g' -e 's/_/ /g' -e "s/,/<\/td>\n\t<td style=\"${STYLE_TD_HEAD}\">/g" -e 's/$/<\/td><\/tr>/g' >> ${EMAILBODY}
+		head -n1 "${GFILE}" | sed -e 's/[0-9][0-9][0-9][0-9]-//g' -e 's/_/ /g' -e "s/,/<\/td>\n\t<td style=\"${STYLE_TD_HEAD}\">/g" -e 's/$/<\/td><\/tr>/g' >> ${BODY}
 
 		tac "${GFILE}" | while read LINE ; do
 
@@ -393,9 +395,9 @@ function MakeHTML() {
 				[ ${DEBUG} ] && echo "LINE_DATE: ${LINE_DATE} || THREE_WEEKS: ${THREE_WEEKS}"
 
 				if [ ${LINE_DATE} -ge ${THREE_WEEKS} ] ; then
-					echo -n "<tr><td style=\"${STYLE_TD_HEAD}\">" >> ${EMAILBODY}
-#					echo "${LINE}" | sed -e 's/-/ /g' -e 's/_/ /g' -e "s/,/<\/td>\n\t<td style=\"${STYLE_TD}\">/g" -e 's/$/<\/td><\/tr>/g' >> ${EMAILBODY}
-					echo "${LINE}" | sed -e 's/[0-9][0-9][0-9][0-9]-//g' -e "s/,/<\/td>\n\t<td style=\"${STYLE_TD}\">/g" -e 's/$/<\/td><\/tr>/g' >> ${EMAILBODY}
+					echo -n "<tr><td style=\"${STYLE_TD_HEAD}\">" >> ${BODY}
+#					echo "${LINE}" | sed -e 's/-/ /g' -e 's/_/ /g' -e "s/,/<\/td>\n\t<td style=\"${STYLE_TD}\">/g" -e 's/$/<\/td><\/tr>/g' >> ${BODY}
+					echo "${LINE}" | sed -e 's/[0-9][0-9][0-9][0-9]-//g' -e "s/,/<\/td>\n\t<td style=\"${STYLE_TD}\">/g" -e 's/$/<\/td><\/tr>/g' >> ${BODY}
 
 					[ ${DEBUG} ] && echo "${LINE_COUNT}: ${LINE}"
 
@@ -405,7 +407,7 @@ function MakeHTML() {
 			fi
 		done
 
-		echo "</table><br></body></html>" >> ${EMAILBODY}
+		echo "</table><br></body></html>" >> ${BODY}
 }
 
 
