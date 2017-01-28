@@ -5,8 +5,9 @@
 source $HOME/Sources/scripts-git/secret_stuff.sh
 DEBUG="YES"
 REPO="$HOME/Stern"
-MAILTO_ADDR="${EMAIL_MINE}"
+EMAILS="${EMAIL_MINE}"
 WORKDIR="/tmp"
+BODY="${BODY}"
 ##########################################
 
 
@@ -145,13 +146,14 @@ if [ $DOMAIL = "yes" ] ; then
 	NEWSIZE=$(ls -sh "$MONTH_REPO/$JUST_DATE.mp3" | awk '{print $1}' | sed -e 's/[a-zA-Z]//g')
 	PERCENT=$(echo "(1-($NEWSIZE/$OLDSIZE)) * 100" | bc -l | sed -e 's/\(\.[0-9]\).*/\1/g')
 
-	echo -e "Name: ${NUMBER_DATE}" > /tmp/sternmail
-	echo -e "Album: Howard Stern - $MONTH_YEAR" >> /tmp/sternmail
-	echo -e "Old size: ${OLDSIZE}M" >> /tmp/sternmail
-	echo -e "New size: ${NEWSIZE}M" >> /tmp/sternmail
-	echo -e "$PERCENT% reduction" >> /tmp/sternmail
-	mutt -s "Success: $JUST_DATE.mp3" "${MAILTO_ADDR}" < /tmp/sternmail
-	rm -f /tmp/sternmail
+	echo -e "Name: ${NUMBER_DATE}" > ${BODY}
+	echo -e "Album: Howard Stern - $MONTH_YEAR" >> ${BODY}
+	echo -e "Old size: ${OLDSIZE}M" >> ${BODY}
+	echo -e "New size: ${NEWSIZE}M" >> ${BODY}
+	echo -e "$PERCENT% reduction" >> ${BODY}
+#	mutt -s "Success: $JUST_DATE.mp3" "${EMAILS}" < ${BODY}
+	mailx -s "Success: $JUST_DATE.mp3" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+	rm -f ${BODY}
 fi
 ##########################################
 }
