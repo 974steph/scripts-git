@@ -26,12 +26,13 @@ transmission-remote --uplimit=60 --utp --dht --no-downlimit --trash-torrent --no
 
 case $2 in
 	mail)
-		echo "" | mutt -s "Torrent Done - $(basename $1)" -- ${EMAIL_MINE}
+		echo "" | mutt -s "Torrent Done - $(basename $1)" -- ${EMAILS}
+		echo "" | mailx -s "Torrent Done - $(basename $1)" -a "Content-Type: text/html" "${EMAILS}"
 esac
 
 # if [ "$2" ] ; then
 # 	if [ "$2" == "mail" ] ; then
-# 		echo "" | mutt -s "Torrent Done - $(basename $1)" -- ${EMAIL_MINE}
+# 		echo "" | mutt -s "Torrent Done - $(basename $1)" -- ${EMAILS}
 # 	fi
 # fi
 
