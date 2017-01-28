@@ -28,7 +28,7 @@ fi
 
 if [ ${POSTED} -ge ${TODAY_DOWN} -a ${POSTED} -le ${TODAY_UP} ] ; then
 
-	HTML="/tmp/eVIC_Updates.html"
+	BODY="/tmp/eVIC_Updates.html"
 
 #	FILES=$(curl -s "http://www.joyetech.com/mvr-software/?sid=155" | grep zip -m2 | sed "s/.*href=\"\(.*.zip\)\".*/\1/")
 	FILES=$(echo "${RAW_PAGE}" | grep zip -m2 | sed "s/.*href=\"\(.*.zip\)\".*/\1/")
@@ -44,16 +44,17 @@ if [ ${POSTED} -ge ${TODAY_DOWN} -a ${POSTED} -le ${TODAY_UP} ] ; then
 		echo -e "Mac: http://www.joyetech.com${FILE_MAC}"
 	fi
 
-	echo -e "<p>eVIC Firmware Updated</p>" > "${HTML}"
-	echo -e "<p>Firmware updated to: ${VERSION} on $(date -d @${POSTED} '+%B %d, %Y')</p>" >> "${HTML}"
-#	echo -e "<hr>" >> "${HTML}"
-	echo -e "<p>Windows Download: <a href=\"http://www.joyetech.com${FILE_WIN}\">$(echo ${FILE_WIN} | sed "s/.*Up/Up/")</a></p>" >> "${HTML}"
-	echo -e "<p>Mac Download: <a href=\"http://www.joyetech.com${FILE_MAC}\">$(echo ${FILE_MAC} | sed "s/.*Up/Up/")</a></p>" >> "${HTML}"
-	echo -e "<p><a href=\"http://www.joyetech.com/mvr-software/?sid=155\">Joytech eVIC VT software page</a>" >> "${HTML}"
+	echo -e "<p>eVIC Firmware Updated</p>" > "${BODY}"
+	echo -e "<p>Firmware updated to: ${VERSION} on $(date -d @${POSTED} '+%B %d, %Y')</p>" >> "${BODY}"
+#	echo -e "<hr>" >> "${BODY}"
+	echo -e "<p>Windows Download: <a href=\"http://www.joyetech.com${FILE_WIN}\">$(echo ${FILE_WIN} | sed "s/.*Up/Up/")</a></p>" >> "${BODY}"
+	echo -e "<p>Mac Download: <a href=\"http://www.joyetech.com${FILE_MAC}\">$(echo ${FILE_MAC} | sed "s/.*Up/Up/")</a></p>" >> "${BODY}"
+	echo -e "<p><a href=\"http://www.joyetech.com/mvr-software/?sid=155\">Joytech eVIC VT software page</a>" >> "${BODY}"
 
-	mutt -s "eVIC Firmware ${VERSION}" -e "set content_type=text/html" -- "${EMAIL_MINE}" < "${HTML}"
+#	mutt -s "eVIC Firmware ${VERSION}" -e "set content_type=text/html" -- "${EMAILS}" < "${BODY}"
+	mailx -s "eVIC Firmware ${VERSION}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 
-	rm -f "${HTML}"
+	rm -f "${BODY}"
 
 	exit 0
 
