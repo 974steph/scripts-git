@@ -888,29 +888,34 @@ function FinishMail() {
 #		mailx -s "${SUBJECT}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 
  		if [ ${SOBER_ONLY} ] ; then
- 			mutt -s "Sober" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+# 			mutt -s "Sober" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+			mailx -s "Sober" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
  		elif [ "${END_OF_TIME}" ] ; then
 
  			#########
  			# EndOfTime
- 			mutt -s "The ${EOT_DAYS}${NUMEND} day until the End of Time" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+# 			mutt -s "The ${EOT_DAYS}${NUMEND} day until the End of Time" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+			mailx -s "The ${EOT_DAYS}${NUMEND} day until the End of Time" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
  			#########
  		elif [ "${LEX_ONLY}" ] ; then
 
  			#########
  			# LEX
- 			mutt -s "Daily Shared Calendar Update" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+# 			mutt -s "Daily Shared Calendar Update" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+			mailx -s "Daily Shared Calendar Update" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
  			#########
  		elif [ "${BLAND}" ] ; then
 
  			#########
  			# BLAND
- 			mutt -s "Daily Email" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+# 			mutt -s "Daily Email" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+			mailx -s "Daily Eamil" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
  			#########
  		else
 
  			#########
- 			mutt -s "The ${TOTAL_TIME}${NUMEND} Day of Forever" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+# 			mutt -s "The ${TOTAL_TIME}${NUMEND} Day of Forever" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
+			mailx -s "The ${TOTAL_TIME}${NUMEND} Day of Forever" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
  			#########
  		fi
 	fi
