@@ -417,6 +417,13 @@ if [ ! -f "$1" ] ; then
 	ls -l "$1"
 	exit 1
 else
-	sanitize && tagging
+	if [ -w "$1" ] ; then
+		sanitize && tagging
+	else
+		echo -e \\v"FILE IS NOT WRITABLE"
+#		echo -e "$1"\\v
+		ls -l "$1"
+		exit 1
+	fi
 fi
 ###################################
