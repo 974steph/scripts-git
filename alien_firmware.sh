@@ -4,7 +4,9 @@
 
 TMP_FILE="/tmp/alien_firmware_$(date +%s).tmp"
 
-curl -sL "http://www.smoktech.com/support/upgrade/toolsandfirmware/ispalien" | xmllint --nowarning --format --html - 2>/dev/null  > ${TMP_FILE}
+UA="Mozilla/5.0 (Linux; Android 6.0; XT1585 Build/MCK24.78-13.12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.89 Mobile Safari/537.36"
+
+curl -sL -A "${UA}" "http://www.smoktech.com/support/upgrade/toolsandfirmware/ispalien" | xmllint --nowarning --format --html - 2>/dev/null  > ${TMP_FILE}
 
 if [ ! -f "${TMP_FILE}" ] ; then
 	echo "\"${TMP_FILE}\" doesn't exist for some reason.  Bailing..."
@@ -35,7 +37,7 @@ BASENAME=$(basename "${ZIP_FILE}")
 BIG_STAMP=$(basename "${ZIP_FILE}" | sed 's/\([0-9]\+\).*/\1/')
 FILE_STAMP=$(date -d  @${BASENAME:0:10} +%s)
 YESTER_STAMP=$(date -d $(date -d "yesterday" +%Y-%m-%d) +%s)
-YESTER_STAMP="$(date -d 2017-01-01 +%s)"
+#YESTER_STAMP="$(date -d 2017-01-01 +%s)"
 
 if [ ${DEBUG} ] ; then
 	echo "TMP_FILE: ${TMP_FILE}"
@@ -55,8 +57,7 @@ if [ "${FILE_STAMP}" -gt "${YESTER_STAMP}" ] ; then
 	echo -e "File date: $(date -d @${FILE_STAMP})"
 	echo -e "Zip file: ${ZIP_FILE}\n"
 else
-
-	echo -e "\vNO ALIEN FIRMWARE UPDATE\v"
+	[ ${DEBUG} ] && echo -e "\vNO ALIEN FIRMWARE UPDATE\v"
 fi
 
 if [ ${DEBUG} ] ; then
