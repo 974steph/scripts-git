@@ -39,7 +39,7 @@ function GetWeather() {
 	DATE=$(TZ=${TZ} date -d @${NOW} +%Y-%m-%d)
 	TIME=$(TZ=${TZ} date -d @${NOW} +%H:%M:%S)
 
-	FILE_CSV="${TANK}/${PLACE}.csv"
+	FILE_CSV="${TANK}/$(date +%Y)-${PLACE}.csv"
 
 	if [ ${DEBUG} ] ; then
 		echo "PLACE: $PLACE"
