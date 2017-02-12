@@ -20,7 +20,8 @@ TAR_ZOOM="44"
 TANK="$HOME/Pictures/Mountain"
 
 #UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36"
-UA="$(curl -sL "https://techblog.willshouse.com/2012/01/03/most-common-user-agents/" | grep -i "^Mozilla" | shuf -n1)"
+#UA="$(curl -sL "https://techblog.willshouse.com/2012/01/03/most-common-user-agents/" | grep -i "^Mozilla" | shuf -n1)"
+UA="$(curl -sL "https://udger.com/resources/ua-list/browser-detail?browser=Chrome" | awk '/Useragentstring example/,/<\/td><\/tr>/' | sed 's/<[^>]\+>/ /g;s/ \+/ /g;s/.*Useragentstring example.*//' | egrep -v "^$|^ $" | shuf | head -n1)"
 
 SLEEP=5
 
