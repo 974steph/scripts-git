@@ -959,7 +959,8 @@ function SetStylesAndVariables() {
 
 	GOOGLE_KEY="AIzaSyB9w5fBKge4EiWlFZXDYY9DlIYOhvSyZug"
 
-	UA="$(curl -sL "https://techblog.willshouse.com/2012/01/03/most-common-user-agents/" | grep -i "^Mozilla" | shuf -n1)"
+#	UA="$(curl -sL "https://techblog.willshouse.com/2012/01/03/most-common-user-agents/" | grep -i "^Mozilla" | shuf -n1)"
+	UA="$(curl -sL "https://udger.com/resources/ua-list/browser-detail?browser=Chrome" | awk '/Useragentstring example/,/<\/td><\/tr>/' | sed 's/<[^>]\+>/ /g;s/ \+/ /g;s/.*Useragentstring example.*//' | egrep -v "^$|^ $" | shuf | head -n1)"
 
 # 	SHARED_CAL_ICAL="https://www.google.com/calendar/ical/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.com/private-2fde973cf30e98a7fa64de507bd8eb56/basic.ics"
 # 	SHARED_CAL_XML="https://www.google.com/calendar/feeds/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.com/private-2fde973cf30e98a7fa64de507bd8eb56/basic"
