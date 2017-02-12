@@ -3,7 +3,7 @@
 source $HOME/Sources/scripts-git/secret_stuff.sh
 
 # HOLIDAYS TODAY
-# curl -qL https://www.checkiday.com/rss.php 2>/dev/null | xmllint --format -
+# curl -sL https://www.checkiday.com/rss.php 2>/dev/null | xmllint --format -
 
 ##########################################
 # HUMANIZE TIME
@@ -189,7 +189,7 @@ function UnionCheckLexDay() {
 # 	echo "$1 UNION_START_MIN: $UNION_START_MIN"
 # 		-d fields=entry/title,entry/content \
 
-# 	IS_LEX="$(curl -L -s -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
+# 	IS_LEX="$(curl -A "${UA}" -sL -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
 # 		-d fields=entry/title \
 # 		-d q=nathan \
 # 		-d start-min=${UNION_START_MIN} \
@@ -271,9 +271,9 @@ function UnionFinder() {
 	fi
 
 # 	echo -e "</ul>" >> ${BODY}
-# 
+#
 # 	[ ${DEBUG} ] && echo "UNION_IS_LEX: $(echo ${UNION_IS_LEX} | wc -w)"
-# 
+#
 # 	if [ $(echo ${UNION_IS_LEX} | wc -w) -gt 0 ] ; then
 # 		echo "<u><b>Lex Union Days</b></u>"  >> ${BODY}
 # 		echo -e "<ul style=\"${STYLE_UL}\">" >> ${BODY}
@@ -297,7 +297,7 @@ function EventCheckLexDay() {
 # 	echo EVENT_START_MIN: $EVENT_START_MIN
 # 	echo EVENT_START_MAX: $EVENT_START_MAX
 
-	IS_LEX="$(curl -L -s -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
+	IS_LEX="$(curl -A "${UA}" -sL  -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
 		-d fields=entry/title,entry/content \
 		-d q=nathan \
 		-d start-min=${EVENT_START_MIN} \
@@ -374,8 +374,8 @@ function Event() {
 
 		if [ $(echo "${CONTENT}" | egrep -c "^http://|^www\.|^https://") -gt 0 ] ; then
 			CONTENT_URL="${CONTENT}"
-# 			PAGE_TITLE="$(curl -L -s "${CONTENT}" | grep \<[tT][iI][tT][lL][eE]\> | sed -e 's/.*<[tT][iI][tT][lL][eE]>//g' -e 's/<\/[tT][iI][tT][lL][eE]>.*//g' -e 's/ - .*//g' -e 's/\(.*\)|.*/\1/')"
-			PAGE_TITLE="$(curl -L -s "${CONTENT}" | awk '/<[tT][iI][tT][lL][eE]>/,/<\/[tT][iI][tT][lL][eE]>/' | cut -d \| -f1 | sed -e 's/<[^>]*>//g;s/ - .*//g;s/\(.*\)|.*/\1/')"
+# 			PAGE_TITLE="$(curl -A "${UA}" -sL "${CONTENT}" | grep \<[tT][iI][tT][lL][eE]\> | sed -e 's/.*<[tT][iI][tT][lL][eE]>//g' -e 's/<\/[tT][iI][tT][lL][eE]>.*//g' -e 's/ - .*//g' -e 's/\(.*\)|.*/\1/')"
+			PAGE_TITLE="$(curl -A "${UA}" -sL "${CONTENT}" | awk '/<[tT][iI][tT][lL][eE]>/,/<\/[tT][iI][tT][lL][eE]>/' | cut -d \| -f1 | sed -e 's/<[^>]*>//g;s/ - .*//g;s/\(.*\)|.*/\1/')"
 
 			if [ $(echo "${PAGE_TITLE}" | wc -w) -eq 0 ] ; then
 				PAGE_TITLE="Event Details"
@@ -404,10 +404,10 @@ function Event() {
 # 	links -dump http://www.whitepages.com/business?key=quentin+riding+club
 
 # 	########################
-# 	curl -L -s "https://maps.googleapis.com/maps/api/place/textsearch/xml?query=PA%20Farm%20Show%20Complex,%20Harrisburg,%20PA&sensor=false&output=xml&key=${GOOGLE_KEY}"
+# 	curl -A "${UA}"-sL "https://maps.googleapis.com/maps/api/place/textsearch/xml?query=PA%20Farm%20Show%20Complex,%20Harrisburg,%20PA&sensor=false&output=xml&key=${GOOGLE_KEY}"
 # 	https://maps.googleapis.com/maps/api/staticmap?center=2300%20North%20Cameron%20Street,%20Harrisburg,%20PA,%20United%20States&zoom=15&maptype=satellite&size=190x190&markers=color:blue&sensor=false
 
-# 	curl -L -s -G https://maps.googleapis.com/maps/api/place/textsearch/xml?query=PA%20Farm%20Show%20Complex,%20Harrisburg,%20PA \
+# 	curl -A "${UA}" -sL -G https://maps.googleapis.com/maps/api/place/textsearch/xml?query=PA%20Farm%20Show%20Complex,%20Harrisburg,%20PA \
 # 		-d sensor=false \
 # 		-d output=xml \
 # 		-d key=${GOOGLE_KEY}
@@ -490,20 +490,20 @@ function AutoEvent() {
 
 #	CAL_QUERY="\"${MY_CAL}/basic?orderby=starttime&sortorder=a\" -d fields=entry/title,entry/content -d max-results=70 -d start-min=${START_MIN} -d start-max=${START_MAX}"
 
-#	[ ${DEBUG} ] && echo -e "CURL: curl -L -s -G \"${MY_CAL}/basic?orderby=starttime&sortorder=a\" -d fields=entry/title,entry/content -d q=${1} -d start-min=${START_MIN} -d start-max=${START_MAX}" \\v
-	[ ${DEBUG} ] && echo "CURL: curl -L -s -G \"${SHARED_CAL}/basic?orderby=starttime&sortorder=a\" -d fields=entry/title,entry/content -d q=${1} -d start-min=${START_MIN} -d start-max=${START_MAX}"
-#	[ ${DEBUG} ] && echo "CURL: curl -L -s -G \"${CAL_QUERY}\""
+#	[ ${DEBUG} ] && echo -e "CURL: curl -A "${UA}" -sL -G \"${MY_CAL}/basic?orderby=starttime&sortorder=a\" -d fields=entry/title,entry/content -d q=${1} -d start-min=${START_MIN} -d start-max=${START_MAX}" \\v
+	[ ${DEBUG} ] && echo "CURL: curl -A "${UA}" -sL -G \"${SHARED_CAL}/basic?orderby=starttime&sortorder=a\" -d fields=entry/title,entry/content -d q=${1} -d start-min=${START_MIN} -d start-max=${START_MAX}"
+#	[ ${DEBUG} ] && echo "CURL: curl -A "${UA}" -sL -G \"${CAL_QUERY}\""
 
 
 #-d q=${1} \
-#	curl -L -s -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
+#	curl -A "${UA}" -sL -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
 
 	###########################
 	# LAST GOOD
 	# BROKEN AS OF 2015-11
 	# GOOGLE STOPPED XML OUTPUT
 	#
-# 	curl -L -s -G "${SHARED_CAL}/basic?orderby=starttime&sortorder=a" \
+# 	curl -A "${UA}"-sL -G "${SHARED_CAL}/basic?orderby=starttime&sortorder=a" \
 # 			-d max-results=170 \
 # 			-d fields=entry/title,entry/content \
 # 			-d start-min=${START_MIN} \
@@ -664,7 +664,7 @@ function ClearCalVars() {
 
 function LocationSearch() {
 
-	PLACE_LOCATION=$(curl -L -s -G https://maps.googleapis.com/maps/api/place/textsearch/xml?key=${GOOGLE_KEY} -d output=xml -d sensor=false -d query=${CLEAN_LOC} | egrep -m2 'name|formatted_address' | tr -d \\n)
+	PLACE_LOCATION=$(curl -A "${UA}" -sL -G https://maps.googleapis.com/maps/api/place/textsearch/xml?key=${GOOGLE_KEY} -d output=xml -d sensor=false -d query=${CLEAN_LOC} | egrep -m2 'name|formatted_address' | tr -d \\n)
 	PLACE_NAME="$(echo ${PLACE_LOCATION} | sed -e 's/.*<name>\(.*\)<\/name>.*/\1/g')"
 	PLACE_ADDRESS="$(echo ${PLACE_LOCATION} | sed -e 's/.*<formatted_address>\(.*\)<\/formatted_address>.*/\1/g')"
 	PLACE_LINK="https://maps.google.com/maps?q=$(echo ${PLACE_NAME} | sed -e 's/ /+/g'),+$(echo ${PLACE_ADDRESS} | sed -e 's/ /+/g')"
@@ -690,7 +690,7 @@ function GooglePlaceIcon() {
 
 	[ ${DEBUG} ] && echo "SEARCH_TERM: ${SEARCH_TERM}"
 
-	GOOGLE_PLACE=$(curl -L -s "https://maps.googleapis.com/maps/api/place/textsearch/xml?query=${SEARCH_TERM}&sensor=false&output=xml&key=${GOOGLE_KEY}")
+	GOOGLE_PLACE=$(curl -A "${UA}" -sL "https://maps.googleapis.com/maps/api/place/textsearch/xml?query=${SEARCH_TERM}&sensor=false&output=xml&key=${GOOGLE_KEY}")
 
 	GOOGLE_ICON=$(echo "${GOOGLE_PLACE}" | xmllint -format - | awk '/<result>/,/<\/result>/' | awk '/<icon>/,/<\/icon>/' | head -n1 | sed -e 's/<[^>]*>//g;s/^ *//g;s/ *$//g')
 
@@ -712,18 +712,40 @@ function GetHolidays() {
 	echo "<td width=\"25%\"></td></tr></table>" >> ${BODY}
 	echo "<ul style=\"${STYLE_UL}\">" >> ${BODY}
 
-	curl -s "https://www.checkiday.com" | grep "Today is" | sed "s/.*href=\"\(.*\)\" title=\"Today is \(.*\)\!\" .*/\1,\2/" | while IFS= read -r HOLIDAY ; do
+# 	curl -A "${UA}" -sL "https://www.checkiday.com" | grep "Today is" | sed "s/.*href=\"\(.*\)\" title=\"Today is \(.*\)\!\" .*/\1,\2/" | while IFS= read -r HOLIDAY ; do
+	curl -A "${UA}" -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | xmllint --format - | grep -A3 "<item>" | egrep "<title>|<link>" | sed 's/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/'  | while IFS= read -r HOLIDAY ; do
 
-		URL=$(echo ${HOLIDAY} | cut -d , -f 1)
-		NAME="$(echo ${HOLIDAY} | cut -d , -f 2-)"
+		eval "${HOLIDAY}"
 
-		if [ ${DEBUG} ] ; then
-			echo "NAME: $NAME"
-			echo "URL: $URL"
-			echo "========="
+		if [ "${NAME}" -a "${PAGE_URL}" ] ; then
+
+			URL=$(curl -A "${UA}" -sL "${PAGE_URL}" | grep -i 'id="source-url"' | sed 's/.*href="\(.*\)" class.*/\1/')
+
+			if [ ${DEBUG} ] ; then
+				echo -e "NAME: \"$NAME\""
+				echo -e "URL: \"$URL\""
+				echo -e "PAGE_URL: \"$PAGE_URL\""
+				echo -e "========="
+			fi
+
+			echo "<li style=\"${STYLE_LI_CIRCLE}\"><a href=\"${URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">${NAME}</a><br>" >> ${BODY}
+
+			unset NAME PAGE_URL URL
+		else
+
+			if [ ${DEBUG} ] ; then
+				echo "Still looping"
+				echo -e "\\tNAME: \"$NAME\""
+				echo -e "\\tURL: \"$URL\""
+				echo -e "\\tPAGE_URL: \"$PAGE_URL\""
+				echo -e "\\t========="
+			fi
+
 		fi
 
-		echo "<li style=\"${STYLE_LI_CIRCLE}\"><a href=\"${URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">${NAME}</a><br>" >> ${BODY}
+# 		NAME="$(echo ${HOLIDAY} | cut -d , -f 2-)"
+# 		URL=$(echo ${HOLIDAY} | cut -d , -f 1)
+
 	done
 
 	echo "</ul>" >> ${BODY}
@@ -736,7 +758,7 @@ function GetHolidays() {
 #
 function GetQuote() {
 
-	curl -L -s http://www.esvapi.org/v2/rest/verse?key=IP \
+	curl -A "${UA}"-sL http://www.esvapi.org/v2/rest/verse?key=IP \
 		-d dailyVerse \
 		-d include-footnotes=false \
 		-d output-format=plain-text \
@@ -909,7 +931,7 @@ function FinishMail() {
  			#########
  			# BLAND
 # 			mutt -s "Daily Email" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
-			mailx -s "Daily Eamil" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+			mailx -s "Daily Email" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
  			#########
  		else
 
@@ -936,6 +958,8 @@ function SetStylesAndVariables() {
 	NOTICE_DAYS=10
 
 	GOOGLE_KEY="AIzaSyB9w5fBKge4EiWlFZXDYY9DlIYOhvSyZug"
+
+	UA="$(curl -sL "https://techblog.willshouse.com/2012/01/03/most-common-user-agents/" | grep -i "^Mozilla" | shuf -n1)"
 
 # 	SHARED_CAL_ICAL="https://www.google.com/calendar/ical/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.com/private-2fde973cf30e98a7fa64de507bd8eb56/basic.ics"
 # 	SHARED_CAL_XML="https://www.google.com/calendar/feeds/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.com/private-2fde973cf30e98a7fa64de507bd8eb56/basic"
@@ -1059,7 +1083,10 @@ case $1 in
 	"debug")
 		EMAILS="${EMAIL_MINE}"
 		SUBJECT="The ${TOTAL_TIME}${NUMEND} Day of Forever"
-		DEBUG="TRUE"
+# 		DEBUG="TRUE"
+# 		SetStylesAndVariables
+# 		GetHolidays
+# 		exit
 		;;
 	"me")
 		EMAILS="${EMAIL_MINE}"
