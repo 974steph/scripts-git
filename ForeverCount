@@ -758,7 +758,7 @@ function GetHolidays() {
 #
 function GetQuote() {
 
-	curl -A "${UA}"-sL http://www.esvapi.org/v2/rest/verse?key=IP \
+	curl -A "${UA}" -sL http://www.esvapi.org/v2/rest/verse?key=IP \
 		-d dailyVerse \
 		-d include-footnotes=false \
 		-d output-format=plain-text \
@@ -1092,6 +1092,7 @@ case $1 in
 	"me")
 		EMAILS="${EMAIL_MINE}"
 		SUBJECT="The ${TOTAL_TIME}${NUMEND} Day of Forever"
+		DEBUG="yes"
 #		ONLY_ME="yes"
 #		SOBER_ONLY="yes"
 #		BLAND="yes"
@@ -1133,19 +1134,24 @@ case $1 in
 		;;
 esac
 
-
+[ ${DEBUG} ] && echo -e "\\v\\v\033[0;30;44m         SetStylesAndVariables         \033[0m\\v\\v"
 SetStylesAndVariables ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM: SetStylesAndVariables - ${TRAP}" ; TRAP=0
 
 # EndOfTime
 
+[ ${DEBUG} ] && echo -e "\\v\\v\033[0;30;44m         StartMail         \033[0m\\v\\v"
 StartMail ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM: StartMail - ${TRAP}" ; TRAP=0
 
+[ ${DEBUG} ] && echo  -e "\\v\\v\033[0;30;44m         GetQuote         \033[0m\\v\\v"
 GetQuote ; TRAP=$? ; [ ! ${TRAP} -eq 0 ] && echo "BOOM: GetQuote - ${TRAP}" ; TRAP=0
 
+[ ${DEBUG} ] && echo  -e "\\v\\v\033[0;30;44m         SobrietyCount         \033[0m\\v\\v"
 SobrietyCount ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM SobrietyCount - ${TRAP}" ; TRAP=0
 
+[ ${DEBUG} ] && echo  -e "\\v\\v\033[0;30;44m         SmokeCount         \033[0m\\v\\v"
 SmokeCount ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM SmokeCount - ${TRAP}" ; TRAP=0
 
+[ ${DEBUG} ] && echo  -e "\\v\\v\033[0;30;44m         GetHolidays         \033[0m\\v\\v"
 GetHolidays ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM GetHolidays - ${TRAP}" ; TRAP=0
 
 if [ ! ${SOBER_ONLY} ] ; then
@@ -1155,8 +1161,10 @@ if [ ! ${SOBER_ONLY} ] ; then
 #	[ ! ${BLAND} ] && UnionFinder ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM UnionFinder - ${TRAP}" ; TRAP=0
 fi
 
+[ ${DEBUG} ] && echo  -e "\\v\\v\033[0;30;44m         FinishMail         \033[0m\\v\\v"
 FinishMail ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM FinishMail - ${TRAP}" ; TRAP=0
 
+[ ${DEBUG} ] && echo  -e "\\v\\v\033[0;30;44m         CleanUp         \033[0m\\v\\v"
 [ ! ${DEBUG} ] && CleanUp
 # [ ! ${DEBUG} -o ! ${ONLY_ME} ] && rm -rf "${TMP_DIR}"
 # [ ! ${DEBUG} ] && rm -rf "${TMP_DIR}"
