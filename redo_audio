@@ -31,7 +31,7 @@ function Cleanup() {
 function DoNormalize() {
 #	midentify "${OLD_FILE}" | grep -v '=0$' | sort -u >> "${INFO}"
 #	mplayer -identify -frames 0 -vc null -vo null -ao null "${OLD_FILE}" | grep -v "^=|=0$" | sort -u >> "${INFO}"
-	mplayer -identify -frames 0 -vc null -vo null -ao null "${OLD_FILE}" 2>/dev/null | egrep -v "^=|=0$" | grep "=" | sort -u >> "${INFO}"
+	mplayer -identify -frames 0 -vc null -vo null -ao null "${OLD_FILE}" 2>/dev/null |  grep ^[A-Z].*= | sort -u >> "${INFO}"
 	. "${INFO}"
 
 #	ffmpeg -y -v warning -i "${OLD_FILE}" -qscale 0 -vn -f wav -ac ${ID_AUDIO_NCH} -ar "${ID_AUDIO_RATE}" "${NEW_WAV}"
