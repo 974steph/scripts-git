@@ -9,10 +9,11 @@ ALL_THESE_CAMS=" \
 	${WHERE},OldTown,http://www.kob.com/kobtvImages/wx/oldtowncam.jpg,35.096511,-106.670362,US/Mountain,87102 \
 	${WHERE},Downtown,http://wwc.instacam.com/instacamimg/KOBTV/KOBTV_l.jpg,35.081825,-106.665956,US/Mountain,87102 \
 	${WHERE},MountainRd_I-25,http://wwc.instacam.com/instacamimg/ALBCR/ALBCR_l.jpg,35.101994,-106.661710,US/Mountain,87102 \
-	${WHERE},SandiaPeak,http://sandiapeak.com/movies/tram-cam-latest.jpg,35.190977,-106.479572,US/Mountain,87102 \
+	${WHERE},SandiaPeak,http://sandiapeak.com/images/cams/tram-cam_tn.jpg,35.195966,-106.433870,US/Mountain,87102 \
 	${WHERE},SandiaRange,http://icons.wunderground.com/webcamramdisk/e/c/Economics/1/current.jpg,35.190977,-106.479572,US/Mountain,87102 \
 	${WHERE},BalloonFiestaPark,http://wwc.instacam.com/instacamimg/KOBRU/KOBRU_l.jpg,35.1987407,-106.5928339,US/Mountain,87102"
 
+#	${WHERE},SandiaPeak,http://sandiapeak.com/movies/tram-cam-latest.jpg,35.190977,-106.479572,US/Mountain,87102 \
 #	${WHERE},Hilton_BigI,http://wwc.instacam.com/instacamimg/ABQ03/ABQ03_l.jpg,35.091430,-106.636339,US/Mountain,87102 \
 #	${WHERE},,,,,US/Mountain,87102 \
 
