@@ -2,7 +2,7 @@
 
 ###################################
 #
-#   DEBUG=yes
+   DEBUG=yes
 #  DUMPINFO=yes
 #
 ###################################
@@ -270,8 +270,12 @@ function friggin() {
 	echo "Friggin URL: http://www.marksfriggin.com/news${FRIGGIN_YEAR}/${FRIGGIN_TODAY}"
 
 	if [ $(ls -s "${FRIGGIN_SHOW}" | awk '{print $1}') != 0 ] ; then
+
+		FRIGGIN_DATE_ESC=$(echo "${FRIGGIN_DATE}" | sed 's/\//\\\//g')
+
 #		RUNDOWN=$(sed -n "/<\!--  "${FRIGGIN_DAY}"/,/<\/TD>/p" "${FRIGGIN_SHOW}" | grep -v "Wrap Up Show" | sed -n '/<ul>/,/<\/ul>/p' | sed -e :a -e 's/<[^>]*>//g;/</N;//ba' | grep -v '^$')
-		RUNDOWN=$(grep "^<li.*${FRIGGIN_DATE}" "${FRIGGIN_SHOW}" | sed 's/. '"$(echo $FRIGGIN_DATE | sed 's/\//\\\//g')"'. / /;s/<li>//' | awk 'BEGIN {OFS=FS=" ";} {temp=$NF; $NF = ""; sub("$", ""); print temp " -", $0}')
+#		RUNDOWN=$(grep "^<li.*${FRIGGIN_DATE}" "${FRIGGIN_SHOW}" | sed 's/. '"$(echo $FRIGGIN_DATE | sed 's/\//\\\//g')"'. / /;s/<li>//' | awk 'BEGIN {OFS=FS=" ";} {temp=$NF; $NF = ""; sub("$", ""); print temp " -", $0}')
+		RUNDOWN=$(awk "/^<li>[a-zA-z].*${FRIGGIN_DATE_ESC}/" "${FRIGGIN_SHOW}" | sed 's/<li>//g')
 		echo "${RUNDOWN}" > "${FRIGGIN_DUMP}"
 	else
 		RUNDOWN="Unable to get Rundown for ${PRETTY_DATE}"
