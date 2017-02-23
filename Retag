@@ -13,12 +13,12 @@ MAILFILE="${WORKDIR}/SternMail.html"
 FRIGGIN_DUMP="${WORKDIR}/FrigginDumpFile"
 THEFILE="$1"
 
-EXTEN=$(echo $(basename "${THEFILE}") | sed -e 's/.*\././g')
-#NAME=$(echo $(basename "${THEFILE}") | sed -e 's/\..*//g')
-NAME=$(echo $(basename "${THEFILE}") | sed -e "s/$EXTEN//g")
-WS=$(echo $(basename "${THEFILE}") | sed -e 's/ //g' | grep -i WrapUp | wc -w)
-ONLYNUMBERS=$(echo "${NAME}" | sed -e 's/[0-9\.]//g' | wc -w)
-WHERENOW=$(dirname "${THEFILE}")
+#EXTEN=$(echo $(basename "${THEFILE}") | sed -e 's/.*\././g')
+##NAME=$(echo $(basename "${THEFILE}") | sed -e 's/\..*//g')
+#NAME=$(echo $(basename "${THEFILE}") | sed -e "s/$EXTEN//g")
+#WS=$(echo $(basename "${THEFILE}") | sed -e 's/ //g' | grep -i WrapUp | wc -w)
+#ONLYNUMBERS=$(echo "${NAME}" | sed -e 's/[0-9\.]//g' | wc -w)
+#WHERENOW=$(dirname "${THEFILE}")
 
 FIST="$HOME/Pictures/Fist.png"
 FIST_DATE_PNG="${WORKDIR}/fdate.png"
@@ -409,24 +409,82 @@ function tagging() {
 #	[ -f "${FIST_FISTED}" ] && rm -f "${FIST_FISTED}"
 #	[ -f "${FRIGGIN_DUMP}" ] && rm -f "${FIST_FISTED}"
 }
+
+
+function attemptRename() {
+
+	[ ${DEBUG} ] && echo "START RENAME: ${THEFILE}"
+
+	THISFILE=$(basename "$1")
+	WHERENOW=$(dirname "${THEFILE}")
+
+	TESTDATE=$(echo "${THISFILE}" | sed -r 's/([hH]oward|[sS]tern|[sS]how|\.mp3)//g;s/\(.*\)//g;s/  +//g')
+	[ ${DEBUG} ] && echo "TESTDATE: ${TESTDATE}"
+
+
+	REALDATE=$(date -d "${TESTDATE}" +%y%m%d 2>/dev/null)
+
+
+	if [  "${REALDATE}" ] ; then
+		[ ${DEBUG} ] && echo "REALDATE: ${REALDATE}"
+	else
+		[ ${DEBUG} ] && echo "Manual intervention required: ${THISFILE}"
+	fi
+
+
+	echo -e "\\vShould I rename \"$THISFILE\" to \"${REALDATE}.mp3\"? (y/N)\\v"
+
+	read DO_RENAME in
+
+
+	case "${DO_RENAME}" in
+		[yY])
+			[ ${DEBUG} ] && echo "${THFILE} --> ${WHERENOW}/${REALDATE}.mp3"
+			mv -iv "${THEFILE}" "${WHERENOW}/${REALDATE}.mp3"
+			THEFILE="${WHERENOW}/${REALDATE}.mp3"
+			;;
+		[nN])
+			echo "DON'T RENAME"
+			;;
+		*)
+			echo "DEFAULT DON'T RENAME"
+			;;
+	esac
+
+	[ ${DEBUG} ] && echo "END RENAME: ${THEFILE}"
+	EXTEN=$(echo $(basename "${THEFILE}") | sed -e 's/.*\././g')
+	NAME=$(echo $(basename "${THEFILE}") | sed -e "s/$EXTEN//g")
+	WS=$(echo $(basename "${THEFILE}") | sed -e 's/ //g' | grep -i WrapUp | wc -w)
+	ONLYNUMBERS=$(echo "${NAME}" | sed -e 's/[0-9\.]//g' | wc -w)
+}
 ###################################
 
 
 ###################################
 #
-if [ ! -f "$1" ] ; then
-	echo -e \\v"FILE DOESN'T EXIST"
-	echo -e "$1"\\v
+
+if [ ! -f "${THEFILE}" ] ; then
+	echo -e "\\vFILE DOESN'T EXIST"
+	echo -e "${THEFILE}"\\v
 	echo -e $(basename $0) [The Show]\\v
-	ls -l "$1"
+	ls -l "${THEFILE}"
 	exit 1
 else
-	if [ -w "$1" ] ; then
+	if [ ! -w "$(dirname "${THEFILE}")" ] ; then
+		echo "DIRECTORY NOT WRITABLE BY $(whoami)"
+		ls -ld "$(dirname "${THEFILE}")"
+		exit 1
+	fi
+
+	if [ -w "${THEFILE}" ] ; then
+
+		attemptRename "${THEFILE}"
+
 		sanitize && tagging
 	else
-		echo -e \\v"FILE IS NOT WRITABLE"
-#		echo -e "$1"\\v
-		ls -l "$1"
+		echo -e \\v"FILE IS NOT WRITABLE BY $(whoami)"
+#		echo -e "${THEFILE}"\\v
+		ls -l "${THEFILE}"
 		exit 1
 	fi
 fi
