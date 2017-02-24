@@ -154,9 +154,11 @@ function getSillyQuote() {
 ///////////////////////////
 
 
-$fortune = shell_exec('fortune chalkboard | head -n1');
+//$fortune = shell_exec('fortune chalkboard | head -n1');
+//$fortune = shell_exec('fortune -s definitions | egrep -v "^[a-zA-Z0-9].*:|^[\t ]\+--" | sed "s/^[\t ]\+//g" | tr \\n " "');
+//$fortune = shell_exec('fortune -s | egrep -v "^[a-zA-Z0-9].*:|^[\t ]\+--" | sed "s/^[\t ]\+//g" | tr \\n " "');
 //print "FORTUNE: $fortune\n";
-
+//exit();
 //$sillyQuote = getSillyQuote();
 //print_r($sillyQuote);
 //exit();
@@ -168,7 +170,7 @@ $weatherArray = getWeather($lat, $lon);
 //$quote = $quoteArray[0];
 //$author = $quoteArray[1];
 
-$sillyQuote = shell_exec($myhome ."/Sources/scripts-git/randomquote.sh");
+$sillyQuote = shell_exec("./randomquote.sh");
 
 //print_r($weatherArray['data'][0]['parameters']['wordedForecast']['text']);
 
@@ -177,13 +179,13 @@ $today = $weatherArray['data'][0]['parameters']['wordedForecast']['text'][0];
 $tonight = $weatherArray['data'][0]['parameters']['wordedForecast']['text'][1];
 
 print $day ."'s forecast for $city is ";
-print strtolower($today) ."\n";
+print strtolower($today) ."\n\n";
 print "Tonight will be ". strtolower($tonight) ."\n\n";
 
 //print "$author once said:\n";
 //print "$quote\n\n";
 
 //print "Today's thought:\n";
-//print "$sillyQuote\n";
+print "\n\n\n$sillyQuote\n";
 
-print "$fortune\n";
+//print "$fortune\n";
