@@ -469,24 +469,36 @@ if [ ! -f "${THEFILE}" ] ; then
 	echo -e $(basename $0) [The Show]\\v
 	ls -l "${THEFILE}"
 	exit 1
+fi
+
+
+if [ ! -O "$(dirname "${THEFILE}")" ] ; then
+	echo "DIRECTORY NOT OWNED BY $(whoami).  Fixing..."
+	sudo chown -Rv $(whoami):$(id | sed 's/.*gid=[0-9]\+(\([a-zA-Z]\+\)).*/\1/') "$(dirname "${THEFILE}")"
+
+	TRAP=$?
+
+	if [ $TRAP -ne 0 ] ; then
+		echo "chown failed: $TRAP"
+		exit $TRAP
+	fi
+fi
+
+if [ ! -w "$(dirname "${THEFILE}")" ] ; then
+	echo "DIRECTORY NOT WRITABLE BY $(whoami)"
+	ls -ld "$(dirname "${THEFILE}")"
+	exit 1
+fi
+
+if [ -w "${THEFILE}" ] ; then
+
+	attemptRename "${THEFILE}"
+
+	sanitize && tagging
 else
-	if [ ! -w "$(dirname "${THEFILE}")" ] ; then
-		echo "DIRECTORY NOT WRITABLE BY $(whoami)"
-		ls -ld "$(dirname "${THEFILE}")"
-		exit 1
-	fi
-
-	if [ -w "${THEFILE}" ] ; then
-
-		attemptRename "${THEFILE}"
-
-		sanitize && tagging
-	else
-		echo -e \\v"FILE IS NOT WRITABLE BY $(whoami)"
-#		echo -e "${THEFILE}"\\v
-		ls -l "${THEFILE}"
-		exit 1
-	fi
+	echo -e \\v"FILE IS NOT WRITABLE BY $(whoami)"
+	ls -l "${THEFILE}"
+	exit 1
 fi
 ###################################
 
