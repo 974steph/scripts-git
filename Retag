@@ -13,12 +13,12 @@ MAILFILE="${WORKDIR}/SternMail.html"
 FRIGGIN_DUMP="${WORKDIR}/FrigginDumpFile"
 THEFILE="$1"
 
-#EXTEN=$(echo $(basename "${THEFILE}") | sed -e 's/.*\././g')
+EXTEN=$(echo $(basename "${THEFILE}") | sed -e 's/.*\././g')
 ##NAME=$(echo $(basename "${THEFILE}") | sed -e 's/\..*//g')
-#NAME=$(echo $(basename "${THEFILE}") | sed -e "s/$EXTEN//g")
-#WS=$(echo $(basename "${THEFILE}") | sed -e 's/ //g' | grep -i WrapUp | wc -w)
-#ONLYNUMBERS=$(echo "${NAME}" | sed -e 's/[0-9\.]//g' | wc -w)
-#WHERENOW=$(dirname "${THEFILE}")
+NAME=$(echo $(basename "${THEFILE}") | sed -e "s/$EXTEN//g")
+WS=$(echo $(basename "${THEFILE}") | sed -e 's/ //g' | grep -i WrapUp | wc -w)
+ONLYNUMBERS=$(echo "${NAME}" | sed -e 's/[0-9\.]//g' | wc -w)
+WHERENOW=$(dirname "${THEFILE}")
 
 FIST="$HOME/Pictures/Fist.png"
 FIST_DATE_PNG="${WORKDIR}/fdate.png"
@@ -171,7 +171,7 @@ function sanitize() {
 
 	ISWDM=$(echo "${THEFILE}" | grep WDM | wc -w)
 
-	if [ "${ONLYNUMBERS}" = 0 ] ; then
+	if [ "${ONLYNUMBERS}" -eq 0 ] ; then
 		DATE="${NAME}"
 		PRETTY_DATE=$(date -d ${DATE} "+%A, %B %d, %Y")
 		NUMBER_DATE=$(date -d ${DATE} "+%m/%d/%Y, %A")
@@ -492,7 +492,7 @@ fi
 
 if [ -w "${THEFILE}" ] ; then
 
-	attemptRename "${THEFILE}"
+	[ "${ONLYNUMBERS}" -gt 0 ] && attemptRename "${THEFILE}"
 
 	sanitize && tagging
 else
