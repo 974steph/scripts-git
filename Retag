@@ -413,6 +413,9 @@ function tagging() {
 
 function attemptRename() {
 
+
+	DEBUG="yes"
+
 	[ ${DEBUG} ] && echo "START RENAME: ${THEFILE}"
 
 	THISFILE=$(basename "$1")
@@ -422,34 +425,62 @@ function attemptRename() {
 	[ ${DEBUG} ] && echo "TESTDATE: ${TESTDATE}"
 
 
-	REALDATE=$(date -d "${TESTDATE}" +%y%m%d 2>/dev/null)
+#	REALDATE=$(date -d "${TESTDATE}" +%y%m%d 2>/dev/null)
+	REALDATE=$(date -d "${TESTDATE}" +%y%m%d)
+	TRAP=$?
 
 
-	if [  "${REALDATE}" ] ; then
+#	if [ "${REALDATE}" ] ; then
+	if [ ${TRAP} -eq 0 ] ; then
+
+		unset TRAP
+
 		[ ${DEBUG} ] && echo "REALDATE: ${REALDATE}"
+
+		echo -e "\\vShould I rename \"${THISFILE}\" to \"${REALDATE}.mp3\"? (y/N)\\v"
+
+		read DO_RENAME in
+
+
+		case "${DO_RENAME}" in
+			[yY])
+				[ ${DEBUG} ] && echo "${THFILE} --> ${WHERENOW}/${REALDATE}.mp3"
+				mv -iv "${THEFILE}" "${WHERENOW}/${REALDATE}.mp3"
+				THEFILE="${WHERENOW}/${REALDATE}.mp3"
+				;;
+			[nN])
+				echo "DON'T RENAME"
+				exit 0
+				;;
+			*)
+				echo "DEFAULT DON'T RENAME"
+				;;
+		esac
 	else
 		[ ${DEBUG} ] && echo "Manual intervention required: ${THISFILE}"
+
+		echo -e "\\vGive me a new name for \"$THISFILE\"\\v"
+
+		read NEW_NAME in
+
+		mv -vi "${THEFILE}" "${WHERENOW}/${NEW_NAME}"
+
+		TRAP=$?
+
+		if [ ${TRAP} -ne 0 ] ; then
+
+			echo -e "There was an error renaming \"${THEFILE}\" to \"${NEW_NAME}\".  Bailing..."
+
+			exit ${TRAP}
+		else
+
+			echo "Rename successful."
+
+			THEFILE="${NEW_NAME}"
+		fi
+
 	fi
 
-
-	echo -e "\\vShould I rename \"$THISFILE\" to \"${REALDATE}.mp3\"? (y/N)\\v"
-
-	read DO_RENAME in
-
-
-	case "${DO_RENAME}" in
-		[yY])
-			[ ${DEBUG} ] && echo "${THFILE} --> ${WHERENOW}/${REALDATE}.mp3"
-			mv -iv "${THEFILE}" "${WHERENOW}/${REALDATE}.mp3"
-			THEFILE="${WHERENOW}/${REALDATE}.mp3"
-			;;
-		[nN])
-			echo "DON'T RENAME"
-			;;
-		*)
-			echo "DEFAULT DON'T RENAME"
-			;;
-	esac
 
 	[ ${DEBUG} ] && echo "END RENAME: ${THEFILE}"
 	EXTEN=$(echo $(basename "${THEFILE}") | sed -e 's/.*\././g')
@@ -484,22 +515,28 @@ if [ ! -O "$(dirname "${THEFILE}")" ] ; then
 	fi
 fi
 
-if [ ! -w "$(dirname "${THEFILE}")" ] ; then
-	echo "DIRECTORY NOT WRITABLE BY $(whoami)"
-	ls -ld "$(dirname "${THEFILE}")"
-	exit 1
+#if [ ! -w "$(dirname "${THEFILE}")" ] ; then
+#	echo "DIRECTORY NOT WRITABLE BY $(whoami).  Fixing..."
+#	ls -ld "$(dirname "${THEFILE}")"
+#	exit 1
+#fi
+
+if [ ! -w "${THEFILE}" ] ; then
+
+	echo -e \\v"FILE IS NOT WRITABLE BY $(whoami).  Fixing..."
+
+	sudo chown $(whoami):$(id | sed 's/.*gid=[0-9]\+(\([a-zA-Z]\+\)).*/\1/') "${THEFILE}"
+	chmod 0644 "${THEFILE}"
+
+#	ls -l "${THEFILE}"
+#	exit 1
 fi
 
-if [ -w "${THEFILE}" ] ; then
 
-	[ "${ONLYNUMBERS}" -gt 0 ] && attemptRename "${THEFILE}"
+[ "${ONLYNUMBERS}" -gt 0 ] && attemptRename "${THEFILE}"
 
-	sanitize && tagging
-else
-	echo -e \\v"FILE IS NOT WRITABLE BY $(whoami)"
-	ls -l "${THEFILE}"
-	exit 1
-fi
+sanitize && tagging
+
 ###################################
 
 #Primary Group
