@@ -822,8 +822,6 @@ function SmokeCount() {
 #
 function EndOfTime() {
 
-	SUBJECT="The ${EOT_DAYS}${NUMEND} day until the End of Time"
-
 	EOT_END=$(date -d "2015-10-01 - 1 day" +%s)
 	EOT_EXACT=$(HumanizeTime ${TODAY} ${EOT_END} EXACT)
 	EOT_FUZZY=$(HumanizeTime ${TODAY} ${EOT_END} FUZZY)
@@ -896,51 +894,44 @@ function FinishMail() {
 
 	UPSINCE=$(date -d "$(date) - $(cat /proc/uptime | awk '{print $1}') seconds" "+%A %b %-d, %Y at %r")
 
+	SUBJECT="The ${TOTAL_TIME}${NUMEND} Day of Forever"
+
 	echo -e "<BR><BR><center><small>Aragorn last boot:<BR>${UPSINCE}</small></center><BR>" >> ${BODY}
 
 # 	echo -e "<img src=\"http://img15.imageshack.us/img15/667/1pxu.gif\" alt=\"1px\">" >> ${BODY}
 	echo -e "</body></html>" >> ${BODY}
 
+
+	if [ "${SOBER_ONLY}" ] ; then
+		SUBJECT="Sober"
+	elif [ "${END_OF_TIME}" ] ; then
+		SUBJECT="The ${EOT_DAYS}${NUMEND} day until the End of Time"
+ 	elif [ "${LEX_ONLY}" ] ; then
+		SUBJECT="Daily Shared Calendar Update"
+	elif [ "${BLAND}" ] ; then
+		SUBJECT="Daily Email"
+	elif [ "${ONLY_ME}" ] ; then
+		SUBJECT="ME: \"${SUBJECT}\""
+ 	fi
+
+
 	if [ ${DEBUG} ] ; then
 		echo cat ${BODY}
 		echo ${TOTAL_TIME}${NUMEND} day
 		echo $(HumanizeTime ${START_DATE} ${TODAY} EXACT)
-	else
-#		mutt -s "${SUBJECT}" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
-#		mailx -s "${SUBJECT}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
-
- 		if [ ${SOBER_ONLY} ] ; then
-# 			mutt -s "Sober" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
-			mailx -s "Sober" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
- 		elif [ "${END_OF_TIME}" ] ; then
-
- 			#########
- 			# EndOfTime
-# 			mutt -s "The ${EOT_DAYS}${NUMEND} day until the End of Time" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
-			mailx -s "The ${EOT_DAYS}${NUMEND} day until the End of Time" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
- 			#########
- 		elif [ "${LEX_ONLY}" ] ; then
-
- 			#########
- 			# LEX
-# 			mutt -s "Daily Shared Calendar Update" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
-			mailx -s "Daily Shared Calendar Update" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
- 			#########
- 		elif [ "${BLAND}" ] ; then
-
- 			#########
- 			# BLAND
-# 			mutt -s "Daily Email" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
-			mailx -s "Daily Email" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
- 			#########
- 		else
-
- 			#########
-# 			mutt -s "The ${TOTAL_TIME}${NUMEND} Day of Forever" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
-			mailx -s "The ${TOTAL_TIME}${NUMEND} Day of Forever" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
- 			#########
- 		fi
+		echo \"${SUBJECT}\"
 	fi
+
+	# ARCH NEEDS TO USE gnu-mail
+
+	if [ $(which gnu-mail &>/dev/null; echo $?) -eq 0 ] ; then
+		MAILER=$(which gnu-mail)
+	else
+		MAILER=$(which mailx)
+	fi
+
+#	mailx -s "${SUBJECT}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+	${MAILER} -s "${SUBJECT}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 }
 
 
@@ -1078,12 +1069,10 @@ case $1 in
 	"sober")
 		EMAILS="${EMAIL_MINE}, ${EMAIL_CYN}"
 # 		EMAILS="${EMAIL_MINE}"
-		SUBJECT="Sober"
 		SOBER_ONLY="yes"
 		;;
 	"debug")
 		EMAILS="${EMAIL_MINE}"
-		SUBJECT="The ${TOTAL_TIME}${NUMEND} Day of Forever"
 # 		DEBUG="TRUE"
 # 		SetStylesAndVariables
 # 		GetHolidays
@@ -1091,9 +1080,8 @@ case $1 in
 		;;
 	"me")
 		EMAILS="${EMAIL_MINE}"
-		SUBJECT="The ${TOTAL_TIME}${NUMEND} Day of Forever"
 		DEBUG="yes"
-#		ONLY_ME="yes"
+		ONLY_ME="yes"
 #		SOBER_ONLY="yes"
 #		BLAND="yes"
 #		SetStylesAndVariables
@@ -1108,7 +1096,6 @@ case $1 in
 		;;
 	"bland")
 		EMAILS="${EMAIL_CYN}"
-		SUBJECT="Daily Email"
 		BLAND="yes"
 		SetStylesAndVariables
 		StartMail
@@ -1119,7 +1106,6 @@ case $1 in
 		;;
 	"lex")
 		EMAILS="${EMAIL_LEX}"
-		SUBJECT="Daily Shared Calendar Update"
 		LEX_ONLY="TRUE"
 		SetStylesAndVariables
 		StartMail
@@ -1130,7 +1116,6 @@ case $1 in
 		;;
 	*)
 		EMAILS="${EMAIL_MINE}, ${EMAIL_CYN}"
-		SUBJECT="The ${TOTAL_TIME}${NUMEND} Day of Forever"
 		;;
 esac
 
