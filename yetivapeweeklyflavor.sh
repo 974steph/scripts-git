@@ -6,6 +6,8 @@ source $HOME/Sources/scripts-git/secret_stuff.sh
 
 BODY="/tmp/yeti_$(date +%s).html"
 
+EMAILS="${EMAIL_MINE}"
+
 function doHTML() {
 	echo "<html><head><title>${NAME}</title></head>" > ${BODY}
 	echo "<body align=\"center\">" >> ${BODY}
@@ -17,7 +19,7 @@ function doHTML() {
 
 function sendMail() {
 
-	${MAILER} -s "${NAME}" -a "Content-Type: text/html" "${EMAIL_MINE}" < ${BODY}
+	${MAILER} -s "${NAME}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 
 	rm -f ${BODY}
 }
