@@ -17,7 +17,7 @@ function doHTML() {
 
 function sendMail() {
 
-	${MAILER} -s "${NAME}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+	${MAILER} -s "${NAME}" -a "Content-Type: text/html" "${EMAIL_MINE}" < ${BODY}
 
 	rm -f ${BODY}
 }
