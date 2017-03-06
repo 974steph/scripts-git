@@ -380,11 +380,9 @@ function FinishMail() {
 
 		if [ ${DEBUG} ] ; then
 			cat "${BODY}"
-#			echo -e \\v"mutt -s \"${SUBJECT}\" -e \"set content_type=text/html\" -- \"${EMAILS}\" \< ${BODY}"
-			echo -e \\v"mailx -s \"${SUBJECT}\" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}"
+			echo -e \\v"${MAILER} -s \"${SUBJECT}\" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}"
 		else
-#			mutt -s "${SUBJECT}" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
-			mailx -s "${SUBJECT}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+			${MAILER} -s "${SUBJECT}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 		fi
 	fi
 

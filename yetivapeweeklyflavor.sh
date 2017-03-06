@@ -17,8 +17,7 @@ function doHTML() {
 
 function sendMail() {
 
-#	mutt -s "${NAME}" -e "set content_type=text/html" -- ${EMAILS} < "${BODY}"
-	mailx -s "${NAME}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+	${MAILER} -s "${NAME}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 
 	rm -f ${BODY}
 }

@@ -352,8 +352,6 @@ function ParseTV() {
 				fi
 
 # 				TV_TODAY="yes"
-# 				[ ! ${DEBUG} ] && mutt -s "$(date -d"${DATE}" +%Y-%m-%d) - ${TITLE}" -e "set content_type=text/html" -- ${EMAIL_MINE} < ${TV_BODY}
-#				[ ! ${DEBUG} ] && mailx -s "$(date -d"${DATE}" +%Y-%m-%d) - ${TITLE}" -a "Content-Type: text/html" "${EMAIL_MINE}" < ${TV_BODY}
 				PREVIOUS_TV_RELEASE=$(grep "${TITLE}" "${JOYCE_TV_LIST}")
 				PREVIOUS_TV_DATE=$(date -d "$(echo ${PREVIOUS_TV_RELEASE} | awk '{print $1}')" +%Y%m%d)
 
@@ -415,8 +413,6 @@ function GetTV() {
 # # 		echo "<b>KEYWORDS:</b> ${KEYWORDS}<br>" >> ${TV_BODY}
 # 		echo "<br><br>" >> ${TV_BODY}
 # 		echo "wget ${URL} -O ${TV_FILE_NAME}<br>" >> ${TV_BODY}
-# 		mutt -s "$(date -d"${DATE}" +%Y-%m-%d) - ${TITLE}" -e "set content_type=text/html" -- ${EMAIL_MINE} < ${TV_BODY}
-#		mailx -s "$(date -d"${DATE}" +%Y-%m-%d) - ${TITLE}" -a "Content-Type: text/html" "${EMAIL_MINE}" < ${TV_BODY}
 	fi
 
 	[ ! ${DEBUG} -o ! ${FAKE_ATTACH} ] && echo $(echo ${TV_FILE_NAME} | sed -e 's/\.mp4//g') >> "${JOYCE_TV_LIST}"
@@ -572,10 +568,8 @@ function FinishMail() {
 
 	if [ ${DEBUG} ] ; then
 		echo BODY: ${BODY}
-#		echo "mutt -s \"Joyce Meyer - ${TODAY_PRETTY}\" -e \"set content_type=text/html\" -a ${TMP_DIR}/*.mp3 -- \"${EMAILS}\" < ${BODY}"
-		echo "mailx -s \"Joyce Meyer - ${TODAY_PRETTY}\" -a \"Content-Type: text/html\" -a ${TMP_DIR}/*.mp3 \"${EMAILS}\" < ${BODY}"
-#		echo mutt -s "Joyce Meyer - ${TODAY_PRETTY}" -e "set content_type=text/html" -- ${EMAILS} < ${BODY}
-		echo mailx -s "Joyce Meyer - ${TODAY_PRETTY}" -a "Content-Type: text/html" -a ${TMP_DIR}/*.mp3 "${EMAILS}" < ${BODY}
+		echo "${MAILER} -s \"Joyce Meyer - ${TODAY_PRETTY}\" -a \"Content-Type: text/html\" -a ${TMP_DIR}/*.mp3 \"${EMAILS}\" < ${BODY}"
+		echo ${MAILER} -s "Joyce Meyer - ${TODAY_PRETTY}" -a "Content-Type: text/html" -a ${TMP_DIR}/*.mp3 "${EMAILS}" < ${BODY}
 	else
 
 		echo NOTHING > /dev/null
@@ -584,11 +578,9 @@ function FinishMail() {
 		### PUT THESE BACK IN TO RE-ENABLE MAILING
 		###
 		if [ ${FILE_TODAY} ] ; then
-#			mutt -s "Joyce Meyer - ${TODAY_PRETTY}" -e "set content_type=text/html" -a ${TMP_DIR}/*.mp3 -- "${EMAILS}" < ${BODY}
-			mailx -s "Joyce Meyer - ${TODAY_PRETTY}" -a "Content-Type: text/html" -a ${TMP_DIR}/*.mp3 "${EMAILS}" < ${BODY}
+			${MAILER} -s "Joyce Meyer - ${TODAY_PRETTY}" -a "Content-Type: text/html" -a ${TMP_DIR}/*.mp3 "${EMAILS}" < ${BODY}
 		else
-#			mutt -s "Joyce Meyer - ${TODAY_PRETTY}" -e "set content_type=text/html" -- ${EMAILS} < ${BODY}
-			mailx -s "Joyce Meyer - ${TODAY_PRETTY}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+			${MAILER} -s "Joyce Meyer - ${TODAY_PRETTY}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 		fi
 	fi
 }

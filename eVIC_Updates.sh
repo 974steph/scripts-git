@@ -51,8 +51,7 @@ if [ ${POSTED} -ge ${TODAY_DOWN} -a ${POSTED} -le ${TODAY_UP} ] ; then
 	echo -e "<p>Mac Download: <a href=\"http://www.joyetech.com${FILE_MAC}\">$(echo ${FILE_MAC} | sed "s/.*Up/Up/")</a></p>" >> "${BODY}"
 	echo -e "<p><a href=\"http://www.joyetech.com/mvr-software/?sid=155\">Joytech eVIC VT software page</a>" >> "${BODY}"
 
-#	mutt -s "eVIC Firmware ${VERSION}" -e "set content_type=text/html" -- "${EMAILS}" < "${BODY}"
-	mailx -s "eVIC Firmware ${VERSION}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+	${MAILER} -s "eVIC Firmware ${VERSION}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 
 	rm -f "${BODY}"
 

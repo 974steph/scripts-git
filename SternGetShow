@@ -103,8 +103,7 @@ function doit() {
 		echo "STERNDIR: $STERNDIR" >> "${BODY}"
 		echo "SHOWFILE: $SHOWFILE" >> "${BODY}"
 		echo "</PRE><BR><BR><BR><BR><BR></BODY></HTML>" >> "${BODY}"
-#		mutt -s "Stern Show ERROR - ${TODAY}" -e "set content_type=text/html" -- ${EMAILS} < "${BODY}"
-		mailx -s "Stern Show ERROR - ${TODAY}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+		${MAILER} -s "Stern Show ERROR - ${TODAY}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 		exit 1
 	else
 
@@ -133,8 +132,7 @@ function MailResults() {
 
 	echo "It took "${TIMEITTOOK}" to complete.<br>" >> "${BODY}"
 	echo "</PRE><BR><BR><BR><BR><BR></BODY></HTML>" >> "${BODY}"
-#	mutt -s "Stern Show Done - ${TODAY}" -e "set content_type=text/html" -- ${EMAILS} < "${BODY}"
-	mailx -s "Stern Show Done - ${TODAY}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+	${MAILER} -s "Stern Show Done - ${TODAY}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 	rm -f "${BODY}" "${TIMEFILE}" 
 # 	"${RSSFILE}"
 

@@ -922,15 +922,6 @@ function FinishMail() {
 		echo \"${SUBJECT}\"
 	fi
 
-	# ARCH NEEDS TO USE gnu-mail
-
-	if [ $(which gnu-mail &>/dev/null; echo $?) -eq 0 ] ; then
-		MAILER=$(which gnu-mail)
-	else
-		MAILER=$(which mailx)
-	fi
-
-#	mailx -s "${SUBJECT}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 	${MAILER} -s "${SUBJECT}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 }
 

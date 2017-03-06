@@ -151,8 +151,7 @@ if [ $DOMAIL = "yes" ] ; then
 	echo -e "Old size: ${OLDSIZE}M" >> ${BODY}
 	echo -e "New size: ${NEWSIZE}M" >> ${BODY}
 	echo -e "$PERCENT% reduction" >> ${BODY}
-#	mutt -s "Success: $JUST_DATE.mp3" "${EMAILS}" < ${BODY}
-	mailx -s "Success: $JUST_DATE.mp3" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+	${MAILER} -s "Success: $JUST_DATE.mp3" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 	rm -f ${BODY}
 fi
 ##########################################

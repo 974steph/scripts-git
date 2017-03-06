@@ -328,9 +328,7 @@ function UpdateGrades {
 		# Send Email
 		#
 # 		if [ ! ${DEBUG} ] ; then
-# 			mutt -a "${GFILE}" -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
-#			mutt -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
-			mailx -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+			${MAILER} -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 			[ ! ${DEBUG} ] && rm -f ${BODY}
 # 		fi
 		#######
@@ -349,8 +347,7 @@ function UpdateGrades {
 			GRADES="$(grep -A1 PERIOD "${RAWDIR}/${FILE_DATE}" | tr '\r\n' ' ' | sed -e 's/PERIOD/\nPERIOD/g' | egrep -v 'Homeroom|Lunch|Study Hall' | sed -e '/^$/d' -e 's/.*Grade: //g' -e 's/  Absences.*/,/g' -e 's/--//g' | tr -d '\n' | sed -e 's/,$/\n/')"
 			MakeChart
 			MakeHTML
-#			echo mutt -a "${GFILE}" -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -e "set content_type=text/html" -- "${EMAILS}" < ${BODY}
-			cat "${GFILE}" | mailx -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+			cat "${GFILE}" | ${MAILER} -s "Lex's Grades - $(date -d "${TODAY}" "+%x, %A")" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
 			echo FILE USED: "${RAWDIR}/${THIS_FILE}"
 			echo HTML FILE: echo ${BODY}
 			echo GFILE: ${GFILE}
