@@ -424,10 +424,21 @@ function attemptRename() {
 	TESTDATE=$(echo "${THISFILE}" | sed -r 's/([hH]oward|[sS]tern|[sS]how|\.mp3)//g;s/\(.*\)//g;s/  +//g')
 	[ ${DEBUG} ] && echo "TESTDATE: ${TESTDATE}"
 
-
 #	REALDATE=$(date -d "${TESTDATE}" +%y%m%d 2>/dev/null)
 	REALDATE=$(date -d "${TESTDATE}" +%y%m%d)
 	TRAP=$?
+
+
+	if [ ${TRAP} -ne 0 ] ; then
+
+		unset TRAP
+
+		TESTDATE=$(basename "${THISFILE}" | sed "s/.mp3//;s/.* \([0-9]\+\) .*/\1/")
+#		REALDATE=$(date -d "${TESTDATE}" +%y%m%d 2>/dev/null)
+		REALDATE=$(date -d "${TESTDATE}" +%y%m%d)
+		TRAP=$?
+	fi
+
 
 
 #	if [ "${REALDATE}" ] ; then
