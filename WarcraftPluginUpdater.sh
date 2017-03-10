@@ -9,7 +9,7 @@
 CURSE_PLUGINS="advancedinterfaceoptions auctionator auctioneer altoholic crossrealmassist dejacharacterstats farmhud \
 	gathermate2 gathermate2_data handynotes handynotes_azerothstoptunes handynotes_draenortreasures \
 	handynotes_legionrarestreasures handynotes_lostandfound handynotes_timelesstreasures \
-	herebedragons postal scrap scrap-cleaner skada tomtom world-quest-tracker"
+	herebedragons pawn postal scrap scrap-cleaner skada tomtom world-quest-tracker"
 
 ADDON_DIR="/WoW_2014_11_28/AddOns"
 
