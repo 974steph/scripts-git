@@ -2,13 +2,12 @@
 
 
 #	tradeskill-master tradeskillmaster_accounting tradeskillmaster_apphelper tradeskillmaster_auctioning tradeskillmaster_shopping tradeskillmaster_wowuction
-#	master-plan npcscan npcscan-overlay overachiever silver-dragon 
+#	master-plan npcscan npcscan-overlay overachiever silver-dragon
 
 ######################################################
 # USE THIS STUFF
-CURSE_PLUGINS="advancedinterfaceoptions archy auctionator auctioneer altoholic crossrealmassist dejacharacterstats farmhud \
-	gathermate2 gathermate2_data handynotes handynotes_azerothstoptunes handynotes_draenortreasures \
-	handynotes_legionrarestreasures handynotes_lostandfound handynotes_timelesstreasures \
+CURSE_PLUGINS="advancedinterfaceoptions archy auctionator auctioneer altoholic dejacharacterstats farmhud \
+	gathermate2 gathermate2_data handynotes handynotes_azerothstoptunes handynotes_legionrarestreasures \
 	herebedragons pawn postal scrap scrap-cleaner skada tomtom world-quest-tracker"
 
 ADDON_DIR="/WoW_2014_11_28/AddOns"
