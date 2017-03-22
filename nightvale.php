@@ -122,7 +122,7 @@ foreach ($xml->channel->item as $k=>$v) {
 	}
 
 	$rerun = strpos($title, '(R)');
-//	if ( $debug == TRUE ) { print "RERUN: ". strpos($title, '(R)') ."\n"; }
+//	if ( $debug == TRUE ) { print "RERUN: \"". $rerun ."\"\n"; }
 
 	if ( ($haveEpisode == FALSE) AND (! $rerun) ) {
 		print "$title - \"$fileMp3\"\n";
@@ -138,7 +138,7 @@ foreach ($xml->channel->item as $k=>$v) {
 		print "$title - \"$fileMp3\"\n";
 
 		if ( $rerun ) {
-			print "RERUN\n";
+			print "RERUN!  Skipping...\n";
 		} else {
 			print "YES: $tank/$fileMp3\n";
 		}
