@@ -36,6 +36,9 @@ IFS=${SAVEIFS}
 
 REMAINING=$(transmission-remote -l | grep "^ \+[0-9].*")
 
+
+# transmission-remote -l | awk '/^ +[0-9]+.*Done.*Stopped/ {print $1}' | sed 's/\*//'
+
 if [ ! "${REMAINING}" ] ; then
 	echo -e "No running Torrents remaining.  Stopping..."
 	echo 'sudo /etc/init.d/transmission-daemon stop'
