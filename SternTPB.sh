@@ -100,7 +100,7 @@ if [ "${MAG_RAW}" ] ; then
 
 	echo -e ${MAG_RAW}
 
-	$HOME/Sources/scripts-git/TransManually "${MAG_RAW}"
+	$HOME/Sources/scripts-git/TransManually "${MAG_RAW}" tail
 
 	exit $?
 
