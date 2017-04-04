@@ -63,7 +63,9 @@ if [ "${DD_MONTH}" ] ; then
 		echo "========="
 	done
 else
-	echo "Nothing for ${MONTH}/${YEAR}"
+	echo "Nothing for ${MONTH} ${YEAR}"
+
+	exit
 fi
 
 if [ ! -d ${DEPOT}/DD-WRT-${DVER} ] ; then
