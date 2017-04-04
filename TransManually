@@ -24,6 +24,9 @@ transmission-remote --uplimit=60 --utp --dht --no-downlimit --trash-torrent --no
 
 #[ -f /var/run/transmission/transmission.pid ] && sudo /etc/init.d/transmission-daemon stop
 
+
+tail -F /var/log/transmission/transmission.log
+
 case $2 in
 	mail)
 		echo "" | ${MAILER} -s "Torrent Done - $(basename $1)" -a "Content-Type: text/html" "${EMAILS}"
