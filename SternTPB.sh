@@ -102,7 +102,8 @@ if [ "${MAG_RAW}" ] ; then
 
 	$HOME/Sources/scripts-git/TransManually "${MAG_RAW}" tail
 
-	exit $?
+#	exit $?
+	tail -F /var/log/transmission/transmission
 
 	if [ -f "${BASE}/Howard Stern Show ${STERN_DATE}/Howard Stern Show ${STERN_DATE}.mp3" ] ; then
 
