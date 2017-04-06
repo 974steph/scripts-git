@@ -2,7 +2,8 @@
 
 #DEBUG="YES"
 
-URL="http://www.smoktech.com/support/upgrade/toolsandfirmware/ispalien"
+#URL="http://www.smoktech.com/support/upgrade/toolsandfirmware/ispalien"
+URL="http://www.smoktech.com/support/upgrade/toolsandfirmware/ispalienv"
 
 TMP_FILE="/tmp/alien_firmware_$(date +%s).tmp"
 
@@ -33,8 +34,9 @@ fi
 
 
 #ZIP_FILE=$(curl -sL "${URL}" | xmllint --nowarning --format --html - 2>/dev/null | grep -i \.zip | sed 's/.*href="\(.*\.zip\).*/\1/')
-VERSION=$(grep "ALIEN V" ${TMP_FILE} | sed 's/<[^>]\+>/ /g;s/ \+//;s/)//g' | awk '{print $2}')
-ZIP_FILE=$(xmllint --nowarning --format --html ${TMP_FILE} 2>/dev/null | grep -i ${VERSION}.*\.zip | sed 's/.*href="\(.*\.zip\).*/\1/')
+VERSION=$(grep "ALIEN V" ${TMP_FILE} | sed 's/<[^>]\+>/ /g;s/ \+//;s/)//g' | awk '{print $2}' | tail -n1)
+#ZIP_FILE=$(xmllint --nowarning --format --html ${TMP_FILE} 2>/dev/null | grep -i ${VERSION}.*\.zip | sed 's/.*href="\(.*\.zip\).*/\1/')
+ZIP_FILE=$(grep -i ${VERSION}.*\.zip ${TMP_FILE} | sed 's/.*href="\(.*\.zip\).*/\1/')
 BASENAME=$(basename "${ZIP_FILE}")
 # BASENAME=$(basename "${ZIP_FILE}" | sed 's/\([0-9]\+\).*/\1/')
 BIG_STAMP=$(basename "${ZIP_FILE}" | sed 's/\([0-9]\+\).*/\1/')
@@ -65,9 +67,9 @@ else
 	[ ${DEBUG} ] && echo -e "\vNO ALIEN FIRMWARE UPDATE\v"
 fi
 
-if [ ${DEBUG} ] ; then
-	rm -fv ${TMP_FILE}
-else
+if [ ! ${DEBUG} ] ; then
 	rm -f ${TMP_FILE}
+#else
+#	rm -fv ${TMP_FILE}
 fi
 
