@@ -1,6 +1,9 @@
 #!/usr/bin/env php
 <?php
 
+// MENTIAL NOTE TO SELF
+// curl -sL "https://thevillaoformen.tumblr.com" | awk '/<figure class="post-content high-res"/,/<\/figure>/' | grep -m1 "img src" | sed 's/.*src="\(.*\)" alt.*/\1/'
+
 $rawRSS = file_get_contents("http://thevillaoformen.tumblr.com/rss");
 
 $slackEndPoint = "https://hooks.slack.com/services/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";
@@ -73,7 +76,7 @@ function doSlack($post) {
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($c, CURLOPT_POST, true);
 	curl_setopt($c, CURLOPT_POSTFIELDS, $message);
-	curl_exec($c);
+//	curl_exec($c);
 	curl_close($c);
 }
 
