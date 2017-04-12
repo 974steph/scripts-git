@@ -3,6 +3,8 @@
 
 $rawRSS = file_get_contents("http://thevillaoformen.tumblr.com/rss");
 
+$slackEndPoint = "https://hooks.slack.com/services/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";
+
 $xml_object = simplexml_load_string($rawRSS);
 
 class BlogPost {
@@ -11,26 +13,73 @@ class BlogPost {
 	var $link;
 	var $title;
 	var $text;
+	var $desc;
+	var $imgURL;
 }
 
-function DumpStuff() {
+function DumpStuff($post) {
 
-	global $post;
+//	global $post;
+
+	print_r($post);
 
 	print "TITLE: $post->title\n";
 	print "DATE: $post->date\n";
 	print "TS: $post->ts\n";
 	print "LINK: $post->link\n";
 	print "DESC: $post->desc\n";
-//	print "TEXT: $post->text\n";
+	print "TEXT: $post->text\n";
 }
 
-//print_r($xml_object->channel->item);
-//exit();
+function doSlack($post) {
+
+	global $slackEndPoint;
+
+
+	print_r($post);
+
+	$title = $post->title;
+	$imgURL = $post->imgURL;
+
+	print "TITLE: $title\n";
+	print "URL: $imgURL\n";
+
+	// Create a constant to store your Slack URL
+	define('SLACK_WEBHOOK', $slackEndPoint);
+
+	// Make your message
+
+//	$payload = json_encode(array("text" => "$imgURL", "pretext" => "$title"), JSON_UNESCAPED_SLASHES);
+	$payload = json_encode(array("text" => "$imgURL", "title" => "$title"), JSON_UNESCAPED_SLASHES);
+//	$payload = json_encode(array("fields" => array("title" => "$title", "value" => "$imgURL")), JSON_UNESCAPED_SLASHES);
+
+//	$depth = json_encode(array("title" => "$title", "value" => "$imgURL"), JSON_UNESCAPED_SLASHES);
+//	$depth = str_replace('\"','"', json_encode(array("title" => "$title", "value" => "$imgURL"), JSON_UNESCAPED_SLASHES) );
+//	print "DEPTH: $depth\n";
+//	$payload = json_encode("fields: [$depth]", JSON_UNESCAPED_SLASHES);
+//	$payload = json_encode("attachments: [$depth]", JSON_UNESCAPED_SLASHES);
+
+	print "PAYLOAD:\n$payload\n";
+
+//	exit();
+
+//	$message = array('payload' => json_encode(array("fields" => array("title" => "$title", "value" => "$imgURL"))));
+	$message = str_replace('\"','"', array("payload" => "$payload"));
+
+	print_r($message);
+
+	// Use curl to send your message
+	$c = curl_init(SLACK_WEBHOOK);
+	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($c, CURLOPT_POST, true);
+	curl_setopt($c, CURLOPT_POSTFIELDS, $message);
+	curl_exec($c);
+	curl_close($c);
+}
 
 $post = array();
 
-$x = 2;
+$x = 1;
 $y = 0;
 
 foreach ($xml_object->channel->item as $item) {
@@ -50,51 +99,22 @@ foreach ($xml_object->channel->item as $item) {
 	$post->desc = str_replace($replaceThese,'',$DDoc->documentElement->textContent);
 
 
-
-//	print_r($DDoc->firstChild->nextSibling);
-
-
 	foreach( $DDoc->getElementsByTagName('img') as $node) {
-//		$array[] = $node->nodeValue;
-//		print "nodeValue: ". $node->nodeValue ."\n";
 
-//		print "IS ARRAY: ". is_array($node) ."\n";
-
-/*
-		if ( is_array($node)) {
-			print "ARRAY\n";
-			print "ARRAY: \"". $node->nodeValue ."\"\n";
-		} else {
-*/
 		if ( ! is_array($node) ) {
-//			print "STRING\n";
-//			print "STRING: \"". $node->tagName ."\"\n";
 			print "STRING: \"". $node->getAttribute('src') ."\"\n";
-//			print "STRING: ". $node ."\"". $node->nodeValue ."\"\n";
-//			print "STRING: \"". $node->nodeValue ."\"\n";
-//			print "STRING: \"". $node ."\"\n";
-//			var_dump($node->attributes);
 
-/*
-			if ( $node->tagName === "img" ) {
-				print_r($node->childNodes);
-			}
+			$post->imgURL = $node->getAttribute('src');
 
-			foreach($node as $next) {
-				var_dump($next);
-			}
-*/
+			doSlack($post);
+
+//			exit();
 		}
 	}
 
-//		print_r($node);
-
-
-
-
 	if ( $y == $x ) {
 		print "+++++++++ ($y == $x ) +++++++++\n";
-//		exit();
+		exit();
 	} else {
 		DumpStuff($post);
 		print "+++++++++ ($y != $x ) +++++++++\n";
@@ -103,98 +123,4 @@ foreach ($xml_object->channel->item as $item) {
 	$y++;
 }
 
-//print_r($post);
-exit();
-
-
-
-foreach ( $xml_object->channel->item as $k=>$v ) {
-
-	$description = $v->description;
-
-/*
-	$DDoc = new DOMDocument();
-	$DDoc->loadHTML($description);
-	$DDoc->normalizeDocument();
-
-	foreach( $DDoc->getElementsByTagName('img') as $node) {
-		$array[] = $node->nodeValue;
-		print $node .": ". $node->nodeValue ."\n";
-	}
-
-	print_r($array);
-*/
-/*
-	$DDoc = file_get_html($description);
-	foreach ($DDoc as $line) {
-		print "LINE: $line\n";
-	}
-*/
-
-
-	$dom = new domDocument;
-
-	$dom->loadHTML($description);
-
-	$dom->preserveWhiteSpace = false;
-
-//	$content = $dom->getElementsByTagname('<body>');
-
-	$out = array();
-
-//	var_dump($dom);
-/*
-//	foreach ($content as $item) {
-	foreach ($dom as $item) {
-
-		if (isArray($item)) {
-			foreach ($item as $more) {
-				print "MORE: ". $more->nodeValue ."\n";
-				$out[] = $more->nodeValue;
-			}
-		} else {
-
-			print "ITEM: ". $item->nodeValue ."\n";
-			$out[] = $item->nodeValue;
-		}
-	}
-
-    	var_dump($out);
-*/
-
-
-exit();
-
-	$title = $v->title;
-	$link = $v->link;
-	$pubDate = $v->pubDate;
-	$desc = preg_replace('/thevillaoformen:|\n/','',$DDoc->textContent);
-//	print "DESC: ". $DDoc->textContent ."\n";
-//	$blockQuote = $v->blockquote;
-
-//	simplexml_load_string($rawRSS);
-
-
-
-	print "TITLE: $title\n";
-	print "DESC: $desc\n";
-//	print "QUOTE: $blockQuote\n";
-	print "LINK: $link\n";
-	print "DESC: $description\n";
-//	print_r($DDoc->childNodes);
-	printvar($DDoc);
-	print "---------\n";
-
-	exit();
-
-/*
-	if ( preg_match('#\b(gif|jpg|jpeg)\b#', $description) ) {
-
-		$strip = trim(preg_replace('@<img src=\"|\"/.*@', '', trim(preg_replace('@\r|\n@', '', $description))));
-
-		print "strip: $strip\n";
-		print "\t". $v->pubDate ."\n";
-	}
-*/
-}
 ?>
