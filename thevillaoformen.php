@@ -5,13 +5,24 @@ $rawRSS = file_get_contents("http://thevillaoformen.tumblr.com/rss");
 
 $xml_object = simplexml_load_string($rawRSS);
 
-class BlogPost
-{
-    var $date;
-    var $ts;
-    var $link;
-    var $title;
-    var $text;
+class BlogPost {
+	var $date;
+	var $ts;
+	var $link;
+	var $title;
+	var $text;
+}
+
+function DumpStuff() {
+
+	global $post;
+
+	print "TITLE: $post->title\n";
+	print "DATE: $post->date\n";
+	print "TS: $post->ts\n";
+	print "LINK: $post->link\n";
+	print "DESC: $post->desc\n";
+//	print "TEXT: $post->text\n";
 }
 
 //print_r($xml_object->channel->item);
@@ -36,14 +47,8 @@ foreach ($xml_object->channel->item as $item) {
 
 	$replaceThese = array("thevillaoformen:","\n");
 
-	$desc = str_replace($replaceThese,'',$DDoc->documentElement->textContent);
+	$post->desc = str_replace($replaceThese,'',$DDoc->documentElement->textContent);
 
-	print "TITLE: $post->title\n";
-	print "DATE: $post->date\n";
-	print "TS: $post->ts\n";
-	print "LINK: $post->link\n";
-	print "DESC: $desc\n";
-	print "TEXT: $post->text\n";
 
 
 //	print_r($DDoc->firstChild->nextSibling);
@@ -55,20 +60,30 @@ foreach ($xml_object->channel->item as $item) {
 
 //		print "IS ARRAY: ". is_array($node) ."\n";
 
+/*
 		if ( is_array($node)) {
 			print "ARRAY\n";
 			print "ARRAY: \"". $node->nodeValue ."\"\n";
 		} else {
+*/
+		if ( ! is_array($node) ) {
 //			print "STRING\n";
-			print "STRING: \"". $node->tagName ."\"\n";
+//			print "STRING: \"". $node->tagName ."\"\n";
+			print "STRING: \"". $node->getAttribute('src') ."\"\n";
 //			print "STRING: ". $node ."\"". $node->nodeValue ."\"\n";
 //			print "STRING: \"". $node->nodeValue ."\"\n";
 //			print "STRING: \"". $node ."\"\n";
 //			var_dump($node->attributes);
 
+/*
+			if ( $node->tagName === "img" ) {
+				print_r($node->childNodes);
+			}
+
 			foreach($node as $next) {
 				var_dump($next);
 			}
+*/
 		}
 	}
 
@@ -79,11 +94,13 @@ foreach ($xml_object->channel->item as $item) {
 
 	if ( $y == $x ) {
 		print "+++++++++ ($y == $x ) +++++++++\n";
-		exit();
+//		exit();
 	} else {
+		DumpStuff($post);
 		print "+++++++++ ($y != $x ) +++++++++\n";
-		$y++;
 	}
+
+	$y++;
 }
 
 //print_r($post);
