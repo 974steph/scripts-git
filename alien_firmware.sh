@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+case $1 in
+	debug) DEBUG="YES";;
+esac
+
 #DEBUG="YES"
 
 #URL="http://www.smoktech.com/support/upgrade/toolsandfirmware/ispalien"
