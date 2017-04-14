@@ -76,7 +76,7 @@ function doSlack($post) {
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($c, CURLOPT_POST, true);
 	curl_setopt($c, CURLOPT_POSTFIELDS, $message);
-//	curl_exec($c);
+	curl_exec($c);
 	curl_close($c);
 }
 
