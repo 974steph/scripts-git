@@ -32,6 +32,12 @@ function DoMove {
 	FILE_DOWN="${DIRDATE}/${IMGDATE}_${ONE_DOWN}.${EXTEN}"
 
 
+	if [ ${DEBUG} ] ; then
+		echo "FILE_NORMAL: $FILE_NORMAL"
+		echo "FILE_UP: $FILE_UP"
+		echo "FILE_DOWN: $FILE_DOWN"
+	fi
+
 	if [ ! -f "${FILE_NORMAL}" ] ; then
 		mv -i "$1" "${FILE_NORMAL}"
 		touch --date="${IMGSTAMP}" "${FILE_NORMAL}"
@@ -83,14 +89,32 @@ function MoveImageToDateDir {
 	IMGDATE=$(date -d "${IMGSTAMP}" +%Y%m%d)
 	IMGTIME=$(date -d "${IMGSTAMP}" +%H%M%S)
 
-	ONE_UP=$(expr ${IMGTIME} + 1)
-	ONE_DOWN=$(expr ${IMGTIME} - 1)
+	[ ${DEBUG} ] && echo "IMGDATE: $IMGDATE"
+	[ ${DEBUG} ] && echo "IMGTIME: $IMGTIME"
 
-	[ $(expr length ${ONE_UP}) -lt 6 ] && ONE_UP=0${ONE_UP}
-	[ $(expr length ${ONE_DOWN}) -lt 6 ] && ONE_UP=0${ONE_DOWN}
+	padtowidth=6
 
+	ONE_UP=$(printf "%0*d\n" $padtowidth $(expr ${IMGTIME} + 1))
+	ONE_DOWN=$(printf "%0*d\n" $padtowidth $(expr ${IMGTIME} - 1))
+#	ONE_UP=$(echo "${IMGTIME} + 1" | bc)
+#	ONE_DOWN=$(echo "${IMGTIME} - 1" | bc)
+
+#	if [ ${DEBUG} ] ; then
+#		echo -e "\\tONE_UP: $ONE_UP"
+#		echo -e "\\tONE_DOWN: $ONE_DOWN"
+#	fi
+
+#	[ $(expr length ${ONE_UP}) -lt 6 ] && ONE_UP=0${ONE_UP}
+#	[ $(expr length ${ONE_DOWN}) -lt 6 ] && ONE_UP=0${ONE_DOWN}
+
+	if [ ${DEBUG} ] ; then
+		echo -e "\\tONE_UP: $ONE_UP"
+		echo -e "\\tONE_DOWN: $ONE_DOWN"
+	fi
 
 	if [ -f "${DIRDATE}/${IMGDATE}_${IMGTIME}.${EXTEN}" ] ; then
+
+		[ ${DEBUG} ] && echo "MoveImageToDateDir IF"
 
 		NEW_MD5=$(md5sum "$1" | awk '{print $1}')
 		EXIST_MD5=$(md5sum "${DIRDATE}/${IMGDATE}_${IMGTIME}.${EXTEN}" | awk '{print $1}')
@@ -102,17 +126,21 @@ function MoveImageToDateDir {
 				echo -e "\"$1\" and \"${DIRDATE}/${IMGDATE}_${IMGTIME}.${EXTEN}\" are the same file - \"${IMGSTAMP}\""
 			fi
 		else
-# 			echo SAME TIME, DIFFERENT FILES
-# 			echo This one: $1
-# 			echo Existing: "${IMGDATE}"_"${IMGTIME}"
-# 			echo NEW_MD5: "${NEW_MD5}"
-# 			echo EXIST_MD5: "${EXIST_MD5}"
-# 			echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			if [ ${DEBUG} ] ; then
+	 			echo SAME TIME, DIFFERENT FILES
+	 			echo This one: $1
+	 			echo Existing: "${IMGDATE}"_"${IMGTIME}"
+	 			echo NEW_MD5: "${NEW_MD5}"
+	 			echo EXIST_MD5: "${EXIST_MD5}"
+#	 			echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			fi
 
 # 			[ "${IMGSTAMP}" ] && touch --date="${IMGSTAMP}" "$1"
 			DoMove "$1"
 		fi
 	else
+		[ ${DEBUG} ] && echo "MoveImageToDateDir ELSE"
+
 # 		[ "${IMGSTAMP}" ] && touch --date="${IMGSTAMP}" "$1"
 		DoMove "$1"
 	fi
