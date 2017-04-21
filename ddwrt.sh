@@ -36,13 +36,16 @@ if [ ${DEBUG} ] ; then
 	echo "DD_MONTH: $DD_MONTH"
 fi
 
+DURL=$(echo "${DD_MONTH}" | awk '{print $2}' | sed "s/^.*=\"\(.*\)\/\".*/\1/")
+echo -e "\\vChecking: ${URL_BASE}/${YEAR}/${DURL}/${MODEL}\\v"
+
 if [ "${DD_MONTH}" ] ; then
 
 	for M in "${DD_MONTH}" ; do
 
 		[ ${DEBUG} ] && echo "M: \"$M\""
 
-		DURL=$(echo "${M}" | awk '{print $2}' | sed "s/^.*=\"\(.*\)\/\".*/\1/")
+#		DURL=$(echo "${M}" | awk '{print $2}' | sed "s/^.*=\"\(.*\)\/\".*/\1/")
 		DVER=$(echo ${DURL} | cut -d- -f4)
 		DDATE=$(echo "${M}" | awk '{print $3}')
 		DPOCH=$(date -d ${DDATE} +%s)
@@ -52,7 +55,7 @@ if [ "${DD_MONTH}" ] ; then
 			echo "DDATE: $DDATE"
 			echo "DPOCH: $DPOCH"
 			echo "DVER: $DVER"
-			echo ${URL_BASE}/${YEAR}/${DURL}/${MODEL}
+			echo "URL: \"${URL_BASE}/${YEAR}/${DURL}/${MODEL}\""
 			echo "========="
 		fi
 
