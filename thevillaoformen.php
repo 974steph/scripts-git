@@ -43,17 +43,30 @@ function doSlack($post) {
 
 	$title = $post->title;
 	$imgURL = $post->imgURL;
+	$desc = $post->desc;
+//	$text = strip_tags($text);
 
 	print "TITLE: $title\n";
 	print "URL: $imgURL\n";
+//	print "TEXT: $text\n";
+	print "DESC: $desc\n";
 
 	// Create a constant to store your Slack URL
 	define('SLACK_WEBHOOK', $slackEndPoint);
 
 	// Make your message
 
+	if ( strlen($desc) > 0 ) {
+//		$payloadText = "$desc\n\n$imgURL";
+		$payloadText = "$imgURL\n\n$desc";
+	} else {
+		$payloadText = "$imgURL";
+	}
+
+
 //	$payload = json_encode(array("text" => "$imgURL", "pretext" => "$title"), JSON_UNESCAPED_SLASHES);
-	$payload = json_encode(array("text" => "$imgURL", "title" => "$title"), JSON_UNESCAPED_SLASHES);
+//	$payload = json_encode(array("text" => "$imgURL", "title" => "$title"), JSON_UNESCAPED_SLASHES);
+	$payload = json_encode(array("text" => "$payloadText", "title" => "$title"), JSON_UNESCAPED_SLASHES);
 //	$payload = json_encode(array("fields" => array("title" => "$title", "value" => "$imgURL")), JSON_UNESCAPED_SLASHES);
 
 //	$depth = json_encode(array("title" => "$title", "value" => "$imgURL"), JSON_UNESCAPED_SLASHES);
@@ -101,6 +114,7 @@ foreach ($xml_object->channel->item as $item) {
 
 	$post->desc = str_replace($replaceThese,'',$DDoc->documentElement->textContent);
 
+//	print "DESC: ". $post->desc ."\n";
 
 	foreach( $DDoc->getElementsByTagName('img') as $node) {
 
