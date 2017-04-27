@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
 
+include 'secret_stuff.php';
+
 // MENTIAL NOTE TO SELF
 // curl -sL "https://thevillaoformen.tumblr.com" | awk '/<figure class="post-content high-res"/,/<\/figure>/' | grep -m1 "img src" | sed 's/.*src="\(.*\)" alt.*/\1/'
 
@@ -9,6 +11,10 @@ $rawRSS = file_get_contents("http://thevillaoformen.tumblr.com/rss");
 $slackEndPoint = "https://hooks.slack.com/services/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";
 
 $xml_object = simplexml_load_string($rawRSS);
+
+
+$imageRepo = $myhome ."/Pictures/thevillaoformen";
+
 
 class BlogPost {
 	var $date;
@@ -34,10 +40,13 @@ function DumpStuff($post) {
 	print "TEXT: $post->text\n";
 }
 
+
+//getImage("https://68.media.tumblr.com/ddc2a12e8bfe7a653bffc9b1064d360c/tumblr_okp53vkamY1v21qz0o1_500.gif");
+
+
 function doSlack($post) {
 
 	global $slackEndPoint;
-
 
 	print_r($post);
 
@@ -131,6 +140,32 @@ https://api.slack.com/docs/message-attachments
 	curl_close($c);
 }
 
+function getImage($post) {
+
+	global $imageRepo;
+
+
+//	$info = new SplFileInfo($post);
+	$info = new SplFileInfo($post->imgURL);
+//	var_dump($info->getExtension());
+
+
+//	exit();
+
+	$filename = $post->title ."_". $post->ts .".". $info->getExtension();
+
+	$fullImgPath = $imageRepo."/".$filename;
+
+	if ( ! is_file($fullImgPath) ) {
+		file_put_contents($fullImgPath, file_get_contents($post->imgURL));
+		DoSlack($post);
+	} else {
+		print "Already have: ". $fullImgPath ."\n";
+	}
+
+}
+
+
 $post = array();
 
 $x = 1;
@@ -161,7 +196,8 @@ foreach ($xml_object->channel->item as $item) {
 
 			$post->imgURL = $node->getAttribute('src');
 
-			doSlack($post);
+//			doSlack($post);
+			getImage($post);
 
 //			exit();
 		}
