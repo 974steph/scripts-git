@@ -1,6 +1,14 @@
 #!/usr/bin/env php
 <?php
 
+/*
+$now = time();
+print $now ."\n";
+$nowPretty = date('Ymd_His', $now);
+print $nowPretty ."\n";
+exit();
+*/
+
 include 'secret_stuff.php';
 
 $debug = False;
@@ -97,9 +105,12 @@ function getImage($post) {
 
 	$info = new SplFileInfo($post->imgURL);
 
-	$filename = $post->title ."_". $post->ts .".". $info->getExtension();
+//	$filename = $post->title ."_". $post->ts .".". $info->getExtension();
+	$filename = date('Ymd_His', $post->ts) .".". $info->getExtension();
 
 	$fullImgPath = $imageRepo."/".$filename;
+
+	if ($debug) { print "fullImgPath: $fullImgPath\n"; }
 
 	if ( ! is_file($fullImgPath) ) {
 		file_put_contents($fullImgPath, file_get_contents($post->imgURL));
