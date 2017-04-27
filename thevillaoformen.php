@@ -3,6 +3,8 @@
 
 include 'secret_stuff.php';
 
+$debug = False;
+
 // MENTIAL NOTE TO SELF
 // curl -sL "https://thevillaoformen.tumblr.com" | awk '/<figure class="post-content high-res"/,/<\/figure>/' | grep -m1 "img src" | sed 's/.*src="\(.*\)" alt.*/\1/'
 
@@ -28,9 +30,7 @@ class BlogPost {
 
 function DumpStuff($post) {
 
-//	global $post;
-
-	print_r($post);
+//	print_r($post);
 
 	print "TITLE: $post->title\n";
 	print "DATE: $post->date\n";
@@ -41,27 +41,26 @@ function DumpStuff($post) {
 }
 
 
-//getImage("https://68.media.tumblr.com/ddc2a12e8bfe7a653bffc9b1064d360c/tumblr_okp53vkamY1v21qz0o1_500.gif");
-
-
 function doSlack($post) {
 
-	global $slackEndPoint;
+	global $debug, $slackEndPoint;
 
-	print_r($post);
+	if ($debug) { print_r($post); }
 
 	$title = $post->title;
 	$imgURL = $post->imgURL;
 	$desc = $post->desc;
-//	$text = strip_tags($text);
 
-	print "TITLE: $title\n";
-	print "URL: $imgURL\n";
-//	print "TEXT: $text\n";
-	print "DESC: $desc\n";
+	if ($debug) {
+		print "TITLE: $title\n";
+		print "URL: $imgURL\n";
+		print "DESC: $desc\n";
+	}
 
 	// Create a constant to store your Slack URL
-	define('SLACK_WEBHOOK', $slackEndPoint);
+	if ( ! defined('SLACK_WEBHOOK') ) {
+		define('SLACK_WEBHOOK', $slackEndPoint);
+	}
 
 	// Make your message
 
@@ -72,85 +71,31 @@ function doSlack($post) {
 		$payloadText = "$imgURL";
 	}
 
-
-//	$payload = json_encode(array("text" => "$imgURL", "pretext" => "$title"), JSON_UNESCAPED_SLASHES);
-//	$payload = json_encode(array("text" => "$imgURL", "title" => "$title"), JSON_UNESCAPED_SLASHES);
 	$payload = json_encode(array("text" => "$payloadText", "title" => "$title"), JSON_UNESCAPED_SLASHES);
-//	$payload = json_encode(array("fields" => array("title" => "$title", "value" => "$imgURL")), JSON_UNESCAPED_SLASHES);
-
-//	$depth = json_encode(array("title" => "$title", "value" => "$imgURL"), JSON_UNESCAPED_SLASHES);
-//	$depth = str_replace('\"','"', json_encode(array("title" => "$title", "value" => "$imgURL"), JSON_UNESCAPED_SLASHES) );
-//	print "DEPTH: $depth\n";
-//	$payload = json_encode("fields: [$depth]", JSON_UNESCAPED_SLASHES);
-//	$payload = json_encode("attachments: [$depth]", JSON_UNESCAPED_SLASHES);
-
-
-/*
-
-
-
-
-https://api.slack.com/docs/message-attachments
-
-{
-    "attachments": [
-        {
-            "fallback": "Required plain-text summary of the attachment.",
-            "color": "#36a64f",
-            "pretext": "Optional text that appears above the attachment block",
-            "author_name": "Bobby Tables",
-            "author_link": "http://flickr.com/bobby/",
-            "author_icon": "http://flickr.com/icons/bobby.jpg",
-            "title": "Slack API Documentation",
-            "title_link": "https://api.slack.com/",
-            "text": "Optional text that appears within the attachment",
-            "fields": [
-                {
-                    "title": "Priority",
-                    "value": "High",
-                    "short": false
-                }
-            ],
-            "image_url": "http://my-website.com/path/to/image.jpg",
-            "thumb_url": "http://example.com/path/to/thumb.png",
-            "footer": "Slack API",
-            "footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png",
-            "ts": 123456789
-        }
-    ]
-}
-*/
-
-
-	print "PAYLOAD:\n$payload\n";
-
-//	exit();
 
 //	$message = array('payload' => json_encode(array("fields" => array("title" => "$title", "value" => "$imgURL"))));
 	$message = str_replace('\"','"', array("payload" => "$payload"));
 
-	print_r($message);
+	if ($debug) {
+		print "PAYLOAD:\n$payload\n";
+		print_r($message);
+	}
 
 	// Use curl to send your message
 	$c = curl_init(SLACK_WEBHOOK);
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($c, CURLOPT_POST, true);
 	curl_setopt($c, CURLOPT_POSTFIELDS, $message);
-	curl_exec($c);
+//	curl_exec($c);
+	print "\nSLACK\n\n";
 	curl_close($c);
 }
 
 function getImage($post) {
 
-	global $imageRepo;
+	global $debug, $imageRepo;
 
-
-//	$info = new SplFileInfo($post);
 	$info = new SplFileInfo($post->imgURL);
-//	var_dump($info->getExtension());
-
-
-//	exit();
 
 	$filename = $post->title ."_". $post->ts .".". $info->getExtension();
 
@@ -158,11 +103,13 @@ function getImage($post) {
 
 	if ( ! is_file($fullImgPath) ) {
 		file_put_contents($fullImgPath, file_get_contents($post->imgURL));
-		DoSlack($post);
+		$haveImage = False;
 	} else {
 		print "Already have: ". $fullImgPath ."\n";
+		$haveImage = True;
 	}
 
+	return $haveImage;
 }
 
 
@@ -192,26 +139,34 @@ foreach ($xml_object->channel->item as $item) {
 	foreach( $DDoc->getElementsByTagName('img') as $node) {
 
 		if ( ! is_array($node) ) {
-			print "STRING: \"". $node->getAttribute('src') ."\"\n";
+			if ($debug) { print "STRING: \"". $node->getAttribute('src') ."\"\n"; }
 
 			$post->imgURL = $node->getAttribute('src');
 
-//			doSlack($post);
-			getImage($post);
+			$haveImage = getImage($post);
 
-//			exit();
+			if ($haveImage) {
+				if ($debug) { print "haveImage IF : $haveImage\n"; }
+			} else {
+				if ($debug) { print "haveImage ELSE: $haveImage\n"; }
+
+				doSlack($post);
+
+				unset ($haveImage);
+			}
 		}
 	}
 
 	if ( $y == $x ) {
-		print "+++++++++ ($y == $x ) +++++++++\n";
+		if ($debug) { print "+++++++++ ($y == $x ) +++++++++\n"; }
 		exit();
 	} else {
-		DumpStuff($post);
-		print "+++++++++ ($y != $x ) +++++++++\n";
+		if ($debug) {
+			DumpStuff($post);
+			print "+++++++++ ($y != $x ) +++++++++\n";
+		}
 	}
 
 	$y++;
 }
-
 ?>
