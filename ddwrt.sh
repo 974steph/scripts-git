@@ -9,7 +9,7 @@ GET_WEB_FLASH="YES"
 GET_FACTORY_FLASH="YES"
 
 NOW=$(date +%s)
-#NOW=$(date -d 2017-03-31 +%s)
+#NOW=$(date -d 2017-04-25 +%s)
 YDAY=$(date -d "$(date -d @${NOW}) - 1 day" +%s)
 YEAR=$(date -d @${NOW} +%Y)
 MONTH=$(date -d @${NOW} +%b)
@@ -30,16 +30,18 @@ URL_BASE="http://download1.dd-wrt.com/dd-wrtv2/downloads/betas"
 
 DD_MONTH=$(curl -sL ${URL_BASE}/${YEAR} | grep ${MONTH}.*${YEAR} | tail -n1)
 #DD_MONTH=$(curl -sL ${URL_BASE}/${YEAR} | tail -n1)
+DURL=$(echo "${DD_MONTH}" | awk '{print $2}' | sed "s/^.*=\"\(.*\)\/\".*/\1/")
 
 if [ ${DEBUG} ] ; then
 	echo "curl -sL ${URL_BASE}/${YEAR} | grep ${MONTH}.*${YEAR}"
-	echo "DD_MONTH: $DD_MONTH"
+	echo "DD_MONTH: \"$DD_MONTH\""
+	echo "DURL: \"$DURL\""
 fi
 
-DURL=$(echo "${DD_MONTH}" | awk '{print $2}' | sed "s/^.*=\"\(.*\)\/\".*/\1/")
-echo -e "\\vChecking: ${URL_BASE}/${YEAR}/${DURL}/${MODEL}\\v"
 
 if [ "${DD_MONTH}" ] ; then
+
+	echo -e "\\vChecking: ${URL_BASE}/${YEAR}/${DURL}/${MODEL}\\v"
 
 	for M in "${DD_MONTH}" ; do
 
@@ -80,7 +82,8 @@ if [ "${DD_MONTH}" ] ; then
 		fi
 	done
 else
-	echo -e "\\vNothing for ${MONTH} ${YEAR}\\v"
+	echo -e "\\vChecked: ${URL_BASE}/${YEAR}"
+	echo -e "\\vNo ${MODEL} firmware for ${MONTH}, ${YEAR}\\v"
 
 	exit
 fi
