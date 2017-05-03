@@ -8,6 +8,12 @@ GET_WEB_FLASH="YES"
 # UNCOMMENT TO ENABLE
 GET_FACTORY_FLASH="YES"
 
+
+case $1 in
+	check)	JUST_CHECK=TRUE;;
+esac
+
+
 NOW=$(date +%s)
 #NOW=$(date -d 2017-04-25 +%s)
 YDAY=$(date -d "$(date -d @${NOW}) - 1 day" +%s)
@@ -63,6 +69,7 @@ if [ "${DD_MONTH}" ] ; then
 
 		BIN_FACTORY="${URL_BASE}/${YEAR}/${DURL}/${MODEL}/factory-to-dd-wrt.chk"
 		BIN_FACTORY_OUT="netgear-r6400-factory-to-ddwrt-${DVER}.bin"
+		BIN_FACTORY_AVAILABLE=TRUE
 
 		if [ ${DEBUG} ] ; then
 			echo "FACTORY: ${BIN_FACTORY}"
@@ -73,6 +80,7 @@ if [ "${DD_MONTH}" ] ; then
 
 		BIN_WEBFLASH="${URL_BASE}/${YEAR}/${DURL}/${MODEL}/netgear-r6400-webflash.bin"
 		BIN_WEBFLASH_OUT="netgear-r6400-webflash-${DVER}.bin"
+		BIN_WEBFLASH_AVAILABLE=TRUE
 
 		if [ ${DEBUG} ] ; then
 			echo "WEBFLASH: ${BIN_WEBFLASH}"
@@ -81,6 +89,9 @@ if [ "${DD_MONTH}" ] ; then
 			echo "========="
 		fi
 	done
+
+	[ ${JUST_CHECK} ] && echo -e "Update ${DVER} available!\\v"
+
 else
 	echo -e "\\vChecked: ${URL_BASE}/${YEAR}"
 	echo -e "\\vNo ${MODEL} firmware for ${MONTH}, ${YEAR}\\v"
@@ -88,20 +99,23 @@ else
 	exit
 fi
 
-#if [ ! -d ${DEPOT}/DD-WRT-${DVER} ] ; then
-#	mkdir -pv ${DEPOT}/DD-WRT-${DVER}
-#else
-#	echo "OK - \"${DEPOT}/DD-WRT-${DVER}\""
-#fi
 
 if [ ${GET_FACTORY_FLASH} ] ; then
 	if [ ! -f ${DEPOT}/DD-WRT-${DVER}/${BIN_FACTORY_OUT} ] ; then
 
-		[ ! -d ${DEPOT}/DD-WRT-${DVER} ] && mkdir -pv ${DEPOT}/DD-WRT-${DVER}
+		if [ ${JUST_CHECK} ] ; then
+			unset GET_FACTORY_FLASH
+			unset GOT_FACTORY
 
-		wget ${BIN_FACTORY} -O ${DEPOT}/DD-WRT-${DVER}/${BIN_FACTORY_OUT}
+			echo -e "${BIN_FACTORY}"
+		else
 
-		GOT_FACTORY="true"
+			[ ! -d ${DEPOT}/DD-WRT-${DVER} ] && mkdir -p ${DEPOT}/DD-WRT-${DVER}
+
+			wget -q --show-progress ${BIN_FACTORY} -O ${DEPOT}/DD-WRT-${DVER}/${BIN_FACTORY_OUT}
+
+			GOT_FACTORY="true"
+		fi
 	else
 		echo "Already have: \"${DEPOT}/DD-WRT-${DVER}/${BIN_FACTORY_OUT}\""
 	fi
@@ -110,16 +124,24 @@ fi
 if [ ${GET_WEB_FLASH} ] ; then
 	if [ ! -f ${DEPOT}/DD-WRT-${DVER}/${BIN_WEBFLASH_OUT} ] ; then
 
-		[ ! -d ${DEPOT}/DD-WRT-${DVER} ] && mkdir -pv ${DEPOT}/DD-WRT-${DVER}
+		if [ ${JUST_CHECK} ] ; then
+			unset GET_WEB_FLASH
+			unset GOT_WEB
 
-		wget ${BIN_WEBFLASH} -O ${DEPOT}/DD-WRT-${DVER}/${BIN_WEBFLASH_OUT}
+			echo -e "${BIN_WEBFLASH}"
+		else
+			[ ! -d ${DEPOT}/DD-WRT-${DVER} ] && mkdir -p ${DEPOT}/DD-WRT-${DVER}
 
-		GOT_WEB="true"
+			wget -q --show-progress ${BIN_WEBFLASH} -O ${DEPOT}/DD-WRT-${DVER}/${BIN_WEBFLASH_OUT}
+
+			GOT_WEB="true"
+		fi
 	else
 		echo "Already have: \"${DEPOT}/DD-WRT-${DVER}/${BIN_WEBFLASH_OUT}\""
 	fi
 fi
 
+[ ${JUST_CHECK} ] && echo ; exit 0
 
 if [ ${GOT_FACTORY} -o ${GOT_WEB} ] ; then
 	echo -e "\\vFiles saved to: \"${DEPOT}/DD-WRT-${DVER}\"\\v"
