@@ -90,7 +90,7 @@ if [ "${DD_MONTH}" ] ; then
 		fi
 	done
 
-	[ ${JUST_CHECK} ] && echo -e "Update ${DVER} available!\\v"
+	echo -e "Update ${DVER} available!\\v"
 
 else
 	echo -e "\\vChecked: ${URL_BASE}/${YEAR}"
@@ -141,7 +141,10 @@ if [ ${GET_WEB_FLASH} ] ; then
 	fi
 fi
 
-[ ${JUST_CHECK} ] && echo ; exit 0
+if [ ${JUST_CHECK} ] ; then
+	echo
+	exit 0
+fi
 
 if [ ${GOT_FACTORY} -o ${GOT_WEB} ] ; then
 	echo -e "\\vFiles saved to: \"${DEPOT}/DD-WRT-${DVER}\"\\v"
