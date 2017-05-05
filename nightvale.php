@@ -148,8 +148,6 @@ foreach ($xml->channel->item as $k=>$v) {
 		downloadFile($url, $tank, $fileMp3);
 	}
 
-// 	shell_exec("id3v2 --TEXT \"$summary\" --comment \"$summary\" --song \"$title\" --genre 57 \"$tank/$fileMp3\"");
-
 	print "=========\n";
 }
 
