@@ -170,7 +170,6 @@ function GetRawPics() {
 
 	MIME_TYPE=$(file -b --mime-type "${TMP_PIC_1}")
 
-#	[ "$(jhead "${TMP_PIC_1}" &> /dev/null ; echo $?)" -eq 0 ] && JPEG_OK=OK
 	JPEG_OK=$(jpeginfo -c "${TMP_PIC_1}" | egrep "OK")
 #	JPEG_OK=$(jpeginfo -c "${TMP_PIC_1}" | egrep "OK|WARNING")
 
