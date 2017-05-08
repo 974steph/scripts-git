@@ -10,8 +10,8 @@ date_default_timezone_set('America/New_York');
 
 /* connect to gmail */
 $hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
-$username = "$myemail";
-$password = 'WRONG_PASS';
+$username = "$emailMine";
+$password = "$googlePasswd";;
 
 
 $baseDir = "$myhome/wc";
@@ -94,7 +94,7 @@ $baseDir = "$myhome/wc";
 				fclose($f);
 
 
-// 				imap_mail_move($inbox, "$email_number", 'School');
+ 				imap_mail_move($inbox, "$email_number", "$wcTarget");
 
 
 				// COMMENT OUT TO LOOP
