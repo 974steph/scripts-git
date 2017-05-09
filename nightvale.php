@@ -144,7 +144,7 @@ foreach ($xml->channel->item as $k=>$v) {
 		}
 	}
 
-	if ( ($getShow) AND (! $haveEpisode) ) {
+	if ( ($getShow) AND (! $haveEpisode) AND (! $rerun) ) {
 		downloadFile($url, $tank, $fileMp3);
 	}
 
