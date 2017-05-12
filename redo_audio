@@ -31,7 +31,8 @@ function Cleanup() {
 function DoNormalize() {
 #	midentify "${OLD_FILE}" | grep -v '=0$' | sort -u >> "${INFO}"
 #	mplayer -identify -frames 0 -vc null -vo null -ao null "${OLD_FILE}" | grep -v "^=|=0$" | sort -u >> "${INFO}"
-	mplayer -identify -frames 0 -vc null -vo null -ao null "${OLD_FILE}" 2>/dev/null |  grep ^[A-Z].*= | sort -u >> "${INFO}"
+#	mplayer -identify -frames 0 -vc null -vo null -ao null "${OLD_FILE}" 2>/dev/null |  grep ^[A-Z].*= | sort -u >> "${INFO}"
+	mplayer -identify -frames 0 -vc null -vo null -ao null "${OLD_FILE}" 2>/dev/null | egrep "ID_AUDIO_NCH|ID_AUDIO_RATE" | grep -v "=0" | sort -u >> "${INFO}"
 	. "${INFO}"
 
 #	ffmpeg -y -v warning -i "${OLD_FILE}" -qscale 0 -vn -f wav -ac ${ID_AUDIO_NCH} -ar "${ID_AUDIO_RATE}" "${NEW_WAV}"
@@ -118,7 +119,8 @@ function redo_ogg(){
 # MP3
 #
 function redo_mp3(){
-	id3info "${OLD_FILE}" | grep === | sort | sed -e 's/=== //g' -e 's/ (.*: /="/g' -e 's/$/"/g' -e 's/TALB/ALBUM/g' -e 's/TCON/GENRE/g' -e 's/TIT2/TITLE/g' -e 's/TPE1/ARTIST/g' -e 's/TRCK/TRACKNUMBER/g' -e 's/TYER/DATE/g' | sort -u > "${INFO}"
+#	id3info "${OLD_FILE}" | grep === | sort | sed -e 's/=== //g' -e 's/ (.*: /="/g' -e 's/$/"/g' -e 's/TALB/ALBUM/g' -e 's/TCON/GENRE/g' -e 's/TIT2/TITLE/g' -e 's/TPE1/ARTIST/g' -e 's/TRCK/TRACKNUMBER/g' -e 's/TYER/DATE/g' | sort -u > "${INFO}"
+	mid3v2 "${OLD_FILE}" | egrep "TALB|TCON|TIT2|TPE1|TRCK|TYER" | sed -e 's/TALB=\(.*\)/ALBUM="\1"/g' -e 's/TCON=\(.*\)/GENRE="\1"/g' -e 's/TIT2=\(.*\)/TITLE="\1"/g' -e 's/TPE1=\(.*\)/ARTIST="\1"/g' -e 's/TRCK=\(.*\)/TRACKNUMBER="\1"/g' -e 's/TYER=\(.*\)$/DATE="\1"/g' | sort -u > "${INFO}"
 	. "${INFO}"
 
 	DoNormalize && MakeMp3 && Cleanup
@@ -182,8 +184,10 @@ function RenameDirectories() {
 
 		eyeD3 --to-v2.3 "${ALBUM}"/*.mp3 &> /dev/null
 
-		ID3_YEAR=$(id3info "${ALBUM}/$(ls "${ALBUM}" | head -n1)" | grep TYER | sed -e 's/.*: //g')
-		ID3_ALBUM=$(id3info "${ALBUM}/$(ls "${ALBUM}" | head -n1)" | grep TALB | sed -e 's/.*: //g' -e 's/:/ -/g' -e 's/?//g')
+#		ID3_YEAR=$(id3info "${ALBUM}/$(ls "${ALBUM}" | head -n1)" | grep TYER | sed -e 's/.*: //g')
+#		ID3_ALBUM=$(id3info "${ALBUM}/$(ls "${ALBUM}" | head -n1)" | grep TALB | sed -e 's/.*: //g' -e 's/:/ -/g' -e 's/?//g')
+		ID3_YEAR=$(mid3v2 "${ALBUM}/$(ls "${ALBUM}" | head -n1)" | grep TYER | cut -d= -f 2-)
+		ID3_ALBUM=$(mid3v2 "${ALBUM}/$(ls "${ALBUM}" | head -n1)" | grep TALB | cut -d= -f 2-)
 
 		if [ ! -d "${ID3_YEAR} - ${ID3_ALBUM}" ] ; then
 			mv -vi "${ALBUM}" "${ID3_YEAR} - ${ID3_ALBUM}"
