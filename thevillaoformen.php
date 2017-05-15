@@ -130,16 +130,19 @@ $x = 1;
 $y = 0;
 
 foreach ($xml_object->channel->item as $item) {
+
+//	print_r($item);
+
 	$post = new BlogPost();
 	$post->date  = (string) $item->pubDate;
 	$post->ts    = strtotime($item->pubDate);
 	$post->link  = (string) $item->link;
 //	$post->title = (string) $item->title;
-	$post->title = str_replace(array("\n", "\t", "\r"), ' ', ($item->title));
+	$post->title = str_replace(array("\n", "\t", "\r"), ' ', $item->title);
 //	$post->text  = (string) $item->description;
-	$post->text  = str_replace(array("\n", "\t", "\r"), ' ', ($item->text));
+	$post->text  = str_replace(array("\n", "\t", "\r"), ' ', $item->description);
 
-	print_r($post);
+//	print_r($post);
 
 	$DDoc = new DOMDocument();
 	$DDoc->loadHTML($post->text);
