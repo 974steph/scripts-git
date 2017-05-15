@@ -134,8 +134,12 @@ foreach ($xml_object->channel->item as $item) {
 	$post->date  = (string) $item->pubDate;
 	$post->ts    = strtotime($item->pubDate);
 	$post->link  = (string) $item->link;
-	$post->title = (string) $item->title;
-	$post->text  = (string) $item->description;
+//	$post->title = (string) $item->title;
+	$post->title = str_replace(array("\n", "\t", "\r"), ' ', ($item->title));
+//	$post->text  = (string) $item->description;
+	$post->text  = str_replace(array("\n", "\t", "\r"), ' ', ($item->text));
+
+	print_r($post);
 
 	$DDoc = new DOMDocument();
 	$DDoc->loadHTML($post->text);
