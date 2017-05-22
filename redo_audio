@@ -229,12 +229,14 @@ else
 
 	case "${EXTEN}" in 
 		[mM][pP]3) SetupVars "$1" && redo_mp3 ;;
-		[aA][pP][eE]) SetupVars "$1" && redo_ape ;;
 		[fF][lL][aA][cC]) SetupVars "$1" && redo_flac ;;
-		[mM][kK][vV]) SetupVars "$1" && redo_mkv;;
 		[oO][gG][gG]) SetupVars "$1" && redo_ogg;;
 		[wW][aA][vV]) SetupVars "$1" && redo_wav;;
-		   [mM][pP]4) SetupVars "$1" && redo_wav;;
+
+		[aA][pP][eE]) SetupVars "$1" && redo_ape ;;
+		[mM][kK][vV]) SetupVars "$1" && redo_mkv;;
+		[mM][pP]4) SetupVars "$1" && redo_wav;;
+		[wW][eE][bB][mM]) SetupVars "$1" && redo_wav;;
 		*) DumpHelp;;
 	esac
 fi
