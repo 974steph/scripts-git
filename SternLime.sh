@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DEBUG="yes"
+#DEBUG="yes"
 
 case $1 in
 	[0-9]*-[0-9]*-[0-9]*)
@@ -22,11 +22,11 @@ case $1 in
 		;;
 esac
 
-MAG_DATE_WORD=$(date -d ${DATE} +%b\+ | tr '[:lower:]' '[:upper:]')
-MAG_DATE_WORD+=$(date -d ${DATE} +%-d\+%Y)
-MAG_DATE_NUM=$(date -d ${DATE} +%-m-%d-%Y)
+MAG_DATE_WORD=$(date -d ${DATE} +%b. | tr '[:lower:]' '[:upper:]')
+MAG_DATE_WORD+=$(date -d ${DATE} +%-d.%Y)
+MAG_DATE_NUM=$(date -d ${DATE} +%-m.%d.%Y)
 MAG_DATE_ALL_NUM=$(date -d ${DATE} +%Y%m%d)
-MAG_DATE_LWORD=$(date -d ${DATE} +%Y\+%B\+%d)
+MAG_DATE_LWORD=$(date -d ${DATE} +%Y.%B.%d)
 
 STERN_DATE=$(date -d "${DATE}" "+%b %d %Y " | tr '[:lower:]' '[:upper:]')
 STERN_DATE+=$(date -d "${STERN_DATE}" +%a)
@@ -48,42 +48,8 @@ SEARCH_URL="https://www.limetorrents.cc/searchrss/howard%20stern/"
 
 RESULTS=$(curl -sL -A "${UA}" "${SEARCH_URL}" | xmllint --format - | grep 'enclosure url')
 
-#echo "curl -sL -A \"${UA}\" \"${SEARCH_URL}\" | xmllint --format - | grep 'enclosure url'"
-echo "curl -sL \"${SEARCH_URL}\" | xmllint --format - | grep 'enclosure url'"
-
-SAVEIFS=$IFS
-IFS=$(echo -en "\n\b")
-X=0
-
-for R in ${RESULTS} ; do
-
-	if [ ! "${MAG_RAW}" ] ; then
-
-#		echo $R
-
-		MAG_RAW=$(echo ${R} | grep -i "Howard.*Stern.*${MAG_DATE_WORD}")
-#		echo "MAG_DATE_WORD: ${MAG_RAW}"
-
-		[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${R} | grep -i "Howard.*Stern.*${MAG_DATE_LWORD}")
-#		echo "MAG_DATE_LWORD: ${MAG_RAW}"
-
-		[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${R} | grep -i "Howard.*Stern.*${MAG_DATE_NUM}")
-#		echo "MAG_DATE_NUM: ${MAG_RAW}"
-
-		[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${R} | grep -i "Howard.*Stern.*${MAG_DATE_ALL_NUM}")
-#		echo "MAG_DATE_ALL_NUM: ${MAG_RAW}"
-
-		[ "${MAG_RAW}" ] && break
-#	else
-#		echo "$X: $R"
-#		X=$(( $X + 1 ))
-	fi
-done
-
-#exit
-
-MAG_URL=$(echo "${MAG_RAW}" | sed 's/.*url="\(.*\)torrent?title.*/\1torrent/')
-
+#echo "curl -sL -A \"${UA}\" \"${SEARCH_URL}\" | xmllint --format - | grep enclosure.*url.*torrent"
+echo "curl -sL \"${SEARCH_URL}\" | xmllint --format - | grep enclosure.*url.*torrent"
 
 if [ ${DEBUG} ] ; then
 	echo -e "========="
@@ -93,10 +59,53 @@ if [ ${DEBUG} ] ; then
 	echo "MAG_DATE_ALL_NUM: $MAG_DATE_ALL_NUM"
 #	echo "SEARCH: Howard+Stern+Show+${MAG_DATE_WORD}"
 #	echo "ACTUAL: Howard+Stern+Show+AUG+9+2016+Tue"
+fi
+
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+X=0
+
+for R in ${RESULTS} ; do
+
+	if [ ! "${MAG_RAW}" ] ; then
+
+		[ ${DEBUG} ] && echo "R: $R"
+
+		MAG_RAW=$(echo ${R} | grep -i "Howard.*Stern.*${MAG_DATE_WORD}")
+		[ ${DEBUG} ] && echo "MAG_DATE_WORD: ${MAG_RAW}"
+
+		[ "${MAG_RAW}" ] && break
+
+		[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${R} | grep -i "Howard.*Stern.*${MAG_DATE_LWORD}")
+		[ ${DEBUG} ] && echo "MAG_DATE_LWORD: ${MAG_RAW}"
+
+		[ "${MAG_RAW}" ] && break
+
+		[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${R} | grep -i "Howard.*Stern.*${MAG_DATE_NUM}")
+		[ ${DEBUG} ] && echo "MAG_DATE_NUM: ${MAG_RAW}"
+
+		[ "${MAG_RAW}" ] && break
+
+		[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${R} | grep -i "Howard.*Stern.*${MAG_DATE_ALL_NUM}")
+		[ ${DEBUG} ] && echo "MAG_DATE_ALL_NUM: ${MAG_RAW}"
+
+		[ "${MAG_RAW}" ] && break
+#	else
+#		echo "$X: $R"
+#		X=$(( $X + 1 ))
+	fi
+done
+
+
+MAG_URL=$(echo "${MAG_RAW}" | sed 's/.*url="\(.*\)torrent?title.*/\1torrent/')
+
+if [ ${DEBUG} ] ; then
 	echo "MAG_URL: ${MAG_URL}"
 #	echo -e "---------\\n${MAG_RAW}\\n---------"
 	echo -e "MAG_RAW: ${MAG_RAW}\\n---------"
 fi
+
+#exit
 
 
 if [ "${MAG_URL}" ] ; then
