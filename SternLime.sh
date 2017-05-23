@@ -58,22 +58,31 @@ X=0
 for R in ${RESULTS} ; do
 
 	if [ ! "${MAG_RAW}" ] ; then
+
+#		echo $R
+
 		MAG_RAW=$(echo ${R} | grep -i "Howard.*Stern.*${MAG_DATE_WORD}")
+#		echo "MAG_DATE_WORD: ${MAG_RAW}"
+
 		[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${R} | grep -i "Howard.*Stern.*${MAG_DATE_LWORD}")
+#		echo "MAG_DATE_LWORD: ${MAG_RAW}"
+
 		[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${R} | grep -i "Howard.*Stern.*${MAG_DATE_NUM}")
+#		echo "MAG_DATE_NUM: ${MAG_RAW}"
+
 		[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${R} | grep -i "Howard.*Stern.*${MAG_DATE_ALL_NUM}")
+#		echo "MAG_DATE_ALL_NUM: ${MAG_RAW}"
 
-		echo "MAG_RAW: ${MAG_RAW}"
-
-		break
-	else
-		echo "$X: $R"
-		X=$(( $X + 1 ))
+		[ "${MAG_RAW}" ] && break
+#	else
+#		echo "$X: $R"
+#		X=$(( $X + 1 ))
 	fi
 done
 
+#exit
 
-MAG_URL=$(echo "${R}" | sed 's/.*url="\(.*\)torrent?title.*/\1torrent/')
+MAG_URL=$(echo "${MAG_RAW}" | sed 's/.*url="\(.*\)torrent?title.*/\1torrent/')
 
 
 if [ ${DEBUG} ] ; then
@@ -81,12 +90,13 @@ if [ ${DEBUG} ] ; then
 	echo "MAG_DATE_WORD: $MAG_DATE_WORD"
 	echo "MAG_DATE_LWORD: $MAG_DATE_LWORD"
 	echo "MAG_DATE_NUM: $MAG_DATE_NUM"
-	echo "SEARCH: Howard+Stern+Show+${MAG_DATE_WORD}"
-	echo "ACTUAL: Howard+Stern+Show+AUG+9+2016+Tue"
+	echo "MAG_DATE_ALL_NUM: $MAG_DATE_ALL_NUM"
+#	echo "SEARCH: Howard+Stern+Show+${MAG_DATE_WORD}"
+#	echo "ACTUAL: Howard+Stern+Show+AUG+9+2016+Tue"
 	echo "MAG_URL: ${MAG_URL}"
-	echo -e "---------\\n${MAG_RAW}\\n---------"
+#	echo -e "---------\\n${MAG_RAW}\\n---------"
+	echo -e "MAG_RAW: ${MAG_RAW}\\n---------"
 fi
-
 
 
 if [ "${MAG_URL}" ] ; then
