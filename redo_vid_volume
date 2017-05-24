@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 ##########################################
 # Just a quick syntax check.  This is not idiot-proof.
@@ -46,7 +46,8 @@ midentify "$1" | grep AUDIO | grep -v "=0" | sort > "${TMP_DIR}/${TMP_INFO}"
 #
 if [ ! -f "${TMP_DIR}/${TMP_AUDIO_FILE}" ] ; then
 
-	ffmpeg -i "${INFILE}" -vn -f wav -ac ${ID_AUDIO_NCH} -ar "${ID_AUDIO_RATE}" "${TMP_DIR}/${TMP_AUDIO_FILE}"
+#	ffmpeg -i "${INFILE}" -vn -f wav -ac ${ID_AUDIO_NCH} -ar "${ID_AUDIO_RATE}" "${TMP_DIR}/${TMP_AUDIO_FILE}"
+	ffmpeg -i "${INFILE}" -v 3 -vn -sn -ac 2 -ar "${ID_AUDIO_RATE}" -q:a 0 "${TMP_DIR}/${TMP_AUDIO_FILE}"
 
 	if [ $(normalize --peak -n -q "${TMP_DIR}/${TMP_AUDIO_FILE}" | awk '{print $2}' | cut -d\. -f-1) -lt 0 ] ; then 
 		echo -e \\vNormalizing Audio...\\v
