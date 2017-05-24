@@ -64,7 +64,7 @@ fi
 
 if [ ! -f "${TMP_DIR}/${AUDIO_FILE}" ] ; then
 # 	nice lame -q0 -V7 -ms --resample "${ID_AUDIO_RATE}" "${TMP_DIR}/${TMP_AUDIO_FILE}" "${TMP_DIR}/${AUDIO_FILE}"
-	nice lame -q0 -V5 --resample "${ID_AUDIO_RATE}" "${TMP_DIR}/${TMP_AUDIO_FILE}" "${TMP_DIR}/${AUDIO_FILE}"
+	nice lame -q2 -V0 --resample "${ID_AUDIO_RATE}" "${TMP_DIR}/${TMP_AUDIO_FILE}" "${TMP_DIR}/${AUDIO_FILE}"
 fi
 ##########################################
 
