@@ -375,7 +375,7 @@ function Event() {
 		if [ $(echo "${CONTENT}" | egrep -c "^http://|^www\.|^https://") -gt 0 ] ; then
 			CONTENT_URL="${CONTENT}"
 # 			PAGE_TITLE="$(curl -A "${UA}" -sL "${CONTENT}" | grep \<[tT][iI][tT][lL][eE]\> | sed -e 's/.*<[tT][iI][tT][lL][eE]>//g' -e 's/<\/[tT][iI][tT][lL][eE]>.*//g' -e 's/ - .*//g' -e 's/\(.*\)|.*/\1/')"
-			PAGE_TITLE="$(curl -A "${UA}" -sL "${CONTENT}" | awk '/<[tT][iI][tT][lL][eE]>/,/<\/[tT][iI][tT][lL][eE]>/' | cut -d \| -f1 | sed -e 's/<[^>]*>//g;s/ - .*//g;s/\(.*\)|.*/\1/')"
+			PAGE_TITLE="$(curl -A "${UA}" -sL "${CONTENT}" | awk '/<[tT][iI][tT][lL][eE]>/,/<\/[tT][iI][tT][lL][eE]>/' | cut -d \| -f1 | tr -d "\r\n" | sed -e 's/<[^>]*>//g;s/ - .*//g;s/\(.*\)|.*/\1/;s/ \+/ /g;s/^ \+//')"
 
 			if [ $(echo "${PAGE_TITLE}" | wc -w) -eq 0 ] ; then
 				PAGE_TITLE="Event Details"
