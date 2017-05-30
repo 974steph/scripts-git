@@ -169,7 +169,11 @@ function WoWPro() {
 	WOWPRO_EPOCH=$(date -d "$(curl -sL --head ${LINK} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
 
 	if [ ${DEBUG} ] ; then
-		OUTPUT+="${BOLD}${BLUE}\"wowpro\"${RESET}\\n"
+		if [ "${TERM}" ] ; then
+			OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+		else
+			OUTPUT+="========="
+		fi
 	else
 		OUTPUT+="\"wowpro\"\\n"
 	fi
@@ -180,7 +184,7 @@ function WoWPro() {
 	Freshness ${WOWPRO_EPOCH} wowpro "${LINK}" "${CURRENT_VERSION}"
 
 	if [ "${OUTPUT}" ] ; then
-		if [ ${DEBUG} ] ; then
+		if [ ${TERM} ] ; then
 			OUTPUT+="${BOLD}${WHITE}=========${RESET}"
 		else
 			OUTPUT+="========="
@@ -225,8 +229,11 @@ function Plugins() {
 		PLUGIN_INFO_URL="http://www.curse.com/addons/wow/${PLUGIN}"
 
 		if [ ${DEBUG} ] ; then
-#			echo "$(tput bold)$(tput setaf 4)${PLUGIN}$(tput sgr0)"
-			echo "${BOLD}${BLUE}${PLUGIN}${RESET}"
+			if [ "${TERM}" ] ; then
+				echo "${BOLD}${BLUE}${PLUGIN}${RESET}"
+			else
+				echo "${PLUGIN}"
+			fi
 			echo "PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
 		fi
 
@@ -238,8 +245,15 @@ function Plugins() {
 		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/")
 		PLUGIN_URL=$(curl -Ls ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
 
-#		[ ${DEBUG} ] && echo "$(tput bold)$(tput setaf 4)${PLUGIN_TITLE}$(tput sgr0)"
-		[ ${DEBUG} ] && echo "${BOLD}${BLUE}${PLUGIN_TITLE}${RESET}"
+		if [ ${DEBUG} ] ; then
+			if [ "${TERM}" ] ; then
+				echo "${BOLD}${BLUE}${PLUGIN_TITLE}${RESET}"
+			else
+				echo "${PLUGIN_TITLE}"
+			fi
+#		else
+#			echo "${PLUGIN_TITLE}"
+		fi
 
 		unset PLUGIN_PAGE
 
@@ -253,7 +267,11 @@ function Plugins() {
 
 		if [ "${OUTPUT}" ] ; then
 			if [ ${DEBUG} ] ; then
-				OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+				if [ "${TERM}" ] ; then
+					OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+				else
+					OUTPUT+="========="
+				fi
 			else
 				OUTPUT+="========="
 			fi
@@ -285,7 +303,11 @@ function GPDawnbringer() {
 
 	if [ "${OUTPUT}" ] ; then
 		if [ ${DEBUG} ] ; then
-			OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+			if [ "${TERM}" ] ; then
+				OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+			else
+				OUTPUT+="========="
+			fi
 		else
 			OUTPUT+="========="
 		fi
@@ -430,13 +452,13 @@ function DoIt() {
 	fi
 }
 
-
-BOLD=$(tput bold)
-BLUE=$(tput setaf 4)
-RED=$(tput setaf 1)
-WHITE=$(tput setaf 7)
-RESET=$(tput sgr0)
-
+if [ "$TERM" ] ; then
+	BOLD=$(tput bold)
+	BLUE=$(tput setaf 4)
+	RED=$(tput setaf 1)
+	WHITE=$(tput setaf 7)
+	RESET=$(tput sgr0)
+fi
 
 case $1 in
 	show)
