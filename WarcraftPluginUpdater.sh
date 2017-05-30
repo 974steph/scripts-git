@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 
 #	tradeskill-master tradeskillmaster_accounting tradeskillmaster_apphelper tradeskillmaster_auctioning tradeskillmaster_shopping tradeskillmaster_wowuction
@@ -169,7 +169,7 @@ function WoWPro() {
 	WOWPRO_EPOCH=$(date -d "$(curl -sL --head ${LINK} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
 
 	if [ ${DEBUG} ] ; then
-		if [ "${TERM}" ] ; then
+		if [ ${NOTDUMB} ] ; then
 			OUTPUT+="${BOLD}${WHITE}=========${RESET}"
 		else
 			OUTPUT+="========="
@@ -184,7 +184,7 @@ function WoWPro() {
 	Freshness ${WOWPRO_EPOCH} wowpro "${LINK}" "${CURRENT_VERSION}"
 
 	if [ "${OUTPUT}" ] ; then
-		if [ ${TERM} ] ; then
+		if [ ${NOTDUMB} ] ; then
 			OUTPUT+="${BOLD}${WHITE}=========${RESET}"
 		else
 			OUTPUT+="========="
@@ -229,7 +229,7 @@ function Plugins() {
 		PLUGIN_INFO_URL="http://www.curse.com/addons/wow/${PLUGIN}"
 
 		if [ ${DEBUG} ] ; then
-			if [ "${TERM}" ] ; then
+			if [ ${NOTDUMB} ] ; then
 				echo "${BOLD}${BLUE}${PLUGIN}${RESET}"
 			else
 				echo "${PLUGIN}"
@@ -246,7 +246,7 @@ function Plugins() {
 		PLUGIN_URL=$(curl -Ls ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
 
 		if [ ${DEBUG} ] ; then
-			if [ "${TERM}" ] ; then
+			if [ ${NOTDUMB} ] ; then
 				echo "${BOLD}${BLUE}${PLUGIN_TITLE}${RESET}"
 			else
 				echo "${PLUGIN_TITLE}"
@@ -267,7 +267,7 @@ function Plugins() {
 
 		if [ "${OUTPUT}" ] ; then
 			if [ ${DEBUG} ] ; then
-				if [ "${TERM}" ] ; then
+				if [ ${NOTDUMB} ] ; then
 					OUTPUT+="${BOLD}${WHITE}=========${RESET}"
 				else
 					OUTPUT+="========="
@@ -303,7 +303,7 @@ function GPDawnbringer() {
 
 	if [ "${OUTPUT}" ] ; then
 		if [ ${DEBUG} ] ; then
-			if [ "${TERM}" ] ; then
+			if [ ${NOTDUMB} ] ; then
 				OUTPUT+="${BOLD}${WHITE}=========${RESET}"
 			else
 				OUTPUT+="========="
@@ -452,7 +452,11 @@ function DoIt() {
 	fi
 }
 
-if [ "$TERM" ] ; then
+if [ ! "$TERM" == "dumb" ] ; then
+
+	NOTDUMB="True"
+
+#	echo "TERM: \"$TERM\""
 	BOLD=$(tput bold)
 	BLUE=$(tput setaf 4)
 	RED=$(tput setaf 1)
