@@ -1,6 +1,5 @@
 #!/usr/bin/env php
 <?php
-
 /*
 $now = time();
 print $now ."\n";
@@ -16,12 +15,18 @@ $debug = False;
 // MENTIAL NOTE TO SELF
 // curl -sL "https://thevillaoformen.tumblr.com" | awk '/<figure class="post-content high-res"/,/<\/figure>/' | grep -m1 "img src" | sed 's/.*src="\(.*\)" alt.*/\1/'
 
-$rawRSS = file_get_contents("http://thevillaoformen.tumblr.com/rss");
+/*
+try {
+	$rawRSS = file_get_contents("http://thevillaoformen.tumblr.com/rss");
+} catch (Exception $e) {
+	echo 'file_get_contents Caught exception: ',  $e->getMessage(), "\n";
+	exit(1);
+}
+*/
+
+$rssurl = "http://thevillaoformen.tumblr.com/rss";
 
 $slackEndPoint = "https://hooks.slack.com/services/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";
-
-$xml_object = simplexml_load_string($rawRSS);
-
 
 $imageRepo = $myhome ."/Pictures/thevillaoformen";
 
@@ -34,6 +39,21 @@ class BlogPost {
 	var $text;
 	var $desc;
 	var $imgURL;
+}
+
+
+function getRawRss($rssurl) {
+
+	try {
+		$rawRSS = file_get_contents("http://thevillaoformen.tumblr.com/rss");
+		$xml_object = simplexml_load_string($rawRSS);
+	} catch (Exception $e) {
+		echo 'file_get_contents Caught exception: ',  $e->getMessage(), "\n";
+//		exit(1);
+		$xml_object = False;
+	}
+
+	return $xml_object;
 }
 
 function DumpStuff($post) {
@@ -123,6 +143,13 @@ function getImage($post) {
 	return $haveImage;
 }
 
+
+$xml_object = getRawRss($rssurl);
+
+if ( ! $xml_object ) {
+	echo "xml_object: \""+ $xml_object +"\"\n";
+	exit(1);
+}
 
 $post = array();
 
