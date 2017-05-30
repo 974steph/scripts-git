@@ -283,8 +283,13 @@ function GPDawnbringer() {
 
 	Freshness ${GP_DB_EPOCH} GoingPrice_Dawnbringer "${GP_DB_URL}" "${GP_DB_EPOCH}"
 
-	if [ "${OUTPUT}" ] && [ ${DEBUG} ] ; then
-		OUTPUT+="========="
+	if [ "${OUTPUT}" ] ; then
+		if [ ${DEBUG} ] ; then
+			OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+		else
+			OUTPUT+="========="
+		fi
+
 		echo -e ${OUTPUT}
 	fi
 
