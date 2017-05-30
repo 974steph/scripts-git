@@ -168,7 +168,11 @@ function WoWPro() {
 #	WOWPRO_EPOCH=$(date -d "$(curl -sL --head https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
 	WOWPRO_EPOCH=$(date -d "$(curl -sL --head ${LINK} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
 
-	OUTPUT+="\"wowpro\"\\n"
+	if [ ${DEBUG} ] ; then
+		OUTPUT+="${BOLD}${BLUE}\"wowpro\"${RESET}\\n"
+	else
+		OUTPUT+="\"wowpro\"\\n"
+	fi
 	OUTPUT+="Update Time: $(date -d @${WOWPRO_EPOCH})\\n"
 	OUTPUT+="Current Version: ${CURRENT_VERSION}\\n"
 	OUTPUT+="${WOWPRO_INFO_URL}/blog\\n"
@@ -176,7 +180,11 @@ function WoWPro() {
 	Freshness ${WOWPRO_EPOCH} wowpro "${LINK}" "${CURRENT_VERSION}"
 
 	if [ "${OUTPUT}" ] ; then
-		OUTPUT+="========="
+		if [ ${DEBUG} ] ; then
+			OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+		else
+			OUTPUT+="========="
+		fi
 		echo -e ${OUTPUT}
 	fi
 
@@ -213,9 +221,15 @@ function GetPluginPage() {
 function Plugins() {
 
 	for PLUGIN in ${CURSE_PLUGINS} ; do
+
 		PLUGIN_INFO_URL="http://www.curse.com/addons/wow/${PLUGIN}"
 
-		[ ${DEBUG} ] && echo "PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
+		if [ ${DEBUG} ] ; then
+#			echo "$(tput bold)$(tput setaf 4)${PLUGIN}$(tput sgr0)"
+			echo "${BOLD}${BLUE}${PLUGIN}${RESET}"
+			echo "PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
+		fi
+
 		GetPluginPage
 
 		PLUGIN_EPOCH=$(echo "${PLUGIN_PAGE}" | grep Updated.*epoch | sed -e 's/.*data-epoch="//;s/">.*//')
@@ -224,10 +238,13 @@ function Plugins() {
 		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/")
 		PLUGIN_URL=$(curl -Ls ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
 
+#		[ ${DEBUG} ] && echo "$(tput bold)$(tput setaf 4)${PLUGIN_TITLE}$(tput sgr0)"
+		[ ${DEBUG} ] && echo "${BOLD}${BLUE}${PLUGIN_TITLE}${RESET}"
+
 		unset PLUGIN_PAGE
 
-		OUTPUT+="\"${PLUGIN}\"\\n"
-		OUTPUT+="Title: ${PLUGIN_TITLE}\\n"
+		[ ! ${DEBUG} ] && OUTPUT+="\"${PLUGIN}\"\\n"
+		[ ! ${DEBUG} ] && OUTPUT+="Title: ${PLUGIN_TITLE}\\n"
 		OUTPUT+="Update Time: ${PLUGIN_PRETTY}\\n"
 		OUTPUT+="Current Version: ${PLUGIN_VERSION}\\n"
 		OUTPUT+="CHANGES: ${PLUGIN_INFO_URL}#t1:changes\\n"
@@ -235,7 +252,11 @@ function Plugins() {
 		Freshness ${PLUGIN_EPOCH} ${PLUGIN} "${PLUGIN_URL}" "${PLUGIN_VERSION}"
 
 		if [ "${OUTPUT}" ] ; then
-			OUTPUT+="========="
+			if [ ${DEBUG} ] ; then
+				OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+			else
+				OUTPUT+="========="
+			fi
 			echo -e "${OUTPUT}"
 		fi
 
@@ -404,6 +425,12 @@ function DoIt() {
 	fi
 }
 
+
+BOLD=$(tput bold)
+BLUE=$(tput setaf 4)
+RED=$(tput setaf 1)
+WHITE=$(tput setaf 7)
+RESET=$(tput sgr0)
 
 
 case $1 in
