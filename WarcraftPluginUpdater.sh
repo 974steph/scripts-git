@@ -312,7 +312,7 @@ function GPDawnbringer() {
 			OUTPUT+="========="
 		fi
 
-		echo -e ${OUTPUT}
+		[ ${DEBUG} ] || [ ${FORCE} ] && echo -e ${OUTPUT}
 	fi
 
 	unset OUTPUT
