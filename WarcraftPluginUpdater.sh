@@ -70,13 +70,14 @@ function GetPlugin() {
 			OUTPUT+="UNZIPPED: $(unzip -l "${PLUGIN_FILE}" | tail -n1 | sed 's/\ \+/ /g' | cut -d' ' -f3-)\\n"
 			unset TRAP
 
-			UpdateStamp $1 $2 $3 $4
+#			UpdateStamp $1 $2 $3 $4
+			UpdateStamp $1 $4 "${PLUGIN_FILE}"
 		else
 			OUTPUT+="BAD UNZIP: ${TRAP}"
 			unset TRAP
 		fi
 
-		[ ! ${KEEP} ] && rm -f ${PLUGIN_FILE}
+		[ ! ${KEEP} ] && rm -f "${PLUGIN_FILE}"
 	else
 		OUTPUT+="BAD DOWNLOAD: Server: ${PLUGIN_SERVER_SIZE}K Local: ${PLUGIN_LOCAL_SIZE}K\\v"
 	fi
@@ -97,15 +98,29 @@ function UpdateGit() {
 function UpdateStamp() {
 
 #	1: EPOCH
-#	2: NAME
-#	3: URL
-#	4: VERSION
+#	2: VERSION
+#	3: PLUGIN_FILE
 
 	TOUCH_TIME=$(date -d @${1} +%Y%m%d%H%M.%S)
  	[ ${DEBUG} ] && echo "UpdateStamp: ${TOUCH_TIME} || ${NOW}"
 
-	echo "$4" > "${STAMP_FILE}"
+	ls -l "${ADDON_DIR}/${PLUGIN_FILE}"
+
+
+	echo "$2" > "${STAMP_FILE}"
+	unzip -l "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $4}' | egrep -v "^$|Name|-+" >> "${STAMP_FILE}"
+#	TOP_DIR=$(unzip -l "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $4}' | egrep -v "^$|Name|-+" | grep "/$" | sort | head -n1)
+#	echo "unzip -l \"${ADDON_DIR}/${PLUGIN_FILE}\" | awk '{print $4}' | egrep -v \"^$|Name|-+\" | grep \"/$\" | sort | head -n1"
+
+	[ ${DEBUG} ] && echo "UpdateStamp: ${STAMP_FILE} || ${PLUGIN_FILE}"
+#	[ ${DEBUG} ] && echo "UpdateStamp: ${TOP_DIR}"
+
 	touch -t "${TOUCH_TIME}" "${STAMP_FILE}"
+
+	for TOP_DIR in $(awk -F/ '/\// {print $1}' "${STAMP_FILE}" | sort -u) ; do
+		[ ${DEBUG} ] && echo "touch -t \"${TOUCH_TIME}\" \"${TOP_DIR}\""
+		touch -t "${TOUCH_TIME}" "${TOP_DIR}"
+	done
 }
 
 
@@ -496,6 +511,7 @@ case $1 in
 	force)
 		FORCE="yes"
 		DEBUG="yes"
+#		KEEP="yes"
 		DoIt
 		exit
 		;;
