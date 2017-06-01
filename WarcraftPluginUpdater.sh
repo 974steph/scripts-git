@@ -276,11 +276,11 @@ function Plugins() {
 
 		unset PLUGIN_PAGE
 
-		[ ! ${DEBUG} ] && OUTPUT+="Plugins - \"${PLUGIN}\"\\n"
+#		[ ! ${DEBUG} ] && OUTPUT+="Plugins - \"${PLUGIN}\"\\n"
 		[ ! ${DEBUG} ] && OUTPUT+="Plugins - Title: ${PLUGIN_TITLE}\\n"
 		OUTPUT+="Plugins - Update Time: ${PLUGIN_PRETTY}\\n"
 		OUTPUT+="Plugins - Current Version: ${PLUGIN_VERSION}\\n"
-		OUTPUT+="Plugins - CHANGES: ${PLUGIN_INFO_URL}#t1:changes\\n"
+		OUTPUT+="Plugins - ${PLUGIN_INFO_URL}#t1:changes\\n"
 
 		Freshness ${PLUGIN_EPOCH} ${PLUGIN} "${PLUGIN_URL}" "${PLUGIN_VERSION}"
 
