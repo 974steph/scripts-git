@@ -104,8 +104,7 @@ function UpdateStamp() {
 	TOUCH_TIME=$(date -d @${1} +%Y%m%d%H%M.%S)
  	[ ${DEBUG} ] && echo "UpdateStamp - TOUCH_TIME: ${TOUCH_TIME} || NOW: ${NOW}"
 
-	ls -l "${ADDON_DIR}/${PLUGIN_FILE}"
-
+	[ ${DEBUG} ] && ls -l "${ADDON_DIR}/${PLUGIN_FILE}"
 
 	echo "$2" > "${STAMP_FILE}"
 	unzip -l "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $4}' | egrep -v "^$|Name|-+" >> "${STAMP_FILE}"
@@ -178,6 +177,16 @@ function WoWPro() {
 #	WOWPRO_EPOCH=$(date -d "$(curl -sL --head https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
 	WOWPRO_EPOCH=$(date -d "$(curl -sL --head ${LINK} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
 
+#	if [ ${DEBUG} ] ; then
+#		if [ ${NOTDUMB} ] ; then
+#			echo "WoWPro - ${BOLD}${BLUE}${PLUGIN}${RESET}"
+#		else
+#			echo "WoWPro - ${PLUGIN}"
+#		fi
+#		echo "WoWPro - PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
+#	fi
+
+
 	if [ ${DEBUG} ] ; then
 		if [ ${NOTDUMB} ] ; then
 			OUTPUT+="${BOLD}${WHITE}=========${RESET}"
@@ -187,7 +196,7 @@ function WoWPro() {
 	else
 		OUTPUT+="\"wowpro\"\\n"
 	fi
-	OUTPUT+="WoWPro - Update Time: $(date -d @${WOWPRO_EPOCH})\\n"
+	OUTPUT+="\\nWoWPro - Update Time: $(date -d @${WOWPRO_EPOCH})\\n"
 	OUTPUT+="WoWPro - Current Version: ${CURRENT_VERSION}\\n"
 	OUTPUT+="WoWPro - ${WOWPRO_INFO_URL}/blog\\n"
 
@@ -240,11 +249,11 @@ function Plugins() {
 
 		if [ ${DEBUG} ] ; then
 			if [ ${NOTDUMB} ] ; then
-				echo "${BOLD}${BLUE}${PLUGIN}${RESET}"
+				echo "Plugins - ${BOLD}${BLUE}${PLUGIN}${RESET}"
 			else
-				echo "${PLUGIN}"
+				echo "Plugins - ${PLUGIN}"
 			fi
-			echo "PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
+			echo "Plugins - PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
 		fi
 
 		GetPluginPage
