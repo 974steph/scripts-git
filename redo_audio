@@ -5,6 +5,7 @@
 # SETUP VARS
 #
 function SetupVars() {
+
 	OLD_FILE="$1"
 	NEW_FILE="${OLD_FILE%.${EXTEN}}.mp3"
 	NEW_WAV="${OLD_FILE%.${EXTEN}}_working.wav"
@@ -19,6 +20,7 @@ function SetupVars() {
 # CLEANUP
 #
 function Cleanup() {
+
 	[ -f "${INFO}" ] && rm -fv "${INFO}"
 	[ -f "${NEW_WAV}" ] && rm -fv "${NEW_WAV}"
 	mv "${OLD_FILE}" "${OLD_FILE_DIR}"
@@ -29,17 +31,13 @@ function Cleanup() {
 # NORMALIZE
 #
 function DoNormalize() {
-#	midentify "${OLD_FILE}" | grep -v '=0$' | sort -u >> "${INFO}"
-#	mplayer -identify -frames 0 -vc null -vo null -ao null "${OLD_FILE}" | grep -v "^=|=0$" | sort -u >> "${INFO}"
-#	mplayer -identify -frames 0 -vc null -vo null -ao null "${OLD_FILE}" 2>/dev/null |  grep ^[A-Z].*= | sort -u >> "${INFO}"
-#	mplayer -identify -frames 0 -vc null -vo null -ao null "${OLD_FILE}" 2>/dev/null | egrep "ID_AUDIO_NCH|ID_AUDIO_RATE" | grep -v "=0" | sort -u >> "${INFO}"
+
 	mplayer -identify -frames 0 -vc null -vo null -ao null "${OLD_FILE}" 2>/dev/null | egrep "ID_AUDIO_NCH|ID_AUDIO_RATE" | sort -u >> "${INFO}"
 	. "${INFO}"
 
 	[ ${ID_AUDIO_NCH} -eq 0 ] && ID_AUDIO_NCH=2
 	[ ${ID_AUDIO_RATE} -eq 0 ] && ID_AUDIO_RATE=44100
 
-#	ffmpeg -y -v warning -i "${OLD_FILE}" -qscale 0 -vn -f wav -ac ${ID_AUDIO_NCH} -ar "${ID_AUDIO_RATE}" "${NEW_WAV}"
 	ffmpeg -y -v warning -i "${OLD_FILE}" -q:a 0 -vn -f wav -ac ${ID_AUDIO_NCH} -ar "${ID_AUDIO_RATE}" "${NEW_WAV}"
 
 	echo -e \\v~~~~~~~
@@ -76,6 +74,7 @@ function DoNormalize() {
 # MAKE MP3
 #
 function MakeMp3() {
+
 	if [ "${ALBUM}" ] ; then
 		OLD_FILE_DIR="${EXTEN} - ${ALBUM}"
 		FINAL_DIR="${ALBUM}"
@@ -87,13 +86,6 @@ function MakeMp3() {
 
 	[ ! -d "${FINAL_DIR}" ] && mkdir "${FINAL_DIR}"
 	[ ! -d "${OLD_FILE_DIR}" ] && mkdir "${OLD_FILE_DIR}"
-
-
-#echo NEW_WAV: $NEW_WAV
-#echo FINAL_DIR: $FINAL_DIR
-#echo NEW_FILE: $NEW_FILE
-
-
 
 	nice lame -q0 -V0 --vbr-new --clipdetect --add-id3v2 --id3v2-only --lowpass 22000 --noreplaygain \
 		--resample ${ID_AUDIO_RATE} \
@@ -111,7 +103,7 @@ function MakeMp3() {
 # OGG
 #
 function redo_ogg(){
-# 	id3info "${OLD_FILE}" | grep === | sort | sed -e 's/=== //g' -e 's/ (.*: /="/g' -e 's/$/"/g' -e 's/TALB/ALBUM/g' -e 's/TCON/GENRE/g' -e 's/TIT2/TITLE/g' -e 's/TPE1/ARTIST/g' -e 's/TRCK/TRACKNUMBER/g' -e 's/TYER/DATE/g' | sort -u > "${INFO}"
+
 	ogginfo "${OLD_FILE}" | grep = | sed 's/^[ \t]//g;s/=/="/;s/$/"/' | sort -u > "${INFO}"
 	. "${INFO}"
 
@@ -123,7 +115,7 @@ function redo_ogg(){
 # MP3
 #
 function redo_mp3(){
-#	id3info "${OLD_FILE}" | grep === | sort | sed -e 's/=== //g' -e 's/ (.*: /="/g' -e 's/$/"/g' -e 's/TALB/ALBUM/g' -e 's/TCON/GENRE/g' -e 's/TIT2/TITLE/g' -e 's/TPE1/ARTIST/g' -e 's/TRCK/TRACKNUMBER/g' -e 's/TYER/DATE/g' | sort -u > "${INFO}"
+
 	mid3v2 "${OLD_FILE}" | egrep "TALB|TCON|TIT2|TPE1|TRCK|TYER" | sed -e 's/TALB=\(.*\)/ALBUM="\1"/g' -e 's/TCON=\(.*\)/GENRE="\1"/g' -e 's/TIT2=\(.*\)/TITLE="\1"/g' -e 's/TPE1=\(.*\)/ARTIST="\1"/g' -e 's/TRCK=\(.*\)/TRACKNUMBER="\1"/g' -e 's/TYER=\(.*\)$/DATE="\1"/g' | sort -u > "${INFO}"
 	. "${INFO}"
 
@@ -188,8 +180,6 @@ function RenameDirectories() {
 
 		eyeD3 --to-v2.3 "${ALBUM}"/*.mp3 &> /dev/null
 
-#		ID3_YEAR=$(id3info "${ALBUM}/$(ls "${ALBUM}" | head -n1)" | grep TYER | sed -e 's/.*: //g')
-#		ID3_ALBUM=$(id3info "${ALBUM}/$(ls "${ALBUM}" | head -n1)" | grep TALB | sed -e 's/.*: //g' -e 's/:/ -/g' -e 's/?//g')
 		ID3_YEAR=$(mid3v2 "${ALBUM}/$(ls "${ALBUM}" | head -n1)" | grep TYER | cut -d= -f 2-)
 		ID3_ALBUM=$(mid3v2 "${ALBUM}/$(ls "${ALBUM}" | head -n1)" | grep TALB | cut -d= -f 2-)
 
@@ -213,8 +203,6 @@ function DumpHelp() {
 	echo -e \\v --- HELP ---
 	echo handles mp3, flac, wav
 	echo -e \\vor\\v
-# 	[ -f "$1" ] && echo \"$1\" is: $(file "$1")
-# 	echo -e \\v
 	echo $(basename $0) rename
 	echo Renames all albums in current dir with \"Year - Name\"
 	exit
@@ -229,7 +217,6 @@ function DumpHelp() {
 if [ "$1" = rename ] ; then
 	RenameDirectories
 else
-#	EXTEN=$(echo $(basename "$1") | sed -e 's/.*\.//g')
 	EXTEN=$(echo $(basename "$1") | awk -F"." '{print $NF}')
 
 	case "${EXTEN}" in
