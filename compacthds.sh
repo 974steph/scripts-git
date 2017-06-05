@@ -10,6 +10,10 @@ IFS=$(echo -en "\n\b")
 #done
 #exit
 
+VDIDIR=$(VBoxManage list systemproperties | grep "Default machine folder:" | cut -d : -f2- | sed 's/^ \+//')
+DIRSIZE=$(du -hs "${VDIDIR}" | awk '{print $1}')
+echo "Dir size: ${DIRSIZE}"
+
 for HD in $(VBoxManage list hdds | egrep "^UUID|^Location" | gsed 's/: \+/=/') ; do
 
 #	echo HD: $HD
@@ -55,4 +59,8 @@ for HD in $(VBoxManage list hdds | egrep "^UUID|^Location" | gsed 's/: \+/=/') ;
 
 done
 
+DIRSIZE=$(du -hs "${VDIDIR}" | awk '{print $1}')
+echo "Dir size: ${DIRSIZE}"
+
 IFS=${SAVEIFS}
+
