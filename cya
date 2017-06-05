@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+###########################
+# VARS
+HOST="aragorn.fleag.us"
+THERE="Work/Ring"
+TANK="${HOME}/Google Drive/BACKUP"
+B=$(tput bold)
+R=$(tput setaf 1)
+LB=$(tput setaf 6)
+N=$(tput sgr0)
+
+[ ! -d "${TANK}" ] && mkdir -p "${TANK}"
+###########################
+
+
+###########################
+# IN
+
+#echo -e "\\n ${LB}--- IN ---${N}"
+
+echo "${B}The Villa of Ormen${N}"
+rsync --delete -ai aragorn:/usr/local/palermo/Pictures/thevillaoformen/ ${HOME}/Pictures/thevillaoformen/
+
+echo "${B}Local SSH${N}"
+rsync -ai ${HOME}/.ssh/ "${TANK}/ssh/LOCAL/"
+
+echo "${B}Jump SSH${N}"
+rsync -ai sshjump:.ssh/ "${TANK}/ssh/JUMP/"
+
+echo "${B}Scripts${N}"
+rsync -ai ${HOME}/Scripts/ "${TANK}/SCRIPTS/"
+
+echo "${B}Bash${N}"
+rsync --exclude .bash_sessions -aqi ${HOME}/.bash* "${TANK}/BASH/"
+###########################
+
+
+###########################
+# OUT
+
+#echo -e "\\n${LB}--- OUT ---${N}"
+
+echo "${B}Google${N}"
+rsync --exclude .DS_Store --exclude 'Icon*' --delete -ai ${HOME}/Google\ Drive palermo@${HOST}:${THERE}/
+
+echo "${B}Git${N}"
+rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${HOME}/GIT/broom-closet palermo@${HOST}:${THERE}/
+###########################
