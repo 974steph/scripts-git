@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#DEBUG="YES"
+DEBUG="YES"
 
 SAVEIFS=${IFS}
 IFS=$(echo -en "\n\b")
@@ -12,35 +12,36 @@ for HD in $(VBoxManage list hdds | egrep "^UUID|^Location" | gsed 's/: \+/=/') ;
 		[ ${DEBUG} ] && echo "GOT BOTH"
 
 		NAME=$(basename "${Location}")
-		echo "${NAME}"
+		echo -e "\\tNAME: ${NAME}"
 
 		echo "Old Size: $(du -h "${Location}" | awk '{print $1}')"
 
-		VBoxManage modifyhd --compact "${UUID}"
+echo		VBoxManage modifyhd --compact "${UUID}"
 
 		echo "New Size: $(du -h "${Location}" | awk '{print $1}')"
 
-		unset UUID Location
+		unset UUID
+		unset Location
 
 		echo "========="
 	else
 		if [ "$(echo $HD | grep UUID)" ] ; then
 			[ ${DEBUG} ] && echo "FOUND UUID"
 			eval $HD
-			[ ${DEBUG} ] && echo "UUID: \"$UUID\""
+			[ ${DEBUG} ] && echo -e "\\tUUID: \"$UUID\""
 		fi
 
 		if [ "$(echo $HD | grep Location)" ] ; then
 			[ ${DEBUG} ] && echo "FOUND LOCATION"
 			HD=$(echo $HD | sed 's/ /\\ /')
 			eval "$HD"
-			[ ${DEBUG} ] && echo "Location: \"$Location\""
+			[ ${DEBUG} ] && echo -e "\\tLocation: \"$Location\""
 		fi
 
-		[ ${DEBUG} ] && echo "HD: $HD"
+#		[ ${DEBUG} ] && echo "HD: $HD"
 	fi
 
-[ ${DEBUG} ] && echo "========="
+#	[ ${DEBUG} ] && echo "========="
 
 done
 
