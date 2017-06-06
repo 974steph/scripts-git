@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DEBUG="yes"
+#DEBUG="yes"
 
 case $1 in
 	[0-9]*-[0-9]*-[0-9]*)
