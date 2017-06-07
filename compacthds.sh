@@ -2,12 +2,25 @@
 
 #DEBUG="YES"
 
+R=$(tput setaf 1)
+P=$(tput setaf 5)
+LB=$(tput setaf 6)
+B=$(tput bold)
+N=$(tput sgr0)
+
 SAVEIFS=${IFS}
 IFS=$(echo -en "\n\b")
 
-VDIDIR=$(VBoxManage list systemproperties | grep "Default machine folder:" | cut -d : -f2- | sed 's/^ \+//')
+if [ "${Apple_PubSub_Socket_Render}" ] ; then
+	SED=$(which gsed)
+else
+	SED=$(which sed)
+fi
+
+VDIDIR=$(VBoxManage list systemproperties | grep "Default machine folder:" | cut -d : -f2- | ${SED} 's/^[\ \t]\+//g')
 DIRSIZE=$(du -hs "${VDIDIR}" | awk '{print $1}')
-echo "Dir size: ${DIRSIZE}"
+
+echo -e "\\v${B}${VDIDIR}: ${DIRSIZE}${N}\\v"
 
 for HD in $(VBoxManage list hdds | egrep "^UUID|^Location" | gsed 's/: \+/=/') ; do
 
@@ -28,7 +41,7 @@ for HD in $(VBoxManage list hdds | egrep "^UUID|^Location" | gsed 's/: \+/=/') ;
 
 		[ ${DEBUG} ] && echo "GOT BOTH"
 
-		basename "${Location}"
+		echo "${LB}$(basename ${Location})${N} - ${UUID}"
 
 		echo "Old Size: $(du -h "${Location}" | awk '{print $1}')"
 
@@ -39,7 +52,7 @@ for HD in $(VBoxManage list hdds | egrep "^UUID|^Location" | gsed 's/: \+/=/') ;
 		unset UUID
 		unset Location
 
-		echo "========="
+		echo "${P}=========${N}"
 	else
 
 		[ ${DEBUG} ] && echo "LOOP"
@@ -47,6 +60,6 @@ for HD in $(VBoxManage list hdds | egrep "^UUID|^Location" | gsed 's/: \+/=/') ;
 done
 
 DIRSIZE=$(du -hs "${VDIDIR}" | awk '{print $1}')
-echo "Dir size: ${DIRSIZE}"
+echo -e "\\v${B}${VDIDIR}: ${DIRSIZE}${N}\\v"
 
 IFS=${SAVEIFS}
