@@ -52,7 +52,7 @@ for HD in $(VBoxManage list hdds | egrep "^UUID|^Location" | gsed 's/: \+/=/') ;
 		unset UUID
 		unset Location
 
-		echo "${P}=========${N}"
+		echo
 	else
 
 		[ ${DEBUG} ] && echo "LOOP"
