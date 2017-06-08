@@ -4,12 +4,6 @@
 
 ###########################
 # VARS
-#TZ="US/Pacific"
-
-#NOW=$(TZ=${TZ} date +%s)
-#DATE=$(TZ=${TZ} date -d @${NOW} +%Y-%m-%d)
-#TIME=$(TZ=${TZ} date -d @${NOW} +%H:%M:%S)
-
 TANK="$HOME/Pictures/Cams/Weather"
 
 FETCH_COUNT=0
