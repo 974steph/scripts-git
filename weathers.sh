@@ -76,7 +76,8 @@ function GetWeather() {
 		fi
 	fi
 
-	CURR_COND=$(echo "${WEATHER_FULL}" | sed -n '/data type="current observations"/,$p' | grep "weather-summary" | sed 's/.*"\(.*\)".*/\1/')
+#	CURR_COND=$(echo "${WEATHER_FULL}" | sed -n '/data type="current observations"/,$p' | grep "weather-summary" | sed 's/.*"\(.*\)".*/\1/')
+	CURR_COND=$(echo "${WEATHER_FULL}" | awk '/data type="current observations"/,/weather-conditions weather-summary/' | tail -n1 | sed 's/^.*="\(.*\)".*/\1/')
 	CURR_TEMP=$(echo "${WEATHER_FULL}" | grep -A1 temperature.*appar | tail -n 1 | sed 's/<[^>]\+>//g;s/ *//')
 	CURR_HUMID=$(echo "${WEATHER_FULL}" | grep -A1 humidity.type | tail -n 1 | sed 's/<[^>]\+>//g;s/ *//')
 	CURR_BARO=$(echo "${WEATHER_FULL}" | grep -A1 pressure.type | tail -n 1 | sed 's/<[^>]\+>//g;s/ *//')
