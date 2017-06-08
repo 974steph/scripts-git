@@ -22,6 +22,7 @@ WEATHERS="Albuquerque,35.0853,-106.6056,US/Mountain \
 	Bend,44.2595,-121.1712,US/Pacific \
 	Prescott,34.5400,-112.4685,US/Mountain \
 	SantaFe,35.6870,-105.9378,US/Mountain \
+	Sedona,34.858866,-111.794797,US/Mountain \
 	Tucson,32.2217,-110.9265,US/Mountain"
 
 
@@ -103,7 +104,7 @@ function Hourly() {
 #	if [ "${NOW}" -a "${DATE}" -a "${TIME}" -a "${CURR_TEMP}" -a "${CURR_HUMID}" -a "${CURR_BARO}" -a "${CURR_COND}" ] ; then
 	[ "${NOW}" ] && [ "${DATE}" ] && [ "${TIME}" ] && [ "${CURR_TEMP}" ] && [ "${CURR_HUMID}" ] && [ "${CURR_BARO}" ] && [ "${CURR_COND}" ] && GOT_EVERYTHING="yes"
 	if [ "${GOT_EVERYTHING}" ] ; then
-		[ ! -f ${FILE_CSV} ] && echo "Epoch,Date & Time,Temp,Humidity,Pressure,Wind,Gusts,Direction,Conditions" >> ${FILE_CSV}
+		[ ! -f ${FILE_CSV} ] && echo "Epoch,Date & Time,Temp,Humidity,Pressure,Wind,Gusts,Direction,Conditions" > ${FILE_CSV}
 		[ ! ${DEBUG} ] && echo "${NOW},${DATE} ${TIME},${CURR_TEMP},${CURR_HUMID},${CURR_BARO},${WIND_SUST},${WIND_GUST},${WIND_DIRECT},${CURR_COND}" >> ${FILE_CSV}
 	else
 		if [ ${DEBUG} ] ; then
