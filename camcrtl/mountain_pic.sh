@@ -14,6 +14,9 @@ TAR_ZOOM="44"
 
 TANK="$HOME/Mountain"
 
+# South Sister
+# curl -GLs 67.210.198.15:8081/cgi-bin/absctrl -d zoom=50 -d pan=1210 -d tilt=0
+
 #WEATHER=$(curl -s "http://forecast.weather.gov/MapClick.php?lat=44.0583&lon=-121.314&unit=0&lg=english&FcstType=dwml" | xmllint --nowrap --noblanks --format - | sed -n '/data type="current observations"/,$p' | grep "weather-summary" | sed 's/.*"\(.*\)".*/\1/')
 
 function SaveCurrent() {
