@@ -48,6 +48,7 @@ URL="https://m.thepiratebay.org"
 SEARCH_URL="${URL}/search/howard+stern/0/100/0"
 
 [ ${DEBUG} ] && echo -e "\\vcurl -sL \"${SEARCH_URL}\""
+[ ${CHECK} ] && echo -e "\\vcurl -sL \"${SEARCH_URL}\""
 
 RESULTS=$(curl -sL -A "${UA}" "${SEARCH_URL}" | grep magnet:)
 
