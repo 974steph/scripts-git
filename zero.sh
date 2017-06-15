@@ -18,7 +18,7 @@ if [ -f /etc/lsb-release ] ; then
 
 	if [[ $DISTRIB_ID =~ .*Gentoo.* ]] ; then
 		source /etc/portage/make.conf
-		find "${DISTDIR}" -type f -exec rm -fv "{}" \;
+#		find "${DISTDIR}" -type f -exec rm -fv "{}" \;
 		MOUNTS="${HOME} /usr/local"
 	elif [[ $DISTRIB_ID =~ .*Arch.* ]] ; then
 		MOUNTS="${HOME}"
@@ -29,6 +29,8 @@ if [ -f /etc/lsb-release ] ; then
 		exit
 	fi
 fi
+
+echo "MOUNTS: \"$MOUNTS\""
 
 exit
 
