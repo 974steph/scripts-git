@@ -1,13 +1,37 @@
 #!/usr/bin/env bash
 
-source /etc/portage/make.conf
 
-find "${DISTDIR}" -type f -exec rm -fv "{}" \;
+function doZero() {
 
-MOUNTS="${HOME} /usr/local"
+	MOUNT="$1"
 
-for MOUNT in $MOUNTS ; do
 	echo "Zeroing ${MOUNT}"
 	sudo dd if=/dev/zero of=${MOUNT}/zero bs=1M
 	sudo rm -fv ${MOUNT}/zero
+}
+
+
+if [ -f /etc/lsb-release ] ; then
+	source /etc/lsb-release
+
+	echo -e "DISTRIB_ID: \"$DISTRIB_ID\""
+
+	if [[ $DISTRIB_ID =~ .*Gentoo.* ]] ; then
+		source /etc/portage/make.conf
+		find "${DISTDIR}" -type f -exec rm -fv "{}" \;
+		MOUNTS="${HOME} /usr/local"
+	elif [[ $DISTRIB_ID =~ .*Arch.* ]] ; then
+		MOUNTS="${HOME}"
+	elif [[ $DISTRIB_ID =~ .*Ubuntu*. ]] ; then
+		MOUNTS="${HOME}"
+	else
+		echo -e "DISTRIB_ID: \"$DISTRIB_ID\".  I dunno.\\v"
+		exit
+	fi
+fi
+
+exit
+
+for MOUNT in $MOUNTS ; do
+	doZero ${MOUNT}
 done
