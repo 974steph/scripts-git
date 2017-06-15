@@ -18,8 +18,8 @@ if [ -f /etc/lsb-release ] ; then
 
 	if [[ $DISTRIB_ID =~ .*Gentoo.* ]] ; then
 		source /etc/portage/make.conf
-		find "${DISTDIR}" -type f -exec rm -f "{}" \;
-		find "${PORT_LOGDIR}" -mtime +14 -type f -exec rm -f "{}" \;
+		sudo find "${DISTDIR}" -type f -exec rm -f "{}" \;
+		sudo find "${PORT_LOGDIR}" -mtime +14 -type f -exec rm -f "{}" \;
 		MOUNTS="${HOME} /usr/local"
 		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Arch.* ]] ; then
