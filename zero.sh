@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
 
+B=$(tput bold)
+N=$(tput sgr0)
+
 function doZero() {
 
 	MOUNT="$1"
@@ -18,7 +21,11 @@ if [ -f /etc/lsb-release ] ; then
 
 	if [[ $DISTRIB_ID =~ .*Gentoo.* ]] ; then
 		source /etc/portage/make.conf
+
+		echo -e "\\v${B}Clean ${DISTDIR}${N}\\v"
 		sudo find "${DISTDIR}" -type f -exec rm -f "{}" \;
+
+		echo -e "\\v${B}Clean ${PORT_LOGDIR}${N}\\v"
 		sudo find "${PORT_LOGDIR}" -mtime +14 -type f -exec rm -f "{}" \;
 		MOUNTS="${HOME} /usr/local"
 		WORKS=TRUE
@@ -27,6 +34,17 @@ if [ -f /etc/lsb-release ] ; then
 		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Ubuntu*. ]] ; then
 		MOUNTS="${HOME}"
+
+		echo -e "\\v${B}AUTOREMOVING${N}\\v"
+		sudo apt-get -y autoremove
+
+		echo -e "\\v${B}PURGING${N}\\v"
+		sudo apt-get -y purge $(dpkg-query -l | awk '/^rc/ {print $2}')
+
+		echo -e "\\v${B}CLEANING${N}\\v"
+		sudo apt-get -y clean
+
+		WORKS=TRUE
 	else
 		echo -e "DISTRIB_ID: \"$DISTRIB_ID\".  I dunno.\\v"
 		exit
