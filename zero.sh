@@ -24,6 +24,7 @@ if [ -f /etc/lsb-release ] ; then
 		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Arch.* ]] ; then
 		MOUNTS="${HOME}"
+		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Ubuntu*. ]] ; then
 		MOUNTS="${HOME}"
 	else
