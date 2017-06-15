@@ -30,10 +30,16 @@ if [ -f /etc/lsb-release ] ; then
 
 		echo -e "\\v${B}${LB}Clean ${PORT_LOGDIR}${N}\\v"
 		sudo find "${PORT_LOGDIR}" -mtime +14 -type f -exec rm -f "{}" \;
+
 		MOUNTS="${HOME} /usr/local"
+
 		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Arch.* ]] ; then
 		MOUNTS="${HOME}"
+
+		echo -e "\\v${B}${LB}Cleaning${N}\\v"
+		sudo find /var/cache/pacman/pkg/ -type f -exec rm -f "{}" \;
+
 		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Ubuntu*. ]] ; then
 		MOUNTS="${HOME}"
