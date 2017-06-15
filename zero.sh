@@ -2,13 +2,16 @@
 
 
 B=$(tput bold)
+W=$(tput setaf 7)
+LB=$(tput setaf 153)
 N=$(tput sgr0)
 
 function doZero() {
 
 	MOUNT="$1"
 
-	echo "Zeroing ${MOUNT}"
+	echo -e "\\v${B}${LB}Zeroing ${MOUNT}${N}\\v"
+
 	sudo dd if=/dev/zero of=${MOUNT}/zero bs=1M
 	sudo rm -fv ${MOUNT}/zero
 }
@@ -17,15 +20,15 @@ function doZero() {
 if [ -f /etc/lsb-release ] ; then
 	source /etc/lsb-release
 
-	echo -e "DISTRIB_ID: \"$DISTRIB_ID\""
+#	echo -e "DISTRIB_ID: \"$DISTRIB_ID\""
 
 	if [[ $DISTRIB_ID =~ .*Gentoo.* ]] ; then
 		source /etc/portage/make.conf
 
-		echo -e "\\v${B}Clean ${DISTDIR}${N}\\v"
+		echo -e "\\v${B}${LB}Clean ${DISTDIR}${N}\\v"
 		sudo find "${DISTDIR}" -type f -exec rm -f "{}" \;
 
-		echo -e "\\v${B}Clean ${PORT_LOGDIR}${N}\\v"
+		echo -e "\\v${B}${LB}Clean ${PORT_LOGDIR}${N}\\v"
 		sudo find "${PORT_LOGDIR}" -mtime +14 -type f -exec rm -f "{}" \;
 		MOUNTS="${HOME} /usr/local"
 		WORKS=TRUE
@@ -35,14 +38,16 @@ if [ -f /etc/lsb-release ] ; then
 	elif [[ $DISTRIB_ID =~ .*Ubuntu*. ]] ; then
 		MOUNTS="${HOME}"
 
-		echo -e "\\v${B}AUTOREMOVING${N}\\v"
+		echo -e "\\v${B}${LB}Autoremoving${N}\\v"
 		sudo apt-get -y autoremove
 
-		echo -e "\\v${B}PURGING${N}\\v"
+		echo -e "\\v${B}${LB}Purging${N}\\v"
 		sudo apt-get -y purge $(dpkg-query -l | awk '/^rc/ {print $2}')
 
-		echo -e "\\v${B}CLEANING${N}\\v"
+		echo -e "\\v${B}${LB}Cleaning${N}\\v"
 		sudo apt-get -y clean
+
+		MOUNTS="${HOME}"
 
 		WORKS=TRUE
 	else
@@ -51,7 +56,7 @@ if [ -f /etc/lsb-release ] ; then
 	fi
 fi
 
-echo "MOUNTS: \"$MOUNTS\""
+#echo "MOUNTS: \"$MOUNTS\""
 
 [ ! $WORKS ] && exit
 
