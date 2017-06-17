@@ -5,6 +5,15 @@ source $HOME/Sources/scripts-git/secret_stuff.sh
 # HOLIDAYS TODAY
 # curl -sL https://www.checkiday.com/rss.php 2>/dev/null | xmllint --format -
 
+#XML
+#https://www.checkiday.com/rss.php?tz=America/New_York
+#https://www.checkiday.com/rss.php?tz=America/New_York&adult=true
+
+#ICAL
+#https://www.checkiday.com/ical.php
+#https://www.checkiday.com/ical.php?adult=true
+
+
 ##########################################
 # HUMANIZE TIME
 #
