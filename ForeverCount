@@ -719,7 +719,8 @@ function GetHolidays() {
 
 		if [ "${NAME}" -a "${PAGE_URL}" ] ; then
 
-			URL=$(curl -A "${UA}" -sL "${PAGE_URL}" | grep -i 'id="source-url"' | sed 's/.*href="\(.*\)" class.*/\1/')
+#			URL=$(curl -A "${UA}" -sL "${PAGE_URL}" | grep -i 'id="source-url"' | sed 's/.*href="\(.*\)" class.*/\1/')
+			URL=$(curl -A "${UA}" -sL "${PAGE_URL}" | grep Sources | sed 's/.*Sources.*mdl-list__item//;s/<\/a><\/h3><\/li><\/ul><\/div>.*//;s/.*href="\(.*\)">.*/\1/')
 
 			if [ ${DEBUG} ] ; then
 				echo -e "NAME: \"$NAME\""
@@ -1084,6 +1085,13 @@ case $1 in
 #		AutoEvent
 #		FinishMail
 #		exit
+		;;
+	"holi")
+		EMAILS="${EMAIL_MINE}"
+		DEBUG="yes"
+		ONLY_ME="yes"
+		GetHolidays
+		exit
 		;;
 	"bland")
 		EMAILS="${EMAIL_CYN}"
