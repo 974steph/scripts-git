@@ -10,12 +10,24 @@ function doZero() {
 
 	MOUNT="$1"
 
-	echo -e "\\v${B}${LB}Zeroing ${MOUNT}${N}\\v"
+	echo -e "${B}${LB}Zeroing ${MOUNT}${N}\\v"
 
 	sudo dd if=/dev/zero of=${MOUNT}/zero bs=1M
 	sudo rm -fv ${MOUNT}/zero
 }
 
+function cleanCaches() {
+
+	CACHES="${HOME}/.cache"
+
+	for CACHE in ${CACHES} ; do
+		CSIZE=$(du -hs ${HOME}/.cache | awk '{print $1}')
+		rm -rf "${CACHE}"
+		echo -e "${B}${LB}Cleaned ${CSIZE} from ${CACHE}${N}"
+	done
+
+	echo -e \\v
+}
 
 if [ -f /etc/lsb-release ] ; then
 	source /etc/lsb-release
@@ -25,41 +37,38 @@ if [ -f /etc/lsb-release ] ; then
 	if [[ $DISTRIB_ID =~ .*Gentoo.* ]] ; then
 		source /etc/portage/make.conf
 
-		echo -e "\\v${B}${LB}Clean ${DISTDIR}${N}\\v"
+		echo -e "${B}${LB}Clean ${DISTDIR}${N}\\v"
 		sudo find "${DISTDIR}" -type f -exec rm -f "{}" \;
 
-		echo -e "\\v${B}${LB}Clean ${PORT_LOGDIR}${N}\\v"
+		echo -e "${B}${LB}Clean ${PORT_LOGDIR}${N}\\v"
 		sudo find "${PORT_LOGDIR}" -mtime +14 -type f -exec rm -f "{}" \;
 
-		echo -e "\\v${B}${LB}Clean Caches${N}\\v"
-		rm -rf ${HOME}/.cache
+		cleanCaches
 
 		MOUNTS="${HOME} /usr/local"
 		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Arch.* ]] ; then
 
-		echo -e "\\v${B}${LB}Cleaning${N}\\v"
+		echo -e "${B}${LB}Cleaning${N}\\v"
 		pacaur -Sc --noconfirm
 		sudo find /var/cache/pacman/pkg/ -type f -exec rm -f "{}" \;
 
-		echo -e "\\v${B}${LB}Clean Caches${N}\\v"
-		rm -rf ${HOME}/.cache
+		cleanCaches
 
 		MOUNTS="${HOME}"
 		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Ubuntu*. ]] ; then
 
-		echo -e "\\v${B}${LB}Autoremoving${N}\\v"
+		echo -e "${B}${LB}Autoremoving${N}\\v"
 		sudo apt-get -y autoremove
 
-		echo -e "\\v${B}${LB}Purging${N}\\v"
+		echo -e "${B}${LB}Purging${N}\\v"
 		sudo apt-get -y purge $(dpkg-query -l | awk '/^rc/ {print $2}')
 
-		echo -e "\\v${B}${LB}Cleaning${N}\\v"
+		echo -e "${B}${LB}Cleaning${N}\\v"
 		sudo apt-get -y clean
 
-		echo -e "\\v${B}${LB}Clean Caches${N}\\v"
-		rm -rf ${HOME}/.cache
+		cleanCaches
 
 		MOUNTS="${HOME}"
 		WORKS=TRUE
