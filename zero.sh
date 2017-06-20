@@ -38,6 +38,7 @@ if [ -f /etc/lsb-release ] ; then
 		MOUNTS="${HOME}"
 
 		echo -e "\\v${B}${LB}Cleaning${N}\\v"
+		pacaur -Sc --noconfirm
 		sudo find /var/cache/pacman/pkg/ -type f -exec rm -f "{}" \;
 
 		WORKS=TRUE
