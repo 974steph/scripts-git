@@ -31,19 +31,23 @@ if [ -f /etc/lsb-release ] ; then
 		echo -e "\\v${B}${LB}Clean ${PORT_LOGDIR}${N}\\v"
 		sudo find "${PORT_LOGDIR}" -mtime +14 -type f -exec rm -f "{}" \;
 
-		MOUNTS="${HOME} /usr/local"
+		echo -e "\\v${B}${LB}Clean Caches${N}\\v"
+		rm -rf ${HOME}/.cache
 
+		MOUNTS="${HOME} /usr/local"
 		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Arch.* ]] ; then
-		MOUNTS="${HOME}"
 
 		echo -e "\\v${B}${LB}Cleaning${N}\\v"
 		pacaur -Sc --noconfirm
 		sudo find /var/cache/pacman/pkg/ -type f -exec rm -f "{}" \;
 
+		echo -e "\\v${B}${LB}Clean Caches${N}\\v"
+		rm -rf ${HOME}/.cache
+
+		MOUNTS="${HOME}"
 		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Ubuntu*. ]] ; then
-		MOUNTS="${HOME}"
 
 		echo -e "\\v${B}${LB}Autoremoving${N}\\v"
 		sudo apt-get -y autoremove
@@ -54,16 +58,16 @@ if [ -f /etc/lsb-release ] ; then
 		echo -e "\\v${B}${LB}Cleaning${N}\\v"
 		sudo apt-get -y clean
 
-		MOUNTS="${HOME}"
+		echo -e "\\v${B}${LB}Clean Caches${N}\\v"
+		rm -rf ${HOME}/.cache
 
+		MOUNTS="${HOME}"
 		WORKS=TRUE
 	else
 		echo -e "DISTRIB_ID: \"$DISTRIB_ID\".  I dunno.\\v"
 		exit
 	fi
 fi
-
-#echo "MOUNTS: \"$MOUNTS\""
 
 [ ! $WORKS ] && exit
 
