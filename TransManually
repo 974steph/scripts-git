@@ -18,7 +18,7 @@ sleep 2
 # transmission-cli -D -u 70 -w $HOME/Packages/Torrents/ --finish ${DIR_SCRIPTS}/killtrans "$1"
 #transmission-cli -D -u 70 -w $HOME/Packages/Torrents/ --finish ${DIR_SCRIPTS}/killtrans "${SHORT}"
 
-transmission-remote --uplimit=60 --utp --dht --no-downlimit --trash-torrent --no-start-paused --torrent-done-script ${DIR_SCRIPTS}/killtrans -a "$1"
+transmission-remote --uplimit=0 --utp --dht --no-downlimit --trash-torrent --no-start-paused --torrent-done-script ${DIR_SCRIPTS}/killtrans -a "$1"
 #--no-lds
 # --encryption-preferred --dht
 
