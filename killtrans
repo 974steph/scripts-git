@@ -7,7 +7,7 @@ IFS=$(echo -en "\n\b")
 
 echo $(date) >> ${TRANS_LOG}
 
-for TOR in $(transmission-remote -l | egrep -i "seeding|complete|idle" | sed 's/ \+/ /g') ; do
+for TOR in $(sudo /usr/bin/transmission-remote -l | egrep -i "seeding|complete|idle" | sed 's/ \+/ /g') ; do
 
 	ID=$(echo ${TOR} | awk '{print $1}')
 	NAME=$(echo ${TOR} | cut -d ' ' -f 11-)
@@ -16,7 +16,7 @@ for TOR in $(transmission-remote -l | egrep -i "seeding|complete|idle" | sed 's/
 		echo "Removing ${ID}: ${NAME}"
 		echo "Removing ${ID}: ${NAME}" >> ${TRANS_LOG}
 
-		transmission-remote -t ${ID} -r
+		sudo /usr/bin/transmission-remote -t ${ID} -r
 	else
 		echo "\"${TOR}\" || ${ID}: ${NAME}"
 		echo "\"${TOR}\" || ${ID}: ${NAME}" >> ${TRANS_LOG}
@@ -25,7 +25,7 @@ done
 
 IFS=${SAVEIFS}
 
-REMAINING=$(transmission-remote -l | grep "^ \+[0-9].*")
+REMAINING=$(sudo /usr/bin/transmission-remote -l | grep "^ \+[0-9].*")
 
 if [ ! "${REMAINING}" ] ; then
 	echo -e "No running Torrents remaining.  Stopping..."
