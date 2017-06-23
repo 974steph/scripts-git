@@ -66,7 +66,7 @@ if [ -f /etc/lsb-release ] ; then
 		sudo apt-get -y purge $(dpkg-query -l | awk '/^rc/ {print $2}')
 
 		echo -e "${B}${LB}Cleaning${N}\\v"
-		sudo apt-get -y clean
+		sudo apt-get -y clean all
 
 		cleanCaches
 
