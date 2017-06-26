@@ -1,7 +1,6 @@
-#!/usr/bin/env php
 <?php
 
-include $_SERVER['HOME'] ."/Sources/scripts-git/secret_stuff.php";
+//include $_SERVER['HOME'] ."/Sources/scripts-git/secret_stuff.php";
 
 date_default_timezone_set('UTC');
 // echo date("h:i:s A");
@@ -154,14 +153,6 @@ function getSillyQuote() {
 ///////////////////////////
 
 
-//$fortune = shell_exec('fortune chalkboard | head -n1');
-//$fortune = shell_exec('fortune -s definitions | egrep -v "^[a-zA-Z0-9].*:|^[\t ]\+--" | sed "s/^[\t ]\+//g" | tr \\n " "');
-//$fortune = shell_exec('fortune -s | egrep -v "^[a-zA-Z0-9].*:|^[\t ]\+--" | sed "s/^[\t ]\+//g" | tr \\n " "');
-//print "FORTUNE: $fortune\n";
-//exit();
-//$sillyQuote = getSillyQuote();
-//print_r($sillyQuote);
-//exit();
 
 
 $weatherArray = getWeather($lat, $lon);
@@ -170,7 +161,6 @@ $weatherArray = getWeather($lat, $lon);
 //$quote = $quoteArray[0];
 //$author = $quoteArray[1];
 
-$sillyQuote = shell_exec("./randomquote.sh");
 
 //print_r($weatherArray['data'][0]['parameters']['wordedForecast']['text']);
 
@@ -186,6 +176,16 @@ print "Tonight will be ". strtolower($tonight) ."\n\n";
 //print "$quote\n\n";
 
 //print "Today's thought:\n";
-print "\n\n\n$sillyQuote\n";
 
-//print "$fortune\n";
+//$sillyQuote = shell_exec("randomquote.sh");
+//print "\n\n\n$sillyQuote\n";
+
+$fortune = shell_exec('fortune chalkboard | head -n1');
+//$fortune = shell_exec('fortune -s definitions | egrep -v "^[a-zA-Z0-9].*:|^[\t ]\+--" | sed "s/^[\t ]\+//g" | tr \\n " "');
+//$fortune = shell_exec('fortune -s | egrep -v "^[a-zA-Z0-9].*:|^[\t ]\+--" | sed "s/^[\t ]\+//g" | tr \\n " "');
+//print "FORTUNE: $fortune\n";
+//exit();
+//$sillyQuote = getSillyQuote();
+//print_r($sillyQuote);
+//exit();
+print "\n\n$fortune\n";
