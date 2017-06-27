@@ -22,7 +22,37 @@ function cleanCaches() {
 
 	for CACHE in ${CACHES} ; do
 		CSIZE=$(du -hs ${HOME}/.cache | awk '{print $1}')
+
+		NAME=$(basename "${CACHE}")
+		TOUCHF="/tmp/touchref_${NAME}"
+
+		TYPE=$(file -b "${CACHE}" | sed 's/.*\/\(.*\)\; .*/\1/')
+
+		touch -r "${CACHE}" "${TOUCHF}"
+		chmod --reference "${CACHE}" "${TOUCHF}"
+		[ -s "${CACHE}" ] && LINK=$(readlink "${CACHE}")
+
 		rm -rf "${CACHE}"
+
+		case ${TYPE} in
+			directory)
+				mkdir -p "${CACHE}"
+				chmod --reference "${TOUCHF}" "${CACHE}"
+				touch -r "${TOUCHF}" "${CACHE}"
+				;;
+			symlink)
+				ln -s "${LINK}" "${CACHE}"
+				chmod --reference "${TOUCHF}" "${CACHE}"
+				touch -r "${TOUCHF}" "${CACHE}"
+				;;
+			*)
+				chmod --reference "${TOUCHF}" "${CACHE}"
+				touch -r "${TOUCHF}" "${CACHE}"
+				;;
+		esac
+
+		rm -f "${TOUCHF}"
+
 		echo -e "${B}${LB}Cleaned ${CSIZE} from ${CACHE}${N}"
 	done
 
@@ -56,7 +86,7 @@ if [ -f /etc/lsb-release ] ; then
 		cleanCaches
 
 		MOUNTS="${HOME}"
-		WORKS=TRUE
+#		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Ubuntu*. ]] ; then
 
 		echo -e "${B}${LB}Autoremoving${N}\\v"
