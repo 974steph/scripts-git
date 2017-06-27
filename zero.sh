@@ -19,7 +19,6 @@ function doZero() {
 function cleanCaches() {
 
 	for CACHE in ${CACHES} ; do
-<<<<<<< HEAD
 		CSIZE=$(du -hs ${HOME}/.cache | awk '{print $1}')
 
 		NAME=$(basename "${CACHE}")
@@ -53,7 +52,6 @@ function cleanCaches() {
 		rm -f "${TOUCHF}"
 
 		echo -e "${B}${LB}Cleaned ${CSIZE} from ${CACHE}${N}"
-=======
 		if [ -d "${CACHE}" ] ; then
 			CSIZE=$(sudo du -hs "${CACHE}" | awk '{print $1}')
 			sudo rm -rf "${CACHE}" 2>/dev/null
@@ -61,7 +59,6 @@ function cleanCaches() {
 		else
 			echo "${CACHE} is not a directory.  Skipping..."
 		fi
->>>>>>> 4fc580c9d2d45868cd65a375b1ac5062f67a2146
 	done
 
 	echo -e \\v
@@ -96,7 +93,7 @@ if [ -f /etc/lsb-release ] ; then
 		cleanCaches
 
 		MOUNTS="${HOME}"
-#		WORKS=TRUE
+		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Ubuntu*. ]] ; then
 
 		echo -e "${B}${LB}Autoremoving${N}\\v"
