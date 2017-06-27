@@ -89,7 +89,7 @@ Road
 curl -GLs 67.204.164.159:9293/cgi-bin/absctrl -d zoom=25 -d pan=1400 -d tilt=30
 
 Surfing
-curl -GLs 67.204.164.159:9293/cgi-bin/absctrl -d zoom=51 -d pan=1740 -d tilt=37
+curl -GLs 67.204.164.159:9293/cgi-bin/absctrl -d zoom=50 -d pan=1740 -d tilt=40
 ====================================
 
 

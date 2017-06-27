@@ -18,9 +18,8 @@ function doZero() {
 
 function cleanCaches() {
 
-	CACHES="${HOME}/.cache"
-
 	for CACHE in ${CACHES} ; do
+<<<<<<< HEAD
 		CSIZE=$(du -hs ${HOME}/.cache | awk '{print $1}')
 
 		NAME=$(basename "${CACHE}")
@@ -54,6 +53,15 @@ function cleanCaches() {
 		rm -f "${TOUCHF}"
 
 		echo -e "${B}${LB}Cleaned ${CSIZE} from ${CACHE}${N}"
+=======
+		if [ -d "${CACHE}" ] ; then
+			CSIZE=$(sudo du -hs "${CACHE}" | awk '{print $1}')
+			sudo rm -rf "${CACHE}" 2>/dev/null
+			echo -e "${B}${LB}Cleaned ${CSIZE} from ${CACHE}${N}"
+		else
+			echo "${CACHE} is not a directory.  Skipping..."
+		fi
+>>>>>>> 4fc580c9d2d45868cd65a375b1ac5062f67a2146
 	done
 
 	echo -e \\v
@@ -73,6 +81,7 @@ if [ -f /etc/lsb-release ] ; then
 		echo -e "${B}${LB}Clean ${PORT_LOGDIR}${N}\\v"
 		sudo find "${PORT_LOGDIR}" -mtime +14 -type f -exec rm -f "{}" \;
 
+		CACHES="${HOME}/.cache"
 		cleanCaches
 
 		MOUNTS="${HOME} /usr/local"
@@ -83,6 +92,7 @@ if [ -f /etc/lsb-release ] ; then
 		pacaur -Sc --noconfirm
 		sudo find /var/cache/pacman/pkg/ -type f -exec rm -f "{}" \;
 
+		CACHES="${HOME}/.cache"
 		cleanCaches
 
 		MOUNTS="${HOME}"
@@ -96,8 +106,9 @@ if [ -f /etc/lsb-release ] ; then
 		sudo apt-get -y purge $(dpkg-query -l | awk '/^rc/ {print $2}')
 
 		echo -e "${B}${LB}Cleaning${N}\\v"
-		sudo apt-get -y clean
+		sudo apt-get -y clean all
 
+		CACHES="${HOME}/.cache /var/cache"
 		cleanCaches
 
 		MOUNTS="${HOME}"
