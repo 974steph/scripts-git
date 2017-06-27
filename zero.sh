@@ -94,6 +94,17 @@ if [ -f /etc/lsb-release ] ; then
 
 		MOUNTS="${HOME}"
 		WORKS=TRUE
+	elif [[ $DISTRIB_ID =~ .*ManjaroLinux.* ]] ; then
+
+		echo -e "${B}${LB}Cleaning${N}\\v"
+		pacaur -Sc --noconfirm
+		sudo find /var/cache/pacman/pkg/ -type f -exec rm -f "{}" \;
+
+		CACHES="${HOME}/.cache"
+		cleanCaches
+
+		MOUNTS="${HOME}"
+		WORKS=TRUE
 	elif [[ $DISTRIB_ID =~ .*Ubuntu*. ]] ; then
 
 		echo -e "${B}${LB}Autoremoving${N}\\v"
