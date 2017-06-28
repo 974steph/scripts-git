@@ -16,6 +16,12 @@ function doZero() {
 	sudo rm -fv ${MOUNT}/zero
 }
 
+function BuildCaches() {
+	for USER in $(grep ^users: /etc/group | cut -d: -f4- | sed 's/,/ /g') ; do
+		HOMECACHE+="$(awk -F: "/^$USER/ {print \$6}" /etc/passwd)/.cache "
+	done
+}
+
 function cleanCaches() {
 
 	for CACHE in ${CACHES} ; do
@@ -89,10 +95,18 @@ if [ -f /etc/lsb-release ] ; then
 	elif [[ $DISTRIB_ID =~ .*Arch.* ]] ; then
 
 		echo -e "${B}${LB}Cleaning${N}\\v"
-		pacaur -Sc --noconfirm
+#		pacaur -Sc --noconfirm
 		sudo find /var/cache/pacman/pkg/ -type f -exec rm -f "{}" \;
 
-		CACHES="${HOME}/.cache"
+		BuildCaches
+
+		CACHES="${HOMECACHE}"
+#		CACHES="${HOME}/.cache"
+
+		echo "CACHES: $CACHES"
+
+#		exit
+
 		cleanCaches
 
 		MOUNTS="${HOME}"
