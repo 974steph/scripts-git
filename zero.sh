@@ -52,13 +52,16 @@ function cleanCaches() {
 		rm -f "${TOUCHF}"
 
 		echo -e "${B}${LB}Cleaned ${CSIZE} from ${CACHE}${N}"
-		if [ -d "${CACHE}" ] ; then
-			CSIZE=$(sudo du -hs "${CACHE}" | awk '{print $1}')
-			sudo rm -rf "${CACHE}" 2>/dev/null
-			echo -e "${B}${LB}Cleaned ${CSIZE} from ${CACHE}${N}"
-		else
-			echo "${CACHE} is not a directory.  Skipping..."
-		fi
+
+		unset CSIZE NAME TOUCHF
+
+#		if [ -d "${CACHE}" ] ; then
+#			CSIZE=$(sudo du -hs "${CACHE}" | awk '{print $1}')
+#			sudo rm -rf "${CACHE}" 2>/dev/null
+#			echo -e "${B}${LB}Cleaned ${CSIZE} from ${CACHE}${N}"
+#		else
+#			echo "${CACHE} is not a directory.  Skipping..."
+#		fi
 	done
 
 	echo -e \\v
