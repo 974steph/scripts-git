@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+case $(hostname) in
+	aragorn) STOP=YES;;
+	toa-tahu) STOP=YES;;
+esac
+
+if [ ${STOP} ] ; then
+	echo -e "\\vRefusing to run on $(hostname).  Bailing...\\v"
+	exit
+fi
 
 B=$(tput bold)
 W=$(tput setaf 7)
