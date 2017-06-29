@@ -337,7 +337,7 @@ function GPDawnbringer() {
 
 	if [ "${OUTPUT}" ] ; then
 
-		OUTPUT+="TERM: $TERM"
+#		OUTPUT+="TERM: $TERM"
 
 		if [ ${DEBUG} ] ; then
 			if [ ${NOTDUMB} ] ; then
