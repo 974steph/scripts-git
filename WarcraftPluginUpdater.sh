@@ -44,30 +44,32 @@ function GetPlugin() {
 
 	URL="$3"
 
+	[ ${DEBUG} ] && PREFIX="GetPlugin - "
+
 	PLUGIN_FILE=$(basename "${URL}")
 	PLUGIN_SERVER_SIZE=$(curl -LIs --head "${URL}" | grep Content-Length | awk '{print $2}' | tail -n1 | tr -d "\r\n")
 	wget -q "${URL}" -O "${ADDON_DIR}/${PLUGIN_FILE}"
 
 	PLUGIN_LOCAL_SIZE=$(du -b "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $1}')
 
-	[ ${DEBUG} ] && OUTPUT+="GetPlugin - THIS_URL: ${URL}\\n"
-	[ ${DEBUG} ] && OUTPUT+="GetPlugin - PLUGIN_FILE: \"${ADDON_DIR}/$PLUGIN_FILE\"\\n"
+	[ ${DEBUG} ] && OUTPUT+="${PREFIX}THIS_URL: ${URL}\\n"
+	[ ${DEBUG} ] && OUTPUT+="${PREFIX}PLUGIN_FILE: \"${ADDON_DIR}/$PLUGIN_FILE\"\\n"
 
 	if [ ${DEBUG} ] ; then
-		echo "GetPlugin - ${ADDON_DIR}/${PLUGIN_FILE}"
-		echo "GetPlugin - PLUGIN_SERVER_SIZE: ${PLUGIN_SERVER_SIZE}"
-		echo "GetPlugin - PLUGIN_LOCAL_SIZE: ${PLUGIN_LOCAL_SIZE}"
+		echo "${PREFIX}${ADDON_DIR}/${PLUGIN_FILE}"
+		echo "${PREFIX}PLUGIN_SERVER_SIZE: ${PLUGIN_SERVER_SIZE}"
+		echo "${PREFIX}PLUGIN_LOCAL_SIZE: ${PLUGIN_LOCAL_SIZE}"
 	fi
 
 	if [ "${PLUGIN_SERVER_SIZE}" -eq "${PLUGIN_LOCAL_SIZE}" ] ; then
-		OUTPUT+="GetPlugin - GOOD DOWNLOAD: Server: ${PLUGIN_SERVER_SIZE}K Local: ${PLUGIN_LOCAL_SIZE}K\\n"
+		OUTPUT+="${PREFIX}GOOD DOWNLOAD: Server: ${PLUGIN_SERVER_SIZE}K Local: ${PLUGIN_LOCAL_SIZE}K\\n"
 		cd ${ADDON_DIR}
 		unzip -q -o "${PLUGIN_FILE}"
 
 		TRAP=$?
 
 		if [ ${TRAP} -eq 0 ] ; then
-			OUTPUT+="GetPlugin - UNZIPPED: $(unzip -l "${PLUGIN_FILE}" | tail -n1 | sed 's/\ \+/ /g' | cut -d' ' -f3-)\\n"
+			OUTPUT+="${PREFIX}UNZIPPED: $(unzip -l "${PLUGIN_FILE}" | tail -n1 | sed 's/\ \+/ /g' | cut -d' ' -f3-)\\n"
 			unset TRAP
 
 #			UpdateStamp $1 $2 $3 $4
@@ -79,7 +81,7 @@ function GetPlugin() {
 
 		[ ! ${KEEP} ] && rm -f "${PLUGIN_FILE}"
 	else
-		OUTPUT+="GetPlugin - BAD DOWNLOAD: Server: ${PLUGIN_SERVER_SIZE}K Local: ${PLUGIN_LOCAL_SIZE}K\\v"
+		OUTPUT+="${PREFIX}BAD DOWNLOAD: Server: ${PLUGIN_SERVER_SIZE}K Local: ${PLUGIN_LOCAL_SIZE}K\\v"
 	fi
 
 	unset PLUGIN_LOCAL_SIZE PLUGIN_SERVER_SIZE
@@ -102,22 +104,24 @@ function UpdateStamp() {
 #	3: PLUGIN_FILE
 
 	TOUCH_TIME=$(date -d @${1} +%Y%m%d%H%M.%S)
- 	[ ${DEBUG} ] && echo "UpdateStamp - TOUCH_TIME: ${TOUCH_TIME} || NOW: ${NOW}"
-
-	[ ${DEBUG} ] && ls -l "${ADDON_DIR}/${PLUGIN_FILE}"
+	if [ ${DEBUG} ] ; then
+		PREFIX="UpdateStamp - "
+		echo "${PREFIX}TOUCH_TIME: ${TOUCH_TIME} || NOW: ${NOW}"
+		ls -l "${ADDON_DIR}/${PLUGIN_FILE}"
+	fi
 
 	echo "$2" > "${STAMP_FILE}"
 	unzip -l "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $4}' | egrep -v "^$|Name|-+" >> "${STAMP_FILE}"
 #	TOP_DIR=$(unzip -l "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $4}' | egrep -v "^$|Name|-+" | grep "/$" | sort | head -n1)
 #	echo "unzip -l \"${ADDON_DIR}/${PLUGIN_FILE}\" | awk '{print $4}' | egrep -v \"^$|Name|-+\" | grep \"/$\" | sort | head -n1"
 
-	[ ${DEBUG} ] && echo "UpdateStamp: ${STAMP_FILE} || ${PLUGIN_FILE}"
-#	[ ${DEBUG} ] && echo "UpdateStamp: ${TOP_DIR}"
+	[ ${DEBUG} ] && echo "${PREFIX}${STAMP_FILE} || ${PLUGIN_FILE}"
+#	[ ${DEBUG} ] && echo "${PREFIX}${TOP_DIR}"
 
 	touch -t "${TOUCH_TIME}" "${STAMP_FILE}"
 
 	for TOP_DIR in $(awk -F/ '/\// {print $1}' "${STAMP_FILE}" | sort -u) ; do
-		[ ${DEBUG} ] && echo "UpdateStamp - touch -t \"${TOUCH_TIME}\" \"${TOP_DIR}\""
+		[ ${DEBUG} ] && echo "${PREFIX}touch -t \"${TOUCH_TIME}\" \"${TOP_DIR}\""
 		touch -t "${TOUCH_TIME}" "${TOP_DIR}"
 	done
 }
@@ -133,6 +137,8 @@ function Freshness() {
 	NAME_LOWER=$(echo $2 | tr [:upper:] [:lower:])
 	STAMP_FILE="${ADDON_DIR}/.${NAME_LOWER}"
 
+	[ ${DEBUG} ] && PREFIX="Freshness - "
+
 	if [ -f ${STAMP_FILE} ] ; then
 		LAST_TOUCH=$(date -r ${STAMP_FILE} +%s)
 	else
@@ -140,23 +146,23 @@ function Freshness() {
 	fi
 
 	if [ ${DEBUG} ] ; then
-		echo "Freshness - STAMP_FILE: $STAMP_FILE"
-		echo "Freshness - LAST_TOUCH: ${LAST_TOUCH} || EPOCH: $1 || NOW: ${NOW}"
+		echo "${PREFIX}STAMP_FILE: $STAMP_FILE"
+		echo "${PREFIX}LAST_TOUCH: ${LAST_TOUCH} || EPOCH: $1 || NOW: ${NOW}"
 	fi
 
 	if [ ${FORCE} ] ;  then
-		OUTPUT+="Freshness - Forcing update of ${2}\\n"
+		OUTPUT+="${PREFIX}Forcing update of ${2}\\n"
 		GetPlugin $1 $2 $3 $4
 		UPDATES="yes"
 	elif [ ${1} -gt ${LAST_TOUCH} ] ; then
-		OUTPUT+="Freshness - ${2} will be updated.\\n"
+		OUTPUT+="${PREFIX}${2} will be updated.\\n"
 #		UPDATES="yes"
 
 		[[ ! ${NAME_LOWER} =~ .*goingprice.* ]] && UPDATES="yes"
 
 		[ ! ${SHOW} ] && GetPlugin $1 $2 $3 $4
 	else
-		OUTPUT+="Freshness - ${2} is up to date.\\n"
+		OUTPUT+="${PREFIX}${2} is up to date.\\n"
 		[ ! ${DEBUG} ] && unset OUTPUT
 	fi
 }
@@ -165,6 +171,8 @@ function WoWPro() {
 
 	###########################
 	# WOW-PRO
+
+	[ ${DEBUG} ] && PREFIX="WoWPro - "
 
 	WOWPRO_INFO_URL="http://www.wow-pro.com"
 
@@ -179,11 +187,11 @@ function WoWPro() {
 
 #	if [ ${DEBUG} ] ; then
 #		if [ ${NOTDUMB} ] ; then
-#			echo "WoWPro - ${BOLD}${BLUE}${PLUGIN}${RESET}"
+#			echo "${PREFIX}${BOLD}${BLUE}${PLUGIN}${RESET}"
 #		else
-#			echo "WoWPro - ${PLUGIN}"
+#			echo "${PREFIX}${PLUGIN}"
 #		fi
-#		echo "WoWPro - PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
+#		echo "${PREFIX}PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
 #	fi
 
 
@@ -196,9 +204,9 @@ function WoWPro() {
 	else
 		OUTPUT+="\"wowpro\"\\n"
 	fi
-	OUTPUT+="\\nWoWPro - Update Time: $(date -d @${WOWPRO_EPOCH})\\n"
-	OUTPUT+="WoWPro - Current Version: ${CURRENT_VERSION}\\n"
-	OUTPUT+="WoWPro - ${WOWPRO_INFO_URL}/blog\\n"
+	OUTPUT+="\\n${PREFIX}Update Time: $(date -d @${WOWPRO_EPOCH})\\n"
+	OUTPUT+="${PREFIX}Current Version: ${CURRENT_VERSION}\\n"
+	OUTPUT+="${PREFIX}${WOWPRO_INFO_URL}/blog\\n"
 
 	Freshness ${WOWPRO_EPOCH} wowpro "${LINK}" "${CURRENT_VERSION}"
 
@@ -217,6 +225,8 @@ function WoWPro() {
 
 function GetPluginPage() {
 
+	[ ${DEBUG} ] && PREFIX="GetPluginPage - "
+
 	PLUGIN_PAGE_RAW=$(curl -Ls "${PLUGIN_INFO_URL}")
 
 #	PLUGIN_PAGE=$(curl -Ls "${PLUGIN_INFO_URL}" | awk '/details-list/,/newest-file/')
@@ -225,13 +235,13 @@ function GetPluginPage() {
 	if [ ! "${PLUGIN_PAGE}" ] ; then
 
 		if [ ${FETCH_COUNTER} -gt ${FETCH_LIMIT} ] ; then
-			echo "GetPluginPage - ${FETCH_COUNTER} > ${FETCH_LIMIT}: Failed to fetch \"${PLUGIN_INFO_URL}\".  Bailing..."
+			echo "${PREFIX}${FETCH_COUNTER} > ${FETCH_LIMIT}: Failed to fetch \"${PLUGIN_INFO_URL}\".  Bailing..."
 			exit 1
 		else
 
 			if [ ${DEBUG} ] ; then
-				echo "GetPluginPage - PLUGIN_PAGE: ${PLUGIN_PAGE}"
-				echo "GetPluginPage - FETCH_COUNTER: ${FETCH_COUNTER}"
+				echo "${PREFIX}PLUGIN_PAGE: ${PLUGIN_PAGE}"
+				echo "${PREFIX}FETCH_COUNTER: ${FETCH_COUNTER}"
 			fi
 
 			FETCH_COUNTER=$(( ${FETCH_COUNTER} + 1 ))
@@ -243,17 +253,19 @@ function GetPluginPage() {
 
 function Plugins() {
 
+	[ ${DEBUG} ] && PREFIX="Plugins - "
+
 	for PLUGIN in ${CURSE_PLUGINS} ; do
 
 		PLUGIN_INFO_URL="http://www.curse.com/addons/wow/${PLUGIN}"
 
 		if [ ${DEBUG} ] ; then
 			if [ ${NOTDUMB} ] ; then
-				echo "Plugins - ${BOLD}${BLUE}${PLUGIN}${RESET}"
+				echo "${PREFIX}${BOLD}${BLUE}${PLUGIN}${RESET}"
 			else
-				echo "Plugins - ${PLUGIN}"
+				echo "${PREFIX}${PLUGIN}"
 			fi
-			echo "Plugins - PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
+			echo "${PREFIX}PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
 		fi
 
 		GetPluginPage
@@ -276,11 +288,11 @@ function Plugins() {
 
 		unset PLUGIN_PAGE
 
-#		[ ! ${DEBUG} ] && OUTPUT+="Plugins - \"${PLUGIN}\"\\n"
-		[ ! ${DEBUG} ] && OUTPUT+="Plugins - Title: ${PLUGIN_TITLE}\\n"
-		OUTPUT+="Plugins - Update Time: ${PLUGIN_PRETTY}\\n"
-		OUTPUT+="Plugins - Current Version: ${PLUGIN_VERSION}\\n"
-		OUTPUT+="Plugins - ${PLUGIN_INFO_URL}#t1:changes\\n"
+#		[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}\"${PLUGIN}\"\\n"
+		[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
+		OUTPUT+="${PREFIX}Update Time: ${PLUGIN_PRETTY}\\n"
+		OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
+		OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}#t1:changes\\n"
 
 		Freshness ${PLUGIN_EPOCH} ${PLUGIN} "${PLUGIN_URL}" "${PLUGIN_VERSION}"
 
@@ -306,6 +318,8 @@ function Plugins() {
 
 function GPDawnbringer() {
 
+	[ ${DEBUG} ] && PREFIX="GPDawnbringer - "
+
 	GP_URL="http://goingpriceaddon.com/download"
 
 	GP_US_PAGE=$(curl -Ls "${GP_URL}" | grep href.*GoingPrice_US)
@@ -315,8 +329,8 @@ function GPDawnbringer() {
 	GP_DB_EPOCH=$(basename "${GP_DB_URL}" | awk -F. '{print $3}')
 	GP_DB_PRETTY=$(date -d @${GP_DB_EPOCH} "+%Y-%m-%d %r")
 
-	OUTPUT+="GPDawnbringer - \"GoingPrice_US_Dawnbringer\"\\n"
-	OUTPUT+="GPDawnbringer - Update Time: ${GP_DB_PRETTY}\\n"
+	OUTPUT+="${PREFIX}\"GoingPrice_US_Dawnbringer\"\\n"
+	OUTPUT+="${PREFIX}Update Time: ${GP_DB_PRETTY}\\n"
 
 	Freshness ${GP_DB_EPOCH} GoingPrice_Dawnbringer "${GP_DB_URL}" "${GP_DB_EPOCH}"
 
@@ -358,6 +372,7 @@ function WoWAuctionWGet() {
 function WoWAuction() {
 
 	[ ${DEBUG} ] && echo WoWAuction
+	[ ${DEBUG} ] && PREFIX="WoWAuction - "
 
 	WOWUCTION_URL="http://www.wowuction.com/us/dawnbringer/alliance"
 
@@ -369,14 +384,14 @@ function WoWAuction() {
 	WOWUCTION_MINS_AGO="$(curl -Ls "${WOWUCTION_URL}" | grep "AH scanned.*ago" | sed "s/.*scanned \(.*\) ago/\1/" | tr -d \\r)"
 	WOWUCTION_EPOCH=$(date -d "$(date -d @${NOW}) - ${WOWUCTION_MINS_AGO}" +%s)
 
-	OUTPUT+="WoWAuction - WOWUCTION_EPOCH:    ${WOWUCTION_EPOCH}\\n"
-	OUTPUT+="WoWAuction - WOWUCTION_MINS_AGO: ${CRON_TIME_AGO}\\n"
+	OUTPUT+="${PREFIX}WOWUCTION_EPOCH:    ${WOWUCTION_EPOCH}\\n"
+	OUTPUT+="${PREFIX}WOWUCTION_MINS_AGO: ${CRON_TIME_AGO}\\n"
 
 	if [ ${WOWUCTION_EPOCH} -gt ${CRON_TIME_AGO} ] ; then
 
 		WoWAuctionWGet
 
-		[ ${DEBUG} ] && echo "WoWAuction - TRAP WoWAuctionWGet: ${TRAP}"
+		[ ${DEBUG} ] && echo "${PREFIX}TRAP WoWAuctionWGet: ${TRAP}"
 
 		[ ${TRAP} -eq 0 ] && if [ -a $(du -b "${WOWUCTION_LUA_TEMP}" | awk '{print $1}') -gt 100 ] ; then
 
@@ -393,17 +408,17 @@ function WoWAuction() {
 				OUTPUT+="WoWAuction server date: ${WOWUCTION_TEMP_PRETTY}\\n"
 
 				if [ ${DEBUG} ] ; then
-					echo "WoWAuction - WOWUCTION_TEMP_EPOCH: $WOWUCTION_TEMP_EPOCH"
-					echo "WoWAuction - WOWUCTION_LIVE_EPOCH: $WOWUCTION_LIVE_EPOCH"
+					echo "${PREFIX}WOWUCTION_TEMP_EPOCH: $WOWUCTION_TEMP_EPOCH"
+					echo "${PREFIX}WOWUCTION_LIVE_EPOCH: $WOWUCTION_LIVE_EPOCH"
 				fi
 
 				if [ ${WOWUCTION_TEMP_EPOCH} -gt ${WOWUCTION_LIVE_EPOCH} ] ; then
 
 					mv "${WOWUCTION_LUA_TEMP}" "${WOWUCTION_LUA_LIVE}"
 
-					OUTPUT+="WoWAuction - \"WoWAuction\" updated ${WOWUCTION_MINS_AGO} ago\\n"
-					OUTPUT+="WoWAuction - ${WOWUCTION_URL}\\n"
-					OUTPUT+="WoWAuction - UPDATED: WoWAuction is up to date.\\n"
+					OUTPUT+="${PREFIX}\"WoWAuction\" updated ${WOWUCTION_MINS_AGO} ago\\n"
+					OUTPUT+="${PREFIX}${WOWUCTION_URL}\\n"
+					OUTPUT+="${PREFIX}UPDATED: WoWAuction is up to date.\\n"
 
 					if [ ${DEBUG} ] ; then
 						echo -e "${OUTPUT}========="
@@ -411,10 +426,10 @@ function WoWAuction() {
 				else
 					rm -f "${WOWUCTION_LUA_TEMP}"
 
-					OUTPUT+="WoWAuction - \"WoWAuction\"\\n"
-					OUTPUT+="WoWAuction - Update Time: ${WOWUCTION_MINS_AGO} ago\\n"
-					OUTPUT+="WoWAuction - ${WOWUCTION_URL}\\n"
-					OUTPUT+="WoWAuction - CURRENT: WoWAuction is up to date.\\n"
+					OUTPUT+="${PREFIX}\"WoWAuction\"\\n"
+					OUTPUT+="${PREFIX}Update Time: ${WOWUCTION_MINS_AGO} ago\\n"
+					OUTPUT+="${PREFIX}${WOWUCTION_URL}\\n"
+					OUTPUT+="${PREFIX}CURRENT: WoWAuction is up to date.\\n"
 
 					if [ ${DEBUG} ] ; then
 						echo -e "${OUTPUT}========="
@@ -430,17 +445,17 @@ function WoWAuction() {
 			WGET_LOOP=$(( ${WGET_LOOP} + 1 ))
 
 			if [ ${WGET_LOOP} -le ${WGET_TRIES} ] ; then
-				[ ${DEBUG} ] && echo "WoWAuction -   Pausing.  $(( ${WGET_TRIES} - ${WGET_LOOP} )) more tries... "
+				[ ${DEBUG} ] && echo "${PREFIX}  Pausing.  $(( ${WGET_TRIES} - ${WGET_LOOP} )) more tries... "
 				sleep ${WGET_PAUSE}
 				WoWAuction
 			else
-				[ ${DEBUG} ] && echo "WoWAuction -   BAILING after ${WGET_TRIES} tries... "
+				[ ${DEBUG} ] && echo "${PREFIX}  BAILING after ${WGET_TRIES} tries... "
 			fi
 		fi
 	else
-		OUTPUT+="WoWAuction - \"WoWAuction\" updated ${WOWUCTION_MINS_AGO} ago\\n"
-		OUTPUT+="WoWAuction - ${WOWUCTION_URL}\\n"
-		OUTPUT+="WoWAuction - CURRENT: WoWAuction is up to date.\\n"
+		OUTPUT+="${PREFIX}\"WoWAuction\" updated ${WOWUCTION_MINS_AGO} ago\\n"
+		OUTPUT+="${PREFIX}${WOWUCTION_URL}\\n"
+		OUTPUT+="${PREFIX}CURRENT: WoWAuction is up to date.\\n"
 
 		if [ ${DEBUG} ] ; then
 			echo -e "${OUTPUT}========="
