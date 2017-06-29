@@ -114,8 +114,6 @@ if [ -f /etc/lsb-release ] ; then
 
 		echo "CACHES: $CACHES"
 
-#		exit
-
 		cleanCaches
 
 		MOUNTS="${HOME}"
@@ -142,7 +140,12 @@ if [ -f /etc/lsb-release ] ; then
 		echo -e "${B}${LB}Cleaning${N}\\v"
 		sudo apt-get -y clean all
 
-		CACHES="${HOME}/.cache /var/cache"
+#		BuildCaches
+
+#		CACHES="${HOMECACHE}"
+		CACHES="${HOME}/.cache"
+#		echo "CACHES: $CACHES"
+
 		cleanCaches
 
 		MOUNTS="${HOME}"
