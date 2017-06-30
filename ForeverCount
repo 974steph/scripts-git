@@ -722,8 +722,11 @@ function GetHolidays() {
 	echo "<ul style=\"${STYLE_UL}\">" >> ${BODY}
 
 # 	curl -A "${UA}" -sL "https://www.checkiday.com" | grep "Today is" | sed "s/.*href=\"\(.*\)\" title=\"Today is \(.*\)\!\" .*/\1,\2/" | while IFS= read -r HOLIDAY ; do
-	curl -A "${UA}" -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | sed 's/&\([a-zA-Z]\)\+\;/\1/g' | xmllint --format - | grep -A3 "<item>" | egrep "<title>|<link>" | sed 's/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/'  | while IFS= read -r HOLIDAY ; do
 
+#	HOLIDAY=$(curl -A "${UA}" -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | sed 's/&\([a-zA-Z]\)\+\;/\1/g' | xmllint --format - | grep -A3 "<item>" | egrep "<title>|<link>" | sed 's/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/')
+#	while IFS= read -r HOLIDAY ; do
+
+	curl -A "${UA}" -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | sed 's/&\([a-zA-Z]\)\+\;/\1/g' | xmllint --format - | grep -A3 "<item>" | egrep "<title>|<link>" | sed 's/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/'  | while IFS= read -r HOLIDAY ; do
 		eval "${HOLIDAY}"
 
 		if [ "${NAME}" -a "${PAGE_URL}" ] ; then
