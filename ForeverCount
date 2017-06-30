@@ -718,7 +718,9 @@ function GetHolidays() {
 
 #	curl -A "${UA}" -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | sed 's/&\([a-zA-Z]\)\+\;/\1/g' | xmllint --format - | grep -A3 "<item>" | egrep "<title>|<link>" | sed 's/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/'  | while IFS= read -r HOLIDAY ; do
 
-	HOLIDAYLIST=$(curl -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | xmllint --format - | awk '/<item>/,/<\/item>/' | egrep "<title>|<link>" | gsed 's/^ \+//g;s/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/')
+	HOLIDAYLIST=$(curl -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | xmllint --format - | awk '/<item>/,/<\/item>/' | egrep "<title>|<link>" | sed 's/^ \+//g;s/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/')
+
+#	HOLIDAYLIST=""
 
 	if [ "${HOLIDAYLIST}" ] ; then
 
@@ -763,7 +765,7 @@ function GetHolidays() {
 		echo "<td width=\"25%\"></td></tr></table>" >> ${BODY}
 		echo "<ul style=\"${STYLE_UL}\">" >> ${BODY}
 #		echo "<li style=\"${STYLE_LI_CIRCLE}\">UNABLE TO FETCH HOLIDAYS<br>" >> ${BODY}
-		echo "<li style=\"${STYLE_LI_CIRCLE}\"><pre>${HOLIDAYLIST}</pre><br>" >> ${BODY}
+		echo "<li style=\"${STYLE_LI_CIRCLE}\">Holiday List:<br><pre>${HOLIDAYLIST}</pre><br>" >> ${BODY}
 	fi
 
 	echo "</ul>" >> ${BODY}
