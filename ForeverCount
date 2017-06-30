@@ -716,50 +716,55 @@ function GetHolidays() {
 
 	GOOGLE_ICON="https://maps.gstatic.com/mapfiles/place_api/icons/generic_business-71.png"
 
-	echo "<table width=\"100%\" style=\"margin-top: 1em;\"><tr>" >> ${BODY}
-	echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img Style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\"><b style=\"${STYLE_BULLET_TEXT}\">Holidays today:</b></td>" >> ${BODY}
-	echo "<td width=\"25%\"></td></tr></table>" >> ${BODY}
-	echo "<ul style=\"${STYLE_UL}\">" >> ${BODY}
+#	curl -A "${UA}" -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | sed 's/&\([a-zA-Z]\)\+\;/\1/g' | xmllint --format - | grep -A3 "<item>" | egrep "<title>|<link>" | sed 's/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/'  | while IFS= read -r HOLIDAY ; do
 
-# 	curl -A "${UA}" -sL "https://www.checkiday.com" | grep "Today is" | sed "s/.*href=\"\(.*\)\" title=\"Today is \(.*\)\!\" .*/\1,\2/" | while IFS= read -r HOLIDAY ; do
+	HOLIDAYLIST=$(curl -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | xmllint --format - | awk '/<item>/,/<\/item>/' | egrep "<title>|<link>" | gsed 's/^ \+//g;s/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/')
 
-#	HOLIDAY=$(curl -A "${UA}" -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | sed 's/&\([a-zA-Z]\)\+\;/\1/g' | xmllint --format - | grep -A3 "<item>" | egrep "<title>|<link>" | sed 's/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/')
-#	while IFS= read -r HOLIDAY ; do
+	if [ "${HOLIDAYLIST}" ] ; then
 
-	curl -A "${UA}" -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | sed 's/&\([a-zA-Z]\)\+\;/\1/g' | xmllint --format - | grep -A3 "<item>" | egrep "<title>|<link>" | sed 's/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/'  | while IFS= read -r HOLIDAY ; do
-		eval "${HOLIDAY}"
+		echo "<table width=\"100%\" style=\"margin-top: 1em;\"><tr>" >> ${BODY}
+		echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img Style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\"><b style=\"${STYLE_BULLET_TEXT}\">Holidays today:</b></td>" >> ${BODY}
+		echo "<td width=\"25%\"></td></tr></table>" >> ${BODY}
+		echo "<ul style=\"${STYLE_UL}\">" >> ${BODY}
 
-		if [ "${NAME}" -a "${PAGE_URL}" ] ; then
+		echo "${HOLIDAYLIST}" | while IFS= read -r HOLIDAY ; do
 
-#			URL=$(curl -A "${UA}" -sL "${PAGE_URL}" | grep -i 'id="source-url"' | sed 's/.*href="\(.*\)" class.*/\1/')
-			URL=$(curl -A "${UA}" -sL "${PAGE_URL}" | grep Sources | sed 's/.*Sources.*mdl-list__item//;s/<\/a><\/h3><\/li><\/ul><\/div>.*//;s/.*href="\(.*\)">.*/\1/')
+			eval "${HOLIDAY}"
 
-			if [ ${DEBUG} ] ; then
-				echo -e "NAME: \"$NAME\""
-				echo -e "URL: \"$URL\""
-				echo -e "PAGE_URL: \"$PAGE_URL\""
-				echo -e "========="
+			if [ "${NAME}" -a "${PAGE_URL}" ] ; then
+
+				URL=$(curl -A "${UA}" -sL "${PAGE_URL}" | grep Sources | sed 's/.*Sources.*mdl-list__item//;s/<\/a><\/h3><\/li><\/ul><\/div>.*//;s/.*href="\(.*\)">.*/\1/')
+
+				if [ ${DEBUG} ] ; then
+					echo -e "NAME: \"$NAME\""
+					echo -e "URL: \"$URL\""
+					echo -e "PAGE_URL: \"$PAGE_URL\""
+					echo -e "========="
+				fi
+
+				echo "<li style=\"${STYLE_LI_CIRCLE}\"><a href=\"${URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">${NAME}</a><br>" >> ${BODY}
+
+				unset NAME PAGE_URL URL
+			else
+
+				if [ ${DEBUG} ] ; then
+					echo "Still looping"
+					echo -e "\\tNAME: \"$NAME\""
+					echo -e "\\tURL: \"$URL\""
+					echo -e "\\tPAGE_URL: \"$PAGE_URL\""
+					echo -e "\\t========="
+				fi
 			fi
-
-			echo "<li style=\"${STYLE_LI_CIRCLE}\"><a href=\"${URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">${NAME}</a><br>" >> ${BODY}
-
-			unset NAME PAGE_URL URL
-		else
-
-			if [ ${DEBUG} ] ; then
-				echo "Still looping"
-				echo -e "\\tNAME: \"$NAME\""
-				echo -e "\\tURL: \"$URL\""
-				echo -e "\\tPAGE_URL: \"$PAGE_URL\""
-				echo -e "\\t========="
-			fi
-
-		fi
-
-# 		NAME="$(echo ${HOLIDAY} | cut -d , -f 2-)"
-# 		URL=$(echo ${HOLIDAY} | cut -d , -f 1)
-
-	done
+		done
+	else
+		echo "<table width=\"100%\" style=\"margin-top: 1em;\"><tr>" >> ${BODY}
+#		echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img Style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\"><b style=\"${STYLE_BULLET_TEXT}\">Holidays today:</b></td>" >> ${BODY}
+		echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img Style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\"><b style=\"${STYLE_BULLET_TEXT}\">Unable to fetch holiday list:</b></td>" >> ${BODY}
+		echo "<td width=\"25%\"></td></tr></table>" >> ${BODY}
+		echo "<ul style=\"${STYLE_UL}\">" >> ${BODY}
+#		echo "<li style=\"${STYLE_LI_CIRCLE}\">UNABLE TO FETCH HOLIDAYS<br>" >> ${BODY}
+		echo "<li style=\"${STYLE_LI_CIRCLE}\"><pre>${HOLIDAYLIST}</pre><br>" >> ${BODY}
+	fi
 
 	echo "</ul>" >> ${BODY}
 }
