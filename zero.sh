@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
-case $(hostname) in
-	aragorn) STOP=YES;;
-	toa-tahu) STOP=YES;;
-esac
+#case $(hostname) in
+#	aragorn) STOP=YES;;
+#	toa-tahu) STOP=YES;;
+#esac
 
-if [ ${STOP} ] ; then
+#if [ ${STOP} ] ; then
+if [[ ! $(hostname) =~ vbox.* ]] ; then
 	echo -e "\\vRefusing to run on $(hostname).  Bailing...\\v"
 	exit
 fi
@@ -70,13 +71,6 @@ function cleanCaches() {
 
 		unset CSIZE NAME TOUCHF
 
-#		if [ -d "${CACHE}" ] ; then
-#			CSIZE=$(sudo du -hs "${CACHE}" | awk '{print $1}')
-#			sudo rm -rf "${CACHE}" 2>/dev/null
-#			echo -e "${B}${LB}Cleaned ${CSIZE} from ${CACHE}${N}"
-#		else
-#			echo "${CACHE} is not a directory.  Skipping..."
-#		fi
 	done
 
 	echo -e \\v
@@ -110,9 +104,6 @@ if [ -f /etc/lsb-release ] ; then
 		BuildCaches
 
 		CACHES="${HOMECACHE}"
-#		CACHES="${HOME}/.cache"
-
-		echo "CACHES: $CACHES"
 
 		cleanCaches
 
@@ -143,8 +134,6 @@ if [ -f /etc/lsb-release ] ; then
 		BuildCaches
 
 		CACHES="${HOMECACHE}"
-#		CACHES="${HOME}/.cache"
-		echo "CACHES: $CACHES"
 
 		cleanCaches
 
