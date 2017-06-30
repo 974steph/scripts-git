@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
 
-#case $(hostname) in
-#	aragorn) STOP=YES;;
-#	toa-tahu) STOP=YES;;
-#esac
-
-#if [ ${STOP} ] ; then
 if [[ ! $(hostname) =~ vbox.* ]] ; then
 	echo -e "\\vRefusing to run on $(hostname).  Bailing...\\v"
 	exit
@@ -16,22 +10,17 @@ W=$(tput setaf 7)
 LB=$(tput setaf 153)
 N=$(tput sgr0)
 
-function doZero() {
-
-	MOUNT="$1"
-
-	echo -e "${B}${LB}Zeroing ${MOUNT}${N}\\v"
-
-	sudo dd if=/dev/zero of=${MOUNT}/zero bs=1M
-	sudo rm -fv ${MOUNT}/zero
-}
-
+###########################
+# BUILD CACHES
 function BuildCaches() {
 	for USER in $(grep ^users: /etc/group | cut -d: -f4- | sed 's/,/ /g') ; do
 		HOMECACHE+="$(awk -F: "/^$USER/ {print \$6}" /etc/passwd)/.cache "
 	done
 }
+###########################
 
+###########################
+# CLEAN CACHES
 function cleanCaches() {
 
 	for CACHE in ${CACHES} ; do
@@ -75,78 +64,110 @@ function cleanCaches() {
 
 	echo -e \\v
 }
+###########################
 
+###########################
+# ZERO MOUNTS
+function zeroMounts() {
+
+	for MOUNT in $MOUNTS ; do
+		MOUNT="$1"
+
+		echo -e "${B}${LB}Zeroing ${MOUNT}${N}\\v"
+
+		sudo dd if=/dev/zero of=${MOUNT}/zero bs=1M
+		sudo rm -fv ${MOUNT}/zero
+	done
+}
+###########################
+
+###########################
+# CLEAN ARCH
+function cleanArch() {
+	echo "CLEANING ${DISTRIB_ID}"
+
+	echo -e "${B}${LB}Cleaning${N}\\v"
+	pacaur -Sc --noconfirm > /dev/null
+
+	sudo find /var/cache/pacman/pkg/ -type f -exec rm -f "{}" \;
+
+	BuildCaches
+
+	CACHES="${HOMECACHE}"
+
+	cleanCaches
+
+	MOUNTS="${HOME}"
+
+	zeroMounts
+}
+###########################
+
+###########################
+# CLEAN GENTOO
+function cleanGentoo() {
+	echo "CLEANING ${DISTRIB_ID}"
+
+	source /etc/portage/make.conf
+
+	echo -e "${B}${LB}Clean ${DISTDIR}${N}\\v"
+	sudo find "${DISTDIR}" -type f -exec rm -f "{}" \;
+
+	echo -e "${B}${LB}Clean ${PORT_LOGDIR}${N}\\v"
+	sudo find "${PORT_LOGDIR}" -mtime +14 -type f -exec rm -f "{}" \;
+
+	CACHES="${HOME}/.cache"
+
+	cleanCaches
+
+	MOUNTS="${HOME} /usr/local"
+
+	zeroMounts
+}
+###########################
+
+###########################
+# CLEAN UBUNTU
+function cleanUbuntu() {
+	echo "CLEANING ${DISTRIB_ID}"
+
+	echo -e "${B}${LB}Autoremoving${N}\\v"
+	sudo apt-get -y autoremove
+
+	echo -e "${B}${LB}Purging${N}\\v"
+	sudo apt-get -y purge $(dpkg-query -l | awk '/^rc/ {print $2}')
+
+	echo -e "${B}${LB}Cleaning${N}\\v"
+	sudo apt-get -y clean all
+
+	BuildCaches
+
+	CACHES="${HOMECACHE}"
+
+	cleanCaches
+
+	MOUNTS="${HOME}"
+
+	zeroMounts
+}
+###########################
+
+###########################
+# START
 if [ -f /etc/lsb-release ] ; then
 	source /etc/lsb-release
 
-#	echo -e "DISTRIB_ID: \"$DISTRIB_ID\""
+	case ${DISTRIB_ID} in
+		Gentoo) cleanGentoo;;
 
-	if [[ $DISTRIB_ID =~ .*Gentoo.* ]] ; then
-		source /etc/portage/make.conf
+		Arch) cleanArch;;
 
-		echo -e "${B}${LB}Clean ${DISTDIR}${N}\\v"
-		sudo find "${DISTDIR}" -type f -exec rm -f "{}" \;
+		ManjaroLinux) cleanGentoo;;
 
-		echo -e "${B}${LB}Clean ${PORT_LOGDIR}${N}\\v"
-		sudo find "${PORT_LOGDIR}" -mtime +14 -type f -exec rm -f "{}" \;
+		Ubuntu) cleanGentoo;;
 
-		CACHES="${HOME}/.cache"
-		cleanCaches
-
-		MOUNTS="${HOME} /usr/local"
-		WORKS=TRUE
-	elif [[ $DISTRIB_ID =~ .*Arch.* ]] ; then
-
-		echo -e "${B}${LB}Cleaning${N}\\v"
-#		pacaur -Sc --noconfirm
-		sudo find /var/cache/pacman/pkg/ -type f -exec rm -f "{}" \;
-
-		BuildCaches
-
-		CACHES="${HOMECACHE}"
-
-		cleanCaches
-
-		MOUNTS="${HOME}"
-		WORKS=TRUE
-	elif [[ $DISTRIB_ID =~ .*ManjaroLinux.* ]] ; then
-
-		echo -e "${B}${LB}Cleaning${N}\\v"
-		pacaur -Sc --noconfirm
-		sudo find /var/cache/pacman/pkg/ -type f -exec rm -f "{}" \;
-
-		CACHES="${HOME}/.cache"
-		cleanCaches
-
-		MOUNTS="${HOME}"
-		WORKS=TRUE
-	elif [[ $DISTRIB_ID =~ .*Ubuntu*. ]] ; then
-
-		echo -e "${B}${LB}Autoremoving${N}\\v"
-		sudo apt-get -y autoremove
-
-		echo -e "${B}${LB}Purging${N}\\v"
-		sudo apt-get -y purge $(dpkg-query -l | awk '/^rc/ {print $2}')
-
-		echo -e "${B}${LB}Cleaning${N}\\v"
-		sudo apt-get -y clean all
-
-		BuildCaches
-
-		CACHES="${HOMECACHE}"
-
-		cleanCaches
-
-		MOUNTS="${HOME}"
-		WORKS=TRUE
-	else
-		echo -e "DISTRIB_ID: \"$DISTRIB_ID\".  I dunno.\\v"
-		exit
-	fi
+		*) 	echo "I don't know how to clean ${DISTRIB_ID}.  Bailing..."
+			exit
+			;;
+	esac
 fi
-
-[ ! $WORKS ] && exit
-
-for MOUNT in $MOUNTS ; do
-	doZero ${MOUNT}
-done
