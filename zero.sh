@@ -62,7 +62,7 @@ function cleanCaches() {
 
 	done
 
-	echo -e \\v
+#	echo -e \\v
 }
 ###########################
 
@@ -86,7 +86,6 @@ function zeroMounts() {
 function cleanArch() {
 	echo "CLEANING ${DISTRIB_ID}"
 
-	echo -e "${B}${LB}Cleaning${N}\\v"
 	pacaur -Sc --noconfirm > /dev/null
 
 	sudo find /var/cache/pacman/pkg/ -type f -exec rm -f "{}" \;
@@ -162,7 +161,7 @@ if [ -f /etc/lsb-release ] ; then
 
 		Arch) cleanArch;;
 
-		ManjaroLinux) cleanGentoo;;
+		ManjaroLinux) cleanArch;;
 
 		Ubuntu) cleanGentoo;;
 
