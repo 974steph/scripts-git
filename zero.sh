@@ -140,11 +140,11 @@ if [ -f /etc/lsb-release ] ; then
 		echo -e "${B}${LB}Cleaning${N}\\v"
 		sudo apt-get -y clean all
 
-#		BuildCaches
+		BuildCaches
 
-#		CACHES="${HOMECACHE}"
-		CACHES="${HOME}/.cache"
-#		echo "CACHES: $CACHES"
+		CACHES="${HOMECACHE}"
+#		CACHES="${HOME}/.cache"
+		echo "CACHES: $CACHES"
 
 		cleanCaches
 
