@@ -6,7 +6,7 @@
 
 ######################################################
 # USE THIS STUFF
-CURSE_PLUGINS="advancedinterfaceoptions archy auctionator auctioneer altoholic dejacharacterstats farmhud \
+CURSE_PLUGINS="advancedinterfaceoptions archy auctionator auctioneer altoholic deadly-boss-mods dejacharacterstats farmhud \
 	gathermate2 gathermate2_data handynotes handynotes_azerothstoptunes handynotes_legionrarestreasures \
 	herebedragons pawn postal scrap scrap-cleaner server-hop skada tomtom world-quest-tracker"
 
