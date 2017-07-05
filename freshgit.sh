@@ -28,16 +28,20 @@ for GIT in ${TANKS} ; do
 
 		echo "${B}$(basename ${DIR})${N} (${GIT_COUNTER} of ${GITS})"
 
-		OUTPUT=$(git pull 2>&1 | egrep -i "changed.*insertions.*deletions|up-to-date" | gsed 's/^\ \+//')
+		OUTPUT_FULL=$(git pull 2>&1)
+#		echo ${OUTPUT_FULL}
 
-		if [[ "${OUTPUT}" =~ .*changed.*insertions.*deletions.* ]] ; then
-			echo -e "${LB}${OUTPUT}${N}"
+#		OUTPUT=$(git pull 2>&1 | egrep -i "changed.*insertions.*deletions|up-to-date" | gsed 's/^\ \+//')
+		OUTPUT_CHANGES=$(echo ${OUTPUT_FULL} | egrep -i "changed.*insertions.*deletions|up-to-date" | gsed 's/^\ \+//')
+
+		if [[ "${OUTPUT_CHANGES}" =~ .*changed.*insertions.*deletions.* ]] ; then
+			echo -e "${LB}${OUTPUT_CHANGES}${N}"
 			UPDATED=$(( ${UPDATED} + 1 ))
 			CHANGED=$(( ${CHANGED} + $(echo ${OUTPUT} | awk '{print $1}') ))
 			INSERTS=$(( ${INSERTS} + $(echo ${OUTPUT} | awk '{print $4}') ))
 			DELETES=$(( ${DELETES} + $(echo ${OUTPUT} | awk '{print $6}') ))
 		else
-			echo -e "${R}${OUTPUT}${N}"
+			echo -e "${R}${OUTPUT_FULL}${N}"
 		fi
 
 		GIT_COUNTER=$(( ${GIT_COUNTER} + 1 ))
