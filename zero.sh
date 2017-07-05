@@ -163,7 +163,7 @@ if [ -f /etc/lsb-release ] ; then
 
 		ManjaroLinux) cleanArch;;
 
-		Ubuntu) cleanGentoo;;
+		Ubuntu) cleanUbuntu;;
 
 		*) 	echo "I don't know how to clean ${DISTRIB_ID}.  Bailing..."
 			exit
