@@ -21,6 +21,9 @@ done
 
 echo
 
+IFS_SAVE=$IFS
+IFS=$'\n'
+
 for GIT in ${TANKS} ; do
 	for DIR in $(find ${GIT} -type d -maxdepth 1 -mindepth 1) ; do
 
@@ -32,14 +35,19 @@ for GIT in ${TANKS} ; do
 #		echo ${OUTPUT_FULL}
 
 #		OUTPUT=$(git pull 2>&1 | egrep -i "changed.*insertions.*deletions|up-to-date" | gsed 's/^\ \+//')
-		OUTPUT_CHANGES=$(echo ${OUTPUT_FULL} | egrep -i "changed.*insertions.*deletions|up-to-date" | gsed 's/^\ \+//')
+		OUTPUT_CHANGES=$(echo ${OUTPUT_FULL} | egrep -i "changed.*insertion|changed.*deletion|up-to-date" | gsed 's/^\ \+//')
+
+		echo "OUTPUT_CHANGES: $OUTPUT_CHANGES"
 
 		if [[ "${OUTPUT_CHANGES}" =~ .*changed.*insertions.*deletions.* ]] ; then
 			echo -e "${LB}${OUTPUT_CHANGES}${N}"
 			UPDATED=$(( ${UPDATED} + 1 ))
-			CHANGED=$(( ${CHANGED} + $(echo ${OUTPUT} | awk '{print $1}') ))
-			INSERTS=$(( ${INSERTS} + $(echo ${OUTPUT} | awk '{print $4}') ))
-			DELETES=$(( ${DELETES} + $(echo ${OUTPUT} | awk '{print $6}') ))
+#			CHANGED=$(( ${CHANGED} + $(echo ${OUTPUT} | awk '{print $1}') ))
+			CHANGED=$(( ${CHANGED} + $(echo ${OUTPUT} | sed 's/ \+\([0-9]\+\) file changed.*/\1/') ))
+#			INSERTS=$(( ${INSERTS} + $(echo ${OUTPUT} | awk '{print $4}') ))
+			INSERTS=$(( ${INSERTS} + $(echo ${OUTPUT} | sed 's/.* \+\([0-9]\+\) insertion.*/\1/') ))
+#			DELETES=$(( ${DELETES} + $(echo ${OUTPUT} | awk '{print $6}') ))
+			DELETES=$(( ${DELETES} + $(echo ${OUTPUT} | sed 's/.* \+\([0-9]\+\) deletion.*/\1/') ))
 		else
 			echo -e "${R}${OUTPUT_FULL}${N}"
 		fi
@@ -59,3 +67,5 @@ if [ ${UPDATED} -gt 0 ] ; then
 else
 	echo -e "\\v${B}${P}It took $(( $(date +%s) - ${NOW} )) seconds to check ${GITS} repos.${N}\\v"
 fi
+
+IFS=$SAVE_IFS
