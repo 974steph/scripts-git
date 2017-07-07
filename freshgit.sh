@@ -53,14 +53,17 @@ for GIT in ${TANKS} ; do
 #			echo "CHANGED: \"$(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) file.*changed.*/\1/')\""
 #			CHANGED=$(( ${CHANGED} + $(echo ${OUTPUT} | awk '{print $1}') ))
 			CHANGED=$(( ${CHANGED} + $(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) file.*changed.*/\1/') ))
+			echo -e "\\tCHANGED: $CHANGED"
 
 #			echo "INSERTS: \"$(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) insertion.*/\1/')\""
 #			INSERTS=$(( ${INSERTS} + $(echo ${OUTPUT} | awk '{print $4}') ))
 			INSERTS=$(( ${INSERTS} + $(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) insertion.*/\1/') ))
+			echo -e "\\tINSERTS: $INSERTS"
 
 #			echo "DELETES: \"$(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) deletion.*/\1/')\""
 #			DELETES=$(( ${DELETES} + $(echo ${OUTPUT} | awk '{print $6}') ))
 			DELETES=$(( ${DELETES} + $(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) deletion.*/\1/') ))
+			echo -e "\\tDELETES: $DELETES"
 		else
 			echo -e "${R}${OUTPUT_FULL}${N}"
 		fi
