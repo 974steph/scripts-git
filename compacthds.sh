@@ -22,7 +22,7 @@ DIRSIZE=$(du -hs "${VDIDIR}" | awk '{print $1}')
 
 echo -e "\\v${B}${VDIDIR}: ${DIRSIZE}${N}\\v"
 
-for HD in $(VBoxManage list hdds | egrep "^UUID|^Location" | gsed 's/: \+/=/') ; do
+for HD in $(VBoxManage list hdds | egrep "^UUID|^Location|^State" | gsed 's/: \+/=/') ; do
 
 	if [ "$(echo $HD | grep UUID)" ] ; then
 		[ ${DEBUG} ] && echo "FOUND UUID"
@@ -32,22 +32,36 @@ for HD in $(VBoxManage list hdds | egrep "^UUID|^Location" | gsed 's/: \+/=/') ;
 
 	if [ "$(echo $HD | grep Location)" ] ; then
 		[ ${DEBUG} ] && echo "FOUND LOCATION"
-		HD=$(echo $HD | sed 's/ /\\ /')
+		HD=$(echo $HD | ${SED} 's/ /\\ /')
 		eval "$HD"
 		[ ${DEBUG} ] && echo -e "\\tLocation: \"$Location\""
 	fi
 
-	if [ "${UUID}" -a "${Location}" ] ; then
+	if [ "$(echo $HD | grep State)" ] ; then
+		[ ${DEBUG} ] && echo "FOUND STATE"
+		HD=$(echo $HD | ${SED} 's/ /\\ /')
+		eval "$HD"
+		[ ${DEBUG} ] && echo -e "\\tState: \"$State\""
+	fi
 
-		[ ${DEBUG} ] && echo "GOT BOTH"
+	if [ "${UUID}" -a "${Location}" -a "${State}" ] ; then
 
-		echo "${LB}$(basename ${Location})${N} - ${UUID}"
+		[ ${DEBUG} ] && echo "GOT ALL"
 
-		echo "Old Size: $(du -h "${Location}" | awk '{print $1}')"
+		if [ "${State}" == "created" ] ; then
+			echo "${LB}$(basename ${Location})${N} - ${UUID}"
 
-		VBoxManage modifyhd --compact "${UUID}"
+			echo "Size before compact: $(du -h "${Location}" | awk '{print $1}')"
 
-		echo "New Size: $(du -h "${Location}" | awk '{print $1}')"
+			VBoxManage modifyhd --compact "${UUID}"
+
+			echo "Size after compact: $(du -h "${Location}" | awk '{print $1}')"
+
+		else
+			echo "${LB}$(basename ${Location})${N} - ${UUID}"
+			echo "Size: $(du -h "${Location}" | awk '{print $1}')"
+			echo "${R}$(basename ${Location}) is in use.  Skipping...${N}"
+		fi
 
 		unset UUID
 		unset Location
@@ -60,6 +74,6 @@ for HD in $(VBoxManage list hdds | egrep "^UUID|^Location" | gsed 's/: \+/=/') ;
 done
 
 DIRSIZE=$(du -hs "${VDIDIR}" | awk '{print $1}')
-echo -e "\\v${B}${VDIDIR}: ${DIRSIZE}${N}\\v"
+echo -e "${B}${VDIDIR}: ${DIRSIZE}${N}\\v"
 
 IFS=${SAVEIFS}
