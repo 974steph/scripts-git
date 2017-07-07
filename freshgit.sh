@@ -1,6 +1,9 @@
 #!/bin/bash
 
 TANKS="$HOME/GIT"
+
+DEBUG=TRUE
+
 NOW=$(date +%s)
 UPDATED=0
 GIT_COUNTER=1
@@ -50,20 +53,19 @@ for GIT in ${TANKS} ; do
 
 			UPDATED=$(( ${UPDATED} + 1 ))
 
-#			echo "CHANGED: \"$(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) file.*changed.*/\1/')\""
-#			CHANGED=$(( ${CHANGED} + $(echo ${OUTPUT} | awk '{print $1}') ))
-			CHANGED=$(( ${CHANGED} + $(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) file.*changed.*/\1/') ))
-			echo -e "\\tCHANGED: $CHANGED"
+#			12 files changed, 158 insertions(+), 16 deletions(-)
 
-#			echo "INSERTS: \"$(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) insertion.*/\1/')\""
-#			INSERTS=$(( ${INSERTS} + $(echo ${OUTPUT} | awk '{print $4}') ))
-			INSERTS=$(( ${INSERTS} + $(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) insertion.*/\1/') ))
-			echo -e "\\tINSERTS: $INSERTS"
+			[ "$(echo ${OUTPUT} | awk '{print $1}')" ] && CHANGED=$(( ${CHANGED} + $(echo ${OUTPUT} | awk '{print $1}') ))
+#			CHANGED=$(( ${CHANGED} + $(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) file.*changed.*/\1/') ))
+			[ ${DEBUG} ] && echo -e "\\tCHANGED: $CHANGED"
 
-#			echo "DELETES: \"$(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) deletion.*/\1/')\""
-#			DELETES=$(( ${DELETES} + $(echo ${OUTPUT} | awk '{print $6}') ))
-			DELETES=$(( ${DELETES} + $(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) deletion.*/\1/') ))
-			echo -e "\\tDELETES: $DELETES"
+			[ "$(echo ${OUTPUT} | awk '{print $4}')" ] && INSERTS=$(( ${INSERTS} + $(echo ${OUTPUT} | awk '{print $4}') ))
+#			INSERTS=$(( ${INSERTS} + $(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) insertion.*/\1/') ))
+			[ ${DEBUG} ] && echo -e "\\tINSERTS: $INSERTS"
+
+			[ "$(echo ${OUTPUT} | awk '{print $6}')" ] && DELETES=$(( ${DELETES} + $(echo ${OUTPUT} | awk '{print $6}') ))
+#			DELETES=$(( ${DELETES} + $(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) deletion.*/\1/') ))
+			[ ${DEBUG} ] && echo -e "\\tDELETES: $DELETES"
 		else
 			echo -e "${R}${OUTPUT_FULL}${N}"
 		fi
