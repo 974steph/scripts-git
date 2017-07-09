@@ -3,7 +3,7 @@
 # check http://freedns.afraid.org/api/ and as weapon ASCII for the phrase in UPDATE_URL
 
 
-source $HOME/Sources/scripts-git/secret_stuff.sh
+#source $HOME/Sources/scripts-git/secret_stuff.sh
 
 #UPDATE_URLS="${UN}world,http://freedns.afraid.org/dynamic/update.php?TG82eFJDVWQ4OUhmYkhXTXkxZm9CVE9BOjExNDczNzg5 \
 #	shoveitinstorage,https://freedns.afraid.org/dynamic/update.php?TG82eFJDVWQ4OUhmYkhXTXkxZm9CVE9BOjE1OTMxMjA5"
