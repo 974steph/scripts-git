@@ -55,15 +55,15 @@ for GIT in ${TANKS} ; do
 
 #			12 files changed, 158 insertions(+), 16 deletions(-)
 
-			[ "$(echo ${OUTPUT} | awk '{print $1}')" ] && CHANGED=$(( ${CHANGED} + $(echo ${OUTPUT} | awk '{print $1}') ))
+			[ "$(echo ${OUTPUT_CHANGES} | awk '{print $1}')" ] && CHANGED=$(( ${CHANGED} + $(echo ${OUTPUT_CHANGES} | awk '{print $1}') ))
 #			CHANGED=$(( ${CHANGED} + $(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) file.*changed.*/\1/') ))
 			[ ${DEBUG} ] && echo -e "\\tCHANGED: $CHANGED"
 
-			[ "$(echo ${OUTPUT} | awk '{print $4}')" ] && INSERTS=$(( ${INSERTS} + $(echo ${OUTPUT} | awk '{print $4}') ))
+			[ "$(echo ${OUTPUT_CHANGES} | awk '{print $4}')" ] && INSERTS=$(( ${INSERTS} + $(echo ${OUTPUT_CHANGES} | awk '{print $4}') ))
 #			INSERTS=$(( ${INSERTS} + $(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) insertion.*/\1/') ))
 			[ ${DEBUG} ] && echo -e "\\tINSERTS: $INSERTS"
 
-			[ "$(echo ${OUTPUT} | awk '{print $6}')" ] && DELETES=$(( ${DELETES} + $(echo ${OUTPUT} | awk '{print $6}') ))
+			[ "$(echo ${OUTPUT_CHANGES} | awk '{print $6}')" ] && DELETES=$(( ${DELETES} + $(echo ${OUTPUT_CHANGES} | awk '{print $6}') ))
 #			DELETES=$(( ${DELETES} + $(echo "${OUTPUT_CHANGES}" | ${SED} 's/.*\([0-9]\+\) deletion.*/\1/') ))
 			[ ${DEBUG} ] && echo -e "\\tDELETES: $DELETES"
 		else
