@@ -2,7 +2,7 @@
 
 TANKS="$HOME/GIT"
 
-DEBUG=TRUE
+#DEBUG=TRUE
 
 NOW=$(date +%s)
 UPDATED=0
