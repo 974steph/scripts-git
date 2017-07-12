@@ -70,8 +70,11 @@ function cleanCaches() {
 # ZERO MOUNTS
 function zeroMounts() {
 
-	for MOUNT in $MOUNTS ; do
-		MOUNT="$1"
+	echo
+#	echo MOUNTS: $MOUNTS
+
+#	for MOUNT in $MOUNTS ; do
+	for MOUNT in $(mount | awk '/^\/dev/ {print $3}') ; do
 
 		echo -e "${B}${LB}Zeroing ${MOUNT}${N}\\v"
 
@@ -84,8 +87,6 @@ function zeroMounts() {
 ###########################
 # CLEAN ARCH
 function cleanArch() {
-	echo "CLEANING ${DISTRIB_ID}"
-
 	pacaur -Sc --noconfirm > /dev/null
 
 	sudo find /var/cache/pacman/pkg/ -type f -exec rm -f "{}" \;
@@ -105,8 +106,6 @@ function cleanArch() {
 ###########################
 # CLEAN GENTOO
 function cleanGentoo() {
-	echo "CLEANING ${DISTRIB_ID}"
-
 	source /etc/portage/make.conf
 
 	echo -e "${B}${LB}Clean ${DISTDIR}${N}\\v"
@@ -119,7 +118,7 @@ function cleanGentoo() {
 
 	cleanCaches
 
-	MOUNTS="${HOME} /usr/local"
+	MOUNTS="/ /usr/local"
 
 	zeroMounts
 }
@@ -128,8 +127,6 @@ function cleanGentoo() {
 ###########################
 # CLEAN UBUNTU
 function cleanUbuntu() {
-	echo "CLEANING ${DISTRIB_ID}"
-
 	echo -e "${B}${LB}Autoremoving${N}\\v"
 	sudo apt-get -y autoremove
 
@@ -145,7 +142,7 @@ function cleanUbuntu() {
 
 	cleanCaches
 
-	MOUNTS="${HOME}"
+	MOUNTS="/"
 
 	zeroMounts
 }
@@ -155,6 +152,8 @@ function cleanUbuntu() {
 # START
 if [ -f /etc/lsb-release ] ; then
 	source /etc/lsb-release
+
+	echo -e "\\vCLEANING ${DISTRIB_ID}\\v"
 
 	case ${DISTRIB_ID} in
 		Gentoo) cleanGentoo;;
