@@ -67,6 +67,26 @@ function cleanCaches() {
 ###########################
 
 ###########################
+# ZERO SWAP
+function zeroSwap() {
+
+	echo
+
+#	for SWAP in $(sudo swapon -va 2>&1 | awk -F: '{print $2}' | sed 's/ \+//g') ; do
+	for SWAP in $(sudo swapon -s | awk '/^\/dev/ {print $1}') ; do
+
+		if [ ${SWAP} ] ; then
+			echo -e "${B}${LB}Zeroing swap on ${SWAP}${N}\\v"
+			sudo swapoff ${SWAP}
+			sudo dd if=/dev/zero of=${SWAP} bs=1M 2>/dev/null
+			sudo mkswap -L swap ${SWAP}
+			sudo swapon ${SWAP}
+		fi
+	done
+}
+###########################
+
+###########################
 # ZERO MOUNTS
 function zeroMounts() {
 
@@ -99,6 +119,8 @@ function cleanArch() {
 
 	MOUNTS="${HOME}"
 
+	zeroSwap
+
 	zeroMounts
 }
 ###########################
@@ -119,6 +141,8 @@ function cleanGentoo() {
 	cleanCaches
 
 	MOUNTS="/ /usr/local"
+
+	zeroSwap
 
 	zeroMounts
 }
@@ -143,6 +167,8 @@ function cleanUbuntu() {
 	cleanCaches
 
 	MOUNTS="/"
+
+	zeroSwap
 
 	zeroMounts
 }
