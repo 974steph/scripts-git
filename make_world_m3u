@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function DoHerem3u() {
 	ALBUM_LIST="/tmp/m3uMaker_albumlist"

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl -w
 #
 # Usage: $prog > ~/.magick/type.xml
 #        $prog [-d] font1.ttf font2.ttf ... > type.xml

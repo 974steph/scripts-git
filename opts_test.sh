@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/usr/bin/env bash -e
 
 function HELP {
   echo "usage: ${BASH_BIN} -e <ENV> -s <service> -v <main_version> -p <pod> -r <region> -m <method>"
