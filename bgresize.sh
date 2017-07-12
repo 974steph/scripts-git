@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 
 # ORDER="VBOX1 VBOX0 VBOX2"

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # this script updates the dynamic ip on http://freedns.afraid.org/ using curl
 # check http://freedns.afraid.org/api/ and as weapon ASCII for the phrase in UPDATE_URL
 

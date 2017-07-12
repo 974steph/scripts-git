@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 #curl -sL "http://www.yourweatherservice.com/weather/cloudcroft/united-states/usnm0069" | awk '/left_column/,/advertising_content/' | tidy -b -wrap 1000 -q -ascii --tidy-mark false --show-warnings false | grep "forecast_summary_table_.*_column"
 

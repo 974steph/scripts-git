@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 if [ ! $(whoami) == "root" ] ; then
 	echo -e "\\vYou are not root.\\v"

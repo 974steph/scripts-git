@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 source $HOME/Sources/scripts-git/secret_stuff.sh
 

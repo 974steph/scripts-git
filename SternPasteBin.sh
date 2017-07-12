@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 URL_PB="http://pastebin.com/raw.php?i=tQjbSGrD"
 
