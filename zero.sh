@@ -76,10 +76,13 @@ function zeroSwap() {
 	for SWAP in $(sudo swapon -s | awk '/^\/dev/ {print $1}') ; do
 
 		if [ ${SWAP} ] ; then
+
+			eval $(sudo blkid ${SWAP} | cut -d: -f2-)
+
 			echo -e "${B}${LB}Zeroing swap on ${SWAP}${N}\\v"
 			sudo swapoff ${SWAP}
 			sudo dd if=/dev/zero of=${SWAP} bs=1M 2>/dev/null
-			sudo mkswap -L swap ${SWAP}
+			sudo mkswap -L swap -U ${UUID} ${SWAP}
 			sudo swapon ${SWAP}
 		fi
 	done
