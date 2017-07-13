@@ -42,7 +42,7 @@ rsync --exclude .bash_sessions -aqi ${HOME}/.bash* "${TANK}/BASH/"
 #echo -e "\\n${LB}--- OUT ---${N}"
 
 echo "${B}Google${N}"
-rsync --exclude .DS_Store --exclude 'Icon*' --delete -ai ${HOME}/Google\ Drive palermo@${HOST}:${THERE}/
+rsync --exclude .DS_Store --exclude 'Icon*' --exclude 'NoSync' --delete -ai ${HOME}/Google\ Drive palermo@${HOST}:${THERE}/
 
 echo "${B}Git${N}"
 rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${HOME}/GIT/broom-closet palermo@${HOST}:${THERE}/
