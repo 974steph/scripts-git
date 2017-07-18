@@ -3,12 +3,13 @@
 
 #	tradeskill-master tradeskillmaster_accounting tradeskillmaster_apphelper tradeskillmaster_auctioning tradeskillmaster_shopping tradeskillmaster_wowuction
 #	master-plan npcscan npcscan-overlay overachiever silver-dragon
+# herebedragons server-hop archy advancedinterfaceoptions handynotes_azerothstoptunes
 
 ######################################################
 # USE THIS STUFF
-CURSE_PLUGINS="advancedinterfaceoptions archy askmrrobot auctionator auctioneer altoholic deadly-boss-mods \
-	dejacharacterstats farmhud gathermate2 gathermate2_data handynotes handynotes_azerothstoptunes \
-	handynotes_legionrarestreasures herebedragons pawn postal scrap scrap-cleaner server-hop skada tomtom world-quest-tracker"
+CURSE_PLUGINS="askmrrobot auctionator auctioneer altoholic deadly-boss-mods \
+	dejacharacterstats farmhud gathermate2 gathermate2_data handynotes \
+	handynotes_legionrarestreasures pawn postal scrap scrap-cleaner skada tomtom world-quest-tracker"
 
 ADDON_DIR="/WoW_2014_11_28/AddOns"
 
