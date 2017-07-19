@@ -18,9 +18,9 @@ else
 fi
 
 VDIDIR=$(VBoxManage list systemproperties | grep "Default machine folder:" | cut -d : -f2- | ${SED} 's/^[\ \t]\+//g')
-DIRSIZE=$(du -hs "${VDIDIR}" | awk '{print $1}')
+DIRSIZE_BEFORE=$(du -hs "${VDIDIR}" | awk '{print $1}')
 
-echo -e "\\v${B}${VDIDIR}: ${DIRSIZE}${N}\\v"
+echo -e "\\v${B}${VDIDIR}: ${DIRSIZE_BEFORE}${N}\\v"
 
 for HD in $(VBoxManage list hdds | egrep "^UUID|^Location|^State" | gsed 's/: \+/=/') ; do
 
@@ -51,12 +51,20 @@ for HD in $(VBoxManage list hdds | egrep "^UUID|^Location|^State" | gsed 's/: \+
 		if [ "${State}" == "created" ] ; then
 			echo "${LB}$(basename ${Location})${N} - ${UUID}"
 
-			echo "Size before compact: $(du -h "${Location}" | awk '{print $1}')"
+			SIZE_BEFORE=$(du -h "${Location}" | awk '{print $1}')
+			echo "Size before compact: ${SIZE_BEFORE}"
 
 			VBoxManage modifyhd --compact "${UUID}"
 
-			echo "Size after compact: $(du -h "${Location}" | awk '{print $1}')"
+			SIZE_AFTER=$(du -h "${Location}" | awk '{print $1}')
 
+			if [ "$(echo "$(echo ${SIZE_BEFORE} | sed 's/[a-zA-Z]//') > $(echo ${SIZE_AFTER} | sed 's/[a-zA-Z]//')" | bc)" -eq 1 ] ; then
+				SIZE_FREED=$(echo "$(echo ${SIZE_BEFORE} | sed 's/[a-zA-Z]//') - $(echo ${SIZE_AFTER} | sed 's/[a-zA-Z]//')" | bc)
+
+				echo "Size after compact: ${SIZE_AFTER} (${SIZE_FREED}G freed)"
+			else
+				echo "Size after compact: ${SIZE_AFTER}"
+			fi
 		else
 			echo "${LB}$(basename ${Location})${N} - ${UUID}"
 			echo "Size: $(du -h "${Location}" | awk '{print $1}')"
@@ -73,7 +81,13 @@ for HD in $(VBoxManage list hdds | egrep "^UUID|^Location|^State" | gsed 's/: \+
 	fi
 done
 
-DIRSIZE=$(du -hs "${VDIDIR}" | awk '{print $1}')
-echo -e "${B}${VDIDIR}: ${DIRSIZE}${N}\\v"
+DIRSIZE_AFTER=$(du -hs "${VDIDIR}" | awk '{print $1}')
+
+if [ $(echo "$(echo ${DIRSIZE_BEFORE} | sed 's/[a-zA-Z]//') > $(echo ${DIRSIZE_AFTER} | sed 's/[a-zA-Z]//')" | bc) -eq 1 ] ; then
+	DIRSIZE_FREED=$(echo "$(echo ${DIRSIZE_BEFORE} | sed 's/[a-zA-Z]//') - $(echo ${DIRSIZE_AFTER} | sed 's/[a-zA-Z]//')" | bc)
+	echo -e "${B}${VDIDIR}: ${DIRSIZE_AFTER} (${DIRSIZE_FREED}G freed)${N}\\v"
+else
+	echo -e "${B}${VDIDIR}: ${DIRSIZE_AFTER}${N}\\v"
+fi
 
 IFS=${SAVEIFS}
