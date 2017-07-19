@@ -4,3 +4,4 @@ secret_stuff.sh
 secret_stuff.php
 *.pyc
 *.kate-swp
+.DS_Store
