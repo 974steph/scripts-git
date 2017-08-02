@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+
+function dumpHelp() {
+	echo "$(basename $0) [port] [on/off]"
+	exit 1
+}
+
+function feedback() {
+
+	case $3 in
+		0)	echo "port $1 turned $2";;
+		1) 	echo "port $1 turned $2 FAILED";;
+		*)	echo "dunno";;
+	esac
+
+	exit $3
+}
+
+
+[ $# -ne 2 ] && dumpHelp
+
+PORT=$1
+VERB=$2
+
+case ${VERB} in
+	on)	echo "enabling port ${PORT}"
+		upnpc -a 192.168.11.241 ${PORT} ${PORT} tcp > /dev/null
+		TRAP=$?
+		feedback ${PORT} ${VERB} ${TRAP}
+		;;
+	off)	echo "disabling port ${PORT}"
+		upnpc -d ${PORT} tcp > /dev/null
+		TRAP=$?
+		feedback ${PORT} ${VERB} ${TRAP}
+		;;
+	*)	dumpHelp
+		;;
+esac
