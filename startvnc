@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 
 upnpc -a 192.168.11.241 5900 5900 tcp
