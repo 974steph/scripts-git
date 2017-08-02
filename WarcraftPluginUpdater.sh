@@ -325,16 +325,25 @@ function GPDawnbringer() {
 
 	GP_US_PAGE=$(curl -Ls "${GP_URL}" | grep href.*GoingPrice_US)
 
-	GP_DB_URL="${GP_URL}/$(echo "${GP_US_PAGE}" | grep GoingPrice_US_Dawnbringer.*zip | awk -F\" '{print $4}' | sed 's/\/download\///')"
+	if [ "${GP_US_PAGE}" ] ; then
 
-	GP_DB_EPOCH=$(basename "${GP_DB_URL}" | awk -F. '{print $3}')
-	GP_DB_PRETTY=$(date -d @${GP_DB_EPOCH} "+%Y-%m-%d %r")
+		GP_DB_URL="${GP_URL}/$(echo "${GP_US_PAGE}" | grep GoingPrice_US_Dawnbringer.*zip | awk -F\" '{print $4}' | sed 's/\/download\///')"
 
-	OUTPUT+="${PREFIX}\"GoingPrice_US_Dawnbringer\"\\n"
-	OUTPUT+="${PREFIX}Update Time: ${GP_DB_PRETTY}\\n"
+		GP_DB_EPOCH=$(basename "${GP_DB_URL}" | awk -F. '{print $3}')
+		GP_DB_PRETTY=$(date -d @${GP_DB_EPOCH} "+%Y-%m-%d %r")
 
-	Freshness ${GP_DB_EPOCH} GoingPrice_Dawnbringer "${GP_DB_URL}" "${GP_DB_EPOCH}"
+		OUTPUT+="${PREFIX}\"GoingPrice_US_Dawnbringer\"\\n"
+		OUTPUT+="${PREFIX}Update Time: ${GP_DB_PRETTY}\\n"
 
+		if [ "${GP_DB_EPOCH}" -a "${GP_DB_URL}" ] ; then
+
+			Freshness ${GP_DB_EPOCH} GoingPrice_Dawnbringer "${GP_DB_URL}" "${GP_DB_EPOCH}"
+		else
+			[ ${DEBUG} ] && echo "${PREFIX} Missing? GP_DB_EPOCH: \"${GP_DB_EPOCH}\" || GP_DB_URL: \"${GP_DB_URL}\""
+		fi
+	else
+		[ ${DEBUG} ] && echo "${PREFIX} Missing GP_US_PAGE: \"${GP_US_PAGE}\""
+	fi
 
 	if [ "${OUTPUT}" ] ; then
 
