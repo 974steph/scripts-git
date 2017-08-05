@@ -28,6 +28,8 @@ FETCH_COUNTER=0
 FETCH_LIMIT=5
 
 UPDATE_LIST="${ADDON_DIR}/plugin_updates.txt"
+
+UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36"
 ######################################################
 
 
@@ -48,7 +50,7 @@ function GetPlugin() {
 	[ ${DEBUG} ] && PREFIX="GetPlugin - "
 
 	PLUGIN_FILE=$(basename "${URL}")
-	PLUGIN_SERVER_SIZE=$(curl -LIs --head "${URL}" | grep Content-Length | awk '{print $2}' | tail -n1 | tr -d "\r\n")
+	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -LIs --head "${URL}" | grep Content-Length | awk '{print $2}' | tail -n1 | tr -d "\r\n")
 	wget -q "${URL}" -O "${ADDON_DIR}/${PLUGIN_FILE}"
 
 	PLUGIN_LOCAL_SIZE=$(du -b "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $1}')
@@ -177,14 +179,14 @@ function WoWPro() {
 
 	WOWPRO_INFO_URL="http://www.wow-pro.com"
 
-	CURRENT_VERSION=$(curl -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | grep Version | awk '{print $3}')
+	CURRENT_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | grep Version | awk '{print $3}')
 
 # 	CURRENT_DISK_VERSION=$(grep Version ${ADDON_DIR}/WoWPro/WowPro.toc | awk '{print $3}')
 
 	LINK="https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip"
 
-#	WOWPRO_EPOCH=$(date -d "$(curl -sL --head https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
-	WOWPRO_EPOCH=$(date -d "$(curl -sL --head ${LINK} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
+#	WOWPRO_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
+	WOWPRO_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${LINK} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
 
 #	if [ ${DEBUG} ] ; then
 #		if [ ${NOTDUMB} ] ; then
@@ -228,9 +230,9 @@ function GetPluginPage() {
 
 	[ ${DEBUG} ] && PREFIX="GetPluginPage - "
 
-	PLUGIN_PAGE_RAW=$(curl -Ls "${PLUGIN_INFO_URL}")
+	PLUGIN_PAGE_RAW=$(curl -A "${UA}" -Ls "${PLUGIN_INFO_URL}")
 
-#	PLUGIN_PAGE=$(curl -Ls "${PLUGIN_INFO_URL}" | awk '/details-list/,/newest-file/')
+#	PLUGIN_PAGE=$(curl -A "${UA}" -Ls "${PLUGIN_INFO_URL}" | awk '/details-list/,/newest-file/')
 	PLUGIN_PAGE=$(echo "${PLUGIN_PAGE_RAW}" | awk '/details-list/,/newest-file/')
 
 	if [ ! "${PLUGIN_PAGE}" ] ; then
@@ -275,7 +277,7 @@ function Plugins() {
 		PLUGIN_PRETTY=$(date -d @${PLUGIN_EPOCH} "+%Y-%m-%d %r")
 		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE}" | grep newest-file | sed "s/.* \(.*\)<.*/\1/g")
 		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/")
-		PLUGIN_URL=$(curl -Ls ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
+		PLUGIN_URL=$(curl -A "${UA}" -Ls ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
 
 		if [ ${DEBUG} ] ; then
 			if [ ${NOTDUMB} ] ; then
@@ -321,15 +323,19 @@ function GPDawnbringer() {
 
 	[ ${DEBUG} ] && PREFIX="GPDawnbringer - "
 
-	GP_URL="http://goingpriceaddon.com/download"
+#	curl -A "${UA}" -sL "http://goingpriceaddon.com/client/json.php?region=us?locale=en_US"
 
-	GP_US_PAGE=$(curl -Ls "${GP_URL}" | grep href.*GoingPrice_US)
+#	GP_URL="http://goingpriceaddon.com/download"
 
-	if [ "${GP_US_PAGE}" ] ; then
+#	GP_US_PAGE=$(curl -A "${UA}" -Ls "${GP_URL}" | grep href.*GoingPrice_US)
 
-		GP_DB_URL="${GP_URL}/$(echo "${GP_US_PAGE}" | grep GoingPrice_US_Dawnbringer.*zip | awk -F\" '{print $4}' | sed 's/\/download\///')"
+#	if [ "${GP_US_PAGE}" ] ; then
+
+#		GP_DB_URL="${GP_URL}/$(echo "${GP_US_PAGE}" | grep GoingPrice_US_Dawnbringer.*zip | awk -F\" '{print $4}' | sed 's/\/download\///')"
+		GP_DB_URL="http://goingpriceaddon.com/download/us.battle.net/symb/GoingPrice_US_Dawnbringer.zip"
 
 		GP_DB_EPOCH=$(basename "${GP_DB_URL}" | awk -F. '{print $3}')
+		GP_DB_EPOCH=$(date -d "$(curl -A "${UA}" --head -sL ${GP_DB_URL} | grep Last-Modified | cut -d ' ' -f2-)" +%s)
 		GP_DB_PRETTY=$(date -d @${GP_DB_EPOCH} "+%Y-%m-%d %r")
 
 		OUTPUT+="${PREFIX}\"GoingPrice_US_Dawnbringer\"\\n"
@@ -341,9 +347,9 @@ function GPDawnbringer() {
 		else
 			[ ${DEBUG} ] && echo "${PREFIX} Missing? GP_DB_EPOCH: \"${GP_DB_EPOCH}\" || GP_DB_URL: \"${GP_DB_URL}\""
 		fi
-	else
-		[ ${DEBUG} ] && echo "${PREFIX} Missing GP_US_PAGE: \"${GP_US_PAGE}\""
-	fi
+#	else
+#		[ ${DEBUG} ] && echo "${PREFIX} Missing GP_US_PAGE: \"${GP_US_PAGE}\""
+#	fi
 
 	if [ "${OUTPUT}" ] ; then
 
@@ -374,7 +380,7 @@ function WoWAuctionWGet() {
 	[ ! ${DEBUG} ] && Q="-q"
 
 
-	wget ${Q} -O "${WOWUCTION_LUA_TEMP}" "${WOWUCTION_URL}/Tools/GetTSMDataStatic?dl=true&token=xe7bW9nG3wqdDVYJrrfVcA2"
+	wget --user-agent="${UA}" ${Q} -O "${WOWUCTION_LUA_TEMP}" "${WOWUCTION_URL}/Tools/GetTSMDataStatic?dl=true&token=xe7bW9nG3wqdDVYJrrfVcA2"
 
 	TRAP=$?
 }
@@ -391,7 +397,7 @@ function WoWAuction() {
 
 	[ -f ${WOWUCTION_LUA_TEMP} ] && rm -f ${WOWUCTION_LUA_TEMP}
 
-	WOWUCTION_MINS_AGO="$(curl -Ls "${WOWUCTION_URL}" | grep "AH scanned.*ago" | sed "s/.*scanned \(.*\) ago/\1/" | tr -d \\r)"
+	WOWUCTION_MINS_AGO="$(curl -A "${UA}" -Ls "${WOWUCTION_URL}" | grep "AH scanned.*ago" | sed "s/.*scanned \(.*\) ago/\1/" | tr -d \\r)"
 	WOWUCTION_EPOCH=$(date -d "$(date -d @${NOW}) - ${WOWUCTION_MINS_AGO}" +%s)
 
 	OUTPUT+="${PREFIX}WOWUCTION_EPOCH:    ${WOWUCTION_EPOCH}\\n"
