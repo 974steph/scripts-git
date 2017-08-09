@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 
 
-#	tradeskill-master tradeskillmaster_accounting tradeskillmaster_apphelper tradeskillmaster_auctioning tradeskillmaster_shopping tradeskillmaster_wowuction
-#	master-plan npcscan npcscan-overlay overachiever silver-dragon
-# herebedragons server-hop archy advancedinterfaceoptions handynotes_azerothstoptunes
-
 ######################################################
 # USE THIS STUFF
 CURSE_PLUGINS="askmrrobot auctionator auctioneer altoholic deadly-boss-mods \
@@ -39,11 +35,6 @@ function GetPlugin() {
 #	2: NAME
 #	3: URL
 #	4: VERSION
-
-#	echo "EPOCH: \"$1\""
-#	echo "NAME: \"$2\""
-#	echo "URL: \"$3\""
-#	echo "VERSION: \"$4\""
 
 	URL="$3"
 
@@ -115,11 +106,8 @@ function UpdateStamp() {
 
 	echo "$2" > "${STAMP_FILE}"
 	unzip -l "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $4}' | egrep -v "^$|Name|-+" >> "${STAMP_FILE}"
-#	TOP_DIR=$(unzip -l "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $4}' | egrep -v "^$|Name|-+" | grep "/$" | sort | head -n1)
-#	echo "unzip -l \"${ADDON_DIR}/${PLUGIN_FILE}\" | awk '{print $4}' | egrep -v \"^$|Name|-+\" | grep \"/$\" | sort | head -n1"
 
 	[ ${DEBUG} ] && echo "${PREFIX}${STAMP_FILE} || ${PLUGIN_FILE}"
-#	[ ${DEBUG} ] && echo "${PREFIX}${TOP_DIR}"
 
 	touch -t "${TOUCH_TIME}" "${STAMP_FILE}"
 
@@ -179,24 +167,12 @@ function WoWPro() {
 
 	WOWPRO_INFO_URL="http://www.wow-pro.com"
 
-	CURRENT_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | grep Version | awk '{print $3}')
+	CURRENT_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | awk '/Version/ {print $3}')
 
-# 	CURRENT_DISK_VERSION=$(grep Version ${ADDON_DIR}/WoWPro/WowPro.toc | awk '{print $3}')
-
-	LINK="https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip"
+	URL="https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip"
 
 #	WOWPRO_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
-	WOWPRO_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${LINK} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
-
-#	if [ ${DEBUG} ] ; then
-#		if [ ${NOTDUMB} ] ; then
-#			echo "${PREFIX}${BOLD}${BLUE}${PLUGIN}${RESET}"
-#		else
-#			echo "${PREFIX}${PLUGIN}"
-#		fi
-#		echo "${PREFIX}PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
-#	fi
-
+	WOWPRO_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${URL} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
 
 	if [ ${DEBUG} ] ; then
 		if [ ${NOTDUMB} ] ; then
@@ -211,7 +187,7 @@ function WoWPro() {
 	OUTPUT+="${PREFIX}Current Version: ${CURRENT_VERSION}\\n"
 	OUTPUT+="${PREFIX}${WOWPRO_INFO_URL}/blog\\n"
 
-	Freshness ${WOWPRO_EPOCH} wowpro "${LINK}" "${CURRENT_VERSION}"
+	Freshness ${WOWPRO_EPOCH} wowpro "${URL}" "${CURRENT_VERSION}"
 
 	if [ "${OUTPUT}" ] ; then
 		if [ ${NOTDUMB} ] ; then
@@ -285,8 +261,6 @@ function Plugins() {
 			else
 				echo "${PLUGIN_TITLE}"
 			fi
-#		else
-#			echo "${PLUGIN_TITLE}"
 		fi
 
 		unset PLUGIN_PAGE
@@ -325,13 +299,6 @@ function GPDawnbringer() {
 
 #	curl -A "${UA}" -sL "http://goingpriceaddon.com/client/json.php?region=us?locale=en_US"
 
-#	GP_URL="http://goingpriceaddon.com/download"
-
-#	GP_US_PAGE=$(curl -A "${UA}" -Ls "${GP_URL}" | grep href.*GoingPrice_US)
-
-#	if [ "${GP_US_PAGE}" ] ; then
-
-#		GP_DB_URL="${GP_URL}/$(echo "${GP_US_PAGE}" | grep GoingPrice_US_Dawnbringer.*zip | awk -F\" '{print $4}' | sed 's/\/download\///')"
 		GP_DB_URL="http://goingpriceaddon.com/download/us.battle.net/symb/GoingPrice_US_Dawnbringer.zip"
 
 		GP_DB_EPOCH=$(basename "${GP_DB_URL}" | awk -F. '{print $3}')
@@ -347,13 +314,8 @@ function GPDawnbringer() {
 		else
 			[ ${DEBUG} ] && echo "${PREFIX} Missing? GP_DB_EPOCH: \"${GP_DB_EPOCH}\" || GP_DB_URL: \"${GP_DB_URL}\""
 		fi
-#	else
-#		[ ${DEBUG} ] && echo "${PREFIX} Missing GP_US_PAGE: \"${GP_US_PAGE}\""
-#	fi
 
 	if [ "${OUTPUT}" ] ; then
-
-#		OUTPUT+="TERM: $TERM"
 
 		if [ ${DEBUG} ] ; then
 			if [ ${NOTDUMB} ] ; then
@@ -367,7 +329,6 @@ function GPDawnbringer() {
 
 #		echo -e ${OUTPUT}
 		[ ${DEBUG} ] && echo -e ${OUTPUT}
-# 		[ ${FORCE} ] && echo -e ${OUTPUT}
 	fi
 
 	unset OUTPUT
@@ -502,10 +463,10 @@ function DoIt() {
 #	WoWAuction
 	GPDawnbringer
 
-	if [ ${UPDATES} ] ; then
+#	if [ ${UPDATES} ] ; then
 #		UpdateGit
-		exit 1
-	fi
+#		exit 1
+#	fi
 }
 
 if [ ! "$TERM" == "dumb" ] ; then
@@ -527,12 +488,6 @@ case $1 in
 		DoIt
 		exit
 		;;
-# 	wp)
-# 		DEBUG="yes"
-# 		FORCE="yes"
-# 		WoWPro
-# 		exit
-# 		;;
 # 	wa)
 # 		DEBUG="yes"
 # 		WoWAuction
