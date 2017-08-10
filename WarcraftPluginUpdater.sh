@@ -46,7 +46,7 @@ function outputHead() {
 	[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
 	OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
 	OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
-	OUTPUT+="${PREFIX}${PLUGIN_FILE_URL}\\n"
+#	OUTPUT+="${PREFIX}${PLUGIN_FILE_URL}\\n"
 	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}\\n"
 }
 
@@ -288,6 +288,7 @@ function GPDawnbringer() {
 
 	PLUGIN="GoingPrice_US_Dawnbringer"
 	PLUGIN_INFO_URL="http://goingpriceaddon.com/news"
+	PLUGIN_TITLE="${PLUGIN}"
 
 	PLUGIN_FILE_URL="http://goingpriceaddon.com/download/us.battle.net/symb/GoingPrice_US_Dawnbringer.zip"
 	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" --head -sL ${PLUGIN_FILE_URL} | grep Last-Modified | cut -d ' ' -f2-)" +%s)
@@ -297,6 +298,8 @@ function GPDawnbringer() {
 	outputHead
 
 	Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${PLUGIN_DATE_EPOCH}"
+
+	unset OUTPUT
 
 	outputTail
 }
@@ -312,6 +315,7 @@ function WoWPro() {
 
 	PLUGIN="wowpro"
 	PLUGIN_INFO_URL="http://www.wow-pro.com/blog"
+	PLUGIN_TITLE="${PLUGIN}"
 
 	PLUGIN_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | awk '/Version/ {print $3}')
 	PLUGIN_FILE_URL="https://s3.amazonaws.com/WoW-Pro/WoWPro+v${PLUGIN_VERSION}.zip"
