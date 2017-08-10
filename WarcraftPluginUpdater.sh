@@ -42,11 +42,10 @@ function outputHead() {
 		echo "${PREFIX}PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
 	fi
 
-	# [ ! ${DEBUG} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
-	# [ ${PLUGIN_TITLE} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
-	# OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
-	# OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
-	# OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}#t1:changes\\n"
+	[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
+	OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
+	OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
+	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}\\n"
 }
 
 
@@ -256,9 +255,8 @@ function Plugins() {
 
 	for PLUGIN in ${CURSE_PLUGINS} ; do
 
-		PLUGIN_INFO_URL="http://www.curse.com/addons/wow/${PLUGIN}"
+		PLUGIN_INFO_URL="http://www.curse.com/addons/wow/${PLUGIN}#t1:changes"
 
-		outputHead
 
 		GetPluginPage
 
@@ -270,11 +268,13 @@ function Plugins() {
 
 		unset PLUGIN_PAGE
 
-#		[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}\"${PLUGIN}\"\\n"
-		[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
-		OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
-		OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
-		OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}#t1:changes\\n"
+		outputHead
+
+# #		[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}\"${PLUGIN}\"\\n"
+# 		[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
+# 		OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
+# 		OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
+# 		OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}\\n"
 
 		Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${PLUGIN_VERSION}"
 
@@ -299,16 +299,18 @@ function GPDawnbringer() {
 	PLUGIN="GoingPrice_US_Dawnbringer"
 	PLUGIN_INFO_URL="http://goingpriceaddon.com/news"
 
-	outputHead
-
 	PLUGIN_FILE_URL="http://goingpriceaddon.com/download/us.battle.net/symb/GoingPrice_US_Dawnbringer.zip"
 
 #	PLUGIN_DATE_EPOCH=$(basename "${GP_DB_URL}" | awk -F. '{print $3}')
 	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" --head -sL ${PLUGIN_FILE_URL} | grep Last-Modified | cut -d ' ' -f2-)" +%s)
 	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %r")
 
-	OUTPUT+="${PREFIX}\"${PLUGIN}\"\\n"
-	OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
+	PLUGIN_VERSION=${PLUGIN_DATE_EPOCH}
+
+	outputHead
+
+	# OUTPUT+="${PREFIX}\"${PLUGIN}\"\\n"
+	# OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
 
 	Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${PLUGIN_DATE_EPOCH}"
 
@@ -325,9 +327,7 @@ function WoWPro() {
 	[ ${DEBUG} ] && PREFIX="WoWPro - "
 
 	PLUGIN="wowpro"
-	PLUGIN_INFO_URL="http://www.wow-pro.com"
-
-	outputHead
+	PLUGIN_INFO_URL="http://www.wow-pro.com/blog"
 
 	CURRENT_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | awk '/Version/ {print $3}')
 
@@ -337,9 +337,11 @@ function WoWPro() {
 	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${PLUGIN_FILE_URL} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
 	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %r")
 
-	OUTPUT+="\\n${PREFIX}Update Time: $(date -d @${PLUGIN_DATE_EPOCH})\\n"
-	OUTPUT+="${PREFIX}Current Version: ${CURRENT_VERSION}\\n"
-	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}/blog\\n"
+	# OUTPUT+="\\n${PREFIX}Update Time: $(date -d @${PLUGIN_DATE_EPOCH})\\n"
+	# OUTPUT+="${PREFIX}Current Version: ${CURRENT_VERSION}\\n"
+	# OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}\\n"
+
+	outputHead
 
 	Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${CURRENT_VERSION}"
 
