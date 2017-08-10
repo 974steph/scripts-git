@@ -66,7 +66,7 @@ function outputTail() {
 			OUTPUT+="========="
 		fi
 
-		echo -e ${OUTPUT}
+		[ ! ${DEBUG} ] && echo -e ${OUTPUT}
 		[ ${DEBUG} ] && echo -e ${OUTPUT}
 	fi
 
@@ -121,7 +121,8 @@ function GetPlugin() {
 	[ ${DEBUG} ] && PREFIX="GetPlugin - "
 
 	PLUGIN_FILE=$(basename "${URL}")
-	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -LIs --head "${URL}" | grep Content-Length | awk '{print $2}' | tail -n1 | tr -d "\r\n")
+	# PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | grep Content-Length | awk '{print $2}' | tail -n1 | tr -d "\r\n")
+	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/Content-Length/ {print $2}'
 	wget -q "${URL}" -O "${ADDON_DIR}/${PLUGIN_FILE}"
 
 	PLUGIN_LOCAL_SIZE=$(du -b "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $1}')
