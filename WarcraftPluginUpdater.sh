@@ -22,6 +22,7 @@ MAILFILE="/tmp/PluginUpdater_${TODAY}.html"
 
 FETCH_COUNTER=0
 FETCH_LIMIT=5
+LAST_TOUCH=0
 
 UPDATE_LIST="${ADDON_DIR}/plugin_updates.txt"
 
@@ -75,6 +76,37 @@ function outputTail() {
 
 
 ###########################
+# UPDATE STAMP
+function UpdateStamp() {
+
+#	1: EPOCH
+#	2: VERSION
+#	3: PLUGIN_FILE
+
+	TOUCH_TIME=$(date -d @${1} +%Y%m%d%H%M.%S)
+	if [ ${DEBUG} ] ; then
+		PREFIX="UpdateStamp - "
+		echo "${PREFIX}TOUCH_TIME: ${TOUCH_TIME} || NOW: ${NOW}"
+		ls -l "${ADDON_DIR}/${PLUGIN_FILE}"
+	fi
+
+	echo "$2" > "${STAMP_FILE}"
+	unzip -l "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $4}' | egrep -v "^$|Name|-+" >> "${STAMP_FILE}"
+
+	[ ${DEBUG} ] && echo "${PREFIX}${STAMP_FILE} || ${PLUGIN_FILE}"
+
+	touch -t "${TOUCH_TIME}" "${STAMP_FILE}"
+
+	for TOP_DIR in $(awk -F/ '/\// {print $1}' "${STAMP_FILE}" | sort -u) ; do
+		[ ${DEBUG} ] && echo "${PREFIX}touch -t \"${TOUCH_TIME}\" \"${TOP_DIR}\""
+		touch -t "${TOUCH_TIME}" "${TOP_DIR}"
+	done
+}
+###########################
+
+
+
+###########################
 # GET PLUGIN
 function GetPlugin() {
 
@@ -112,8 +144,6 @@ function GetPlugin() {
 		if [ ${TRAP} -eq 0 ] ; then
 			OUTPUT+="${PREFIX}UNZIPPED: $(unzip -l "${PLUGIN_FILE}" | tail -n1 | sed 's/\ \+/ /g' | cut -d' ' -f3-)\\n"
 			unset TRAP
-
-#			UpdateStamp $1 $2 $3 $4
 			UpdateStamp $1 $4 "${PLUGIN_FILE}"
 		else
 			OUTPUT+="BAD UNZIP: ${TRAP}"
@@ -132,37 +162,6 @@ function GetPlugin() {
 
 
 ###########################
-# UPDATE STAMP
-function UpdateStamp() {
-
-#	1: EPOCH
-#	2: VERSION
-#	3: PLUGIN_FILE
-
-	TOUCH_TIME=$(date -d @${1} +%Y%m%d%H%M.%S)
-	if [ ${DEBUG} ] ; then
-		PREFIX="UpdateStamp - "
-		echo "${PREFIX}TOUCH_TIME: ${TOUCH_TIME} || NOW: ${NOW}"
-		ls -l "${ADDON_DIR}/${PLUGIN_FILE}"
-	fi
-
-	echo "$2" > "${STAMP_FILE}"
-	unzip -l "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $4}' | egrep -v "^$|Name|-+" >> "${STAMP_FILE}"
-
-	[ ${DEBUG} ] && echo "${PREFIX}${STAMP_FILE} || ${PLUGIN_FILE}"
-
-	touch -t "${TOUCH_TIME}" "${STAMP_FILE}"
-
-	for TOP_DIR in $(awk -F/ '/\// {print $1}' "${STAMP_FILE}" | sort -u) ; do
-		[ ${DEBUG} ] && echo "${PREFIX}touch -t \"${TOUCH_TIME}\" \"${TOP_DIR}\""
-		touch -t "${TOUCH_TIME}" "${TOP_DIR}"
-	done
-}
-###########################
-
-
-
-###########################
 # FRESHNESS
 function Freshness() {
 
@@ -171,6 +170,8 @@ function Freshness() {
 #	3: URL
 #	4: VERSION
 
+	[ ${DEBUG} ] && PREFIX="Freshness - "
+
 	ARG_COUNT=$#
 
 	if [ ${ARG_COUNT} -eq 4 ] ; then
@@ -178,13 +179,7 @@ function Freshness() {
 		NAME_LOWER=$(echo $2 | tr [:upper:] [:lower:])
 		STAMP_FILE="${ADDON_DIR}/.${NAME_LOWER}"
 
-		[ ${DEBUG} ] && PREFIX="Freshness - "
-
-		if [ -f ${STAMP_FILE} ] ; then
-			LAST_TOUCH=$(date -r ${STAMP_FILE} +%s)
-		else
-			LAST_TOUCH=0
-		fi
+		[ -f ${STAMP_FILE} ] && LAST_TOUCH=$(date -r ${STAMP_FILE} +%s)
 
 		if [ ${DEBUG} ] ; then
 			echo "${PREFIX}STAMP_FILE: $STAMP_FILE"
@@ -220,9 +215,8 @@ function GetPluginPage() {
 
 	[ ${DEBUG} ] && PREFIX="GetPluginPage - "
 
-	PLUGIN_PAGE_RAW=$(curl -A "${UA}" -Ls "${PLUGIN_INFO_URL}")
+	PLUGIN_PAGE_RAW=$(curl -A "${UA}" -sL "${PLUGIN_INFO_URL}")
 
-#	PLUGIN_PAGE=$(curl -A "${UA}" -Ls "${PLUGIN_INFO_URL}" | awk '/details-list/,/newest-file/')
 	PLUGIN_PAGE=$(echo "${PLUGIN_PAGE_RAW}" | awk '/details-list/,/newest-file/')
 
 	if [ ! "${PLUGIN_PAGE}" ] ; then
@@ -255,7 +249,7 @@ function Plugins() {
 
 	for PLUGIN in ${CURSE_PLUGINS} ; do
 
-		PLUGIN_INFO_URL="http://www.curse.com/addons/wow/${PLUGIN}#t1:changes"
+		PLUGIN_INFO_URL="http://www.curse.com/addons/wow/${PLUGIN}"
 
 
 		GetPluginPage
@@ -264,19 +258,13 @@ function Plugins() {
 		PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %r")
 		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE}" | grep newest-file | sed "s/.* \(.*\)<.*/\1/g")
 		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/")
-		PLUGIN_FILE_URL=$(curl -A "${UA}" -Ls ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
+		PLUGIN_FILE_URL=$(curl -A "${UA}" -sL ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
 
 		unset PLUGIN_PAGE
 
 		outputHead
 
-# #		[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}\"${PLUGIN}\"\\n"
-# 		[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
-# 		OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
-# 		OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
-# 		OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}\\n"
-
-		Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${PLUGIN_VERSION}"
+		Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}#t1:changes" "${PLUGIN_VERSION}"
 
 		outputTail
 
@@ -300,17 +288,11 @@ function GPDawnbringer() {
 	PLUGIN_INFO_URL="http://goingpriceaddon.com/news"
 
 	PLUGIN_FILE_URL="http://goingpriceaddon.com/download/us.battle.net/symb/GoingPrice_US_Dawnbringer.zip"
-
-#	PLUGIN_DATE_EPOCH=$(basename "${GP_DB_URL}" | awk -F. '{print $3}')
 	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" --head -sL ${PLUGIN_FILE_URL} | grep Last-Modified | cut -d ' ' -f2-)" +%s)
 	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %r")
-
 	PLUGIN_VERSION=${PLUGIN_DATE_EPOCH}
 
 	outputHead
-
-	# OUTPUT+="${PREFIX}\"${PLUGIN}\"\\n"
-	# OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
 
 	Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${PLUGIN_DATE_EPOCH}"
 
@@ -329,21 +311,14 @@ function WoWPro() {
 	PLUGIN="wowpro"
 	PLUGIN_INFO_URL="http://www.wow-pro.com/blog"
 
-	CURRENT_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | awk '/Version/ {print $3}')
-
-	PLUGIN_FILE_URL="https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip"
-
-#	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
+	PLUGIN_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | awk '/Version/ {print $3}')
+	PLUGIN_FILE_URL="https://s3.amazonaws.com/WoW-Pro/WoWPro+v${PLUGIN_VERSION}.zip"
 	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${PLUGIN_FILE_URL} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
 	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %r")
 
-	# OUTPUT+="\\n${PREFIX}Update Time: $(date -d @${PLUGIN_DATE_EPOCH})\\n"
-	# OUTPUT+="${PREFIX}Current Version: ${CURRENT_VERSION}\\n"
-	# OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}\\n"
-
 	outputHead
 
-	Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${CURRENT_VERSION}"
+	Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${PLUGIN_VERSION}"
 
 	outputTail
 }
