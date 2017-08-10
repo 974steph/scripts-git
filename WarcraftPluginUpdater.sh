@@ -29,6 +29,47 @@ UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrom
 ######################################################
 
 
+function outputHead() {
+#	${DEBUG} ] && PREFIX="outputHead - "
+	if [ ${DEBUG} ] ; then
+		if [ ${NOTDUMB} ] ; then
+			echo "${PREFIX}${BOLD}${BLUE}${PLUGIN}${RESET}"
+		else
+			echo "${PREFIX}${PLUGIN}"
+		fi
+		echo "${PREFIX}PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
+	fi
+
+	# [ ! ${DEBUG} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
+	# [ ${PLUGIN_TITLE} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
+	# OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
+	# OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
+	# OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}#t1:changes\\n"
+}
+
+
+function outputTail() {
+#	 ${DEBUG} ] && PREFIX="outputTail - "
+
+ 	if [ "${OUTPUT}" ] ; then
+
+		if [ ${DEBUG} ] ; then
+			if [ ${NOTDUMB} ] ; then
+				OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+			else
+				OUTPUT+="========="
+			fi
+		else
+			OUTPUT+="========="
+		fi
+
+		echo -e ${OUTPUT}
+		[ ${DEBUG} ] && echo -e ${OUTPUT}
+	fi
+
+	unset OUTPUT
+}
+
 function GetPlugin() {
 
 #	1: EPOCH
@@ -125,80 +166,44 @@ function Freshness() {
 #	3: URL
 #	4: VERSION
 
-	NAME_LOWER=$(echo $2 | tr [:upper:] [:lower:])
-	STAMP_FILE="${ADDON_DIR}/.${NAME_LOWER}"
+	ARG_COUNT=$#
 
-	[ ${DEBUG} ] && PREFIX="Freshness - "
+	if [ ${ARG_COUNT} -eq 4 ] ; then
 
-	if [ -f ${STAMP_FILE} ] ; then
-		LAST_TOUCH=$(date -r ${STAMP_FILE} +%s)
-	else
-		LAST_TOUCH=0
-	fi
+		NAME_LOWER=$(echo $2 | tr [:upper:] [:lower:])
+		STAMP_FILE="${ADDON_DIR}/.${NAME_LOWER}"
 
-	if [ ${DEBUG} ] ; then
-		echo "${PREFIX}STAMP_FILE: $STAMP_FILE"
-		echo "${PREFIX}LAST_TOUCH: ${LAST_TOUCH} || EPOCH: $1 || NOW: ${NOW}"
-	fi
+		[ ${DEBUG} ] && PREFIX="Freshness - "
 
-	if [ ${FORCE} ] ;  then
-		OUTPUT+="${PREFIX}Forcing update of ${2}\\n"
-		GetPlugin $1 $2 $3 $4
-		UPDATES="yes"
-	elif [ ${1} -gt ${LAST_TOUCH} ] ; then
-		OUTPUT+="${PREFIX}${2} will be updated.\\n"
-#		UPDATES="yes"
-
-		[[ ! ${NAME_LOWER} =~ .*goingprice.* ]] && UPDATES="yes"
-
-		[ ! ${SHOW} ] && GetPlugin $1 $2 $3 $4
-	else
-		OUTPUT+="${PREFIX}${2} is up to date.\\n"
-		[ ! ${DEBUG} ] && unset OUTPUT
-	fi
-}
-
-function WoWPro() {
-
-	###########################
-	# WOW-PRO
-
-	[ ${DEBUG} ] && PREFIX="WoWPro - "
-
-	WOWPRO_INFO_URL="http://www.wow-pro.com"
-
-	CURRENT_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | awk '/Version/ {print $3}')
-
-	URL="https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip"
-
-#	WOWPRO_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
-	WOWPRO_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${URL} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
-
-	if [ ${DEBUG} ] ; then
-		if [ ${NOTDUMB} ] ; then
-			OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+		if [ -f ${STAMP_FILE} ] ; then
+			LAST_TOUCH=$(date -r ${STAMP_FILE} +%s)
 		else
-			OUTPUT+="========="
+			LAST_TOUCH=0
+		fi
+
+		if [ ${DEBUG} ] ; then
+			echo "${PREFIX}STAMP_FILE: $STAMP_FILE"
+			echo "${PREFIX}LAST_TOUCH: ${LAST_TOUCH} || EPOCH: $1 || NOW: ${NOW}"
+		fi
+
+		if [ ${FORCE} ] ;  then
+			OUTPUT+="${PREFIX}Forcing update of ${2}\\n"
+			GetPlugin $1 $2 $3 $4
+			UPDATES="yes"
+		elif [ ${1} -gt ${LAST_TOUCH} ] ; then
+			OUTPUT+="${PREFIX}${2} will be updated.\\n"
+#			UPDATES="yes"
+
+			[[ ! ${NAME_LOWER} =~ .*goingprice.* ]] && UPDATES="yes"
+
+			[ ! ${SHOW} ] && GetPlugin $1 $2 $3 $4
+		else
+			OUTPUT+="${PREFIX}${2} is up to date.\\n"
+			[ ! ${DEBUG} ] && unset OUTPUT
 		fi
 	else
-		OUTPUT+="\"wowpro\"\\n"
+		echo "${PREFIX}Arg count bad: ${ARG_COUNT} || CMD: $*"
 	fi
-	OUTPUT+="\\n${PREFIX}Update Time: $(date -d @${WOWPRO_EPOCH})\\n"
-	OUTPUT+="${PREFIX}Current Version: ${CURRENT_VERSION}\\n"
-	OUTPUT+="${PREFIX}${WOWPRO_INFO_URL}/blog\\n"
-
-	Freshness ${WOWPRO_EPOCH} wowpro "${URL}" "${CURRENT_VERSION}"
-
-	if [ "${OUTPUT}" ] ; then
-		if [ ${NOTDUMB} ] ; then
-			OUTPUT+="${BOLD}${WHITE}=========${RESET}"
-		else
-			OUTPUT+="========="
-		fi
-		echo -e ${OUTPUT}
-	fi
-
-	unset OUTPUT
 }
 
 
@@ -238,55 +243,60 @@ function Plugins() {
 
 		PLUGIN_INFO_URL="http://www.curse.com/addons/wow/${PLUGIN}"
 
-		if [ ${DEBUG} ] ; then
-			if [ ${NOTDUMB} ] ; then
-				echo "${PREFIX}${BOLD}${BLUE}${PLUGIN}${RESET}"
-			else
-				echo "${PREFIX}${PLUGIN}"
-			fi
-			echo "${PREFIX}PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
-		fi
+		# if [ ${DEBUG} ] ; then
+		# 	if [ ${NOTDUMB} ] ; then
+		# 		echo "${PREFIX}${BOLD}${BLUE}${PLUGIN}${RESET}"
+		# 	else
+		# 		echo "${PREFIX}${PLUGIN}"
+		# 	fi
+		# 	echo "${PREFIX}PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
+		# fi
+
+		outputHead
 
 		GetPluginPage
 
-		PLUGIN_EPOCH=$(echo "${PLUGIN_PAGE}" | grep Updated.*epoch | sed -e 's/.*data-epoch="//;s/">.*//')
-		PLUGIN_PRETTY=$(date -d @${PLUGIN_EPOCH} "+%Y-%m-%d %r")
+		PLUGIN_DATE_EPOCH=$(echo "${PLUGIN_PAGE}" | grep Updated.*epoch | sed -e 's/.*data-epoch="//;s/">.*//')
+		PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %r")
 		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE}" | grep newest-file | sed "s/.* \(.*\)<.*/\1/g")
 		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/")
-		PLUGIN_URL=$(curl -A "${UA}" -Ls ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
+		PLUGIN_FILE_URL=$(curl -A "${UA}" -Ls ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
 
-		if [ ${DEBUG} ] ; then
-			if [ ${NOTDUMB} ] ; then
-				echo "${BOLD}${BLUE}${PLUGIN_TITLE}${RESET}"
-			else
-				echo "${PLUGIN_TITLE}"
-			fi
-		fi
+		# if [ ${DEBUG} ] ; then
+		# 	if [ ${NOTDUMB} ] ; then
+		# 		echo "${BOLD}${BLUE}${PLUGIN_TITLE}${RESET}"
+		# 	else
+		# 		echo "${PLUGIN_TITLE}"
+		# 	fi
+		# fi
 
 		unset PLUGIN_PAGE
 
 #		[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}\"${PLUGIN}\"\\n"
 		[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
-		OUTPUT+="${PREFIX}Update Time: ${PLUGIN_PRETTY}\\n"
+		OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
 		OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
 		OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}#t1:changes\\n"
 
-		Freshness ${PLUGIN_EPOCH} ${PLUGIN} "${PLUGIN_URL}" "${PLUGIN_VERSION}"
+		Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${PLUGIN_VERSION}"
 
-		if [ "${OUTPUT}" ] ; then
-			if [ ${DEBUG} ] ; then
-				if [ ${NOTDUMB} ] ; then
-					OUTPUT+="${BOLD}${WHITE}=========${RESET}"
-				else
-					OUTPUT+="========="
-				fi
-			else
-				OUTPUT+="========="
-			fi
-			echo -e "${OUTPUT}"
-		fi
+		outputTail
 
-		unset OUTPUT
+		# if [ "${OUTPUT}" ] ; then
+		# 	if [ ${DEBUG} ] ; then
+		# 		if [ ${NOTDUMB} ] ; then
+		# 			OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+		# 		else
+		# 			OUTPUT+="========="
+		# 		fi
+		# 	else
+		# 		OUTPUT+="========="
+		# 	fi
+		# 	echo -e "${OUTPUT}"
+		# fi
+
+		# unset OUTPUT
+
 		FETCH_COUNTER=0
 	done
 
@@ -299,39 +309,91 @@ function GPDawnbringer() {
 
 #	curl -A "${UA}" -sL "http://goingpriceaddon.com/client/json.php?region=us?locale=en_US"
 
-		GP_DB_URL="http://goingpriceaddon.com/download/us.battle.net/symb/GoingPrice_US_Dawnbringer.zip"
+	PLUGIN="GoingPrice_US_Dawnbringer"
+	PLUGIN_INFO_URL="http://goingpriceaddon.com/news"
 
-		GP_DB_EPOCH=$(basename "${GP_DB_URL}" | awk -F. '{print $3}')
-		GP_DB_EPOCH=$(date -d "$(curl -A "${UA}" --head -sL ${GP_DB_URL} | grep Last-Modified | cut -d ' ' -f2-)" +%s)
-		GP_DB_PRETTY=$(date -d @${GP_DB_EPOCH} "+%Y-%m-%d %r")
+	outputHead
 
-		OUTPUT+="${PREFIX}\"GoingPrice_US_Dawnbringer\"\\n"
-		OUTPUT+="${PREFIX}Update Time: ${GP_DB_PRETTY}\\n"
+	PLUGIN_FILE_URL="http://goingpriceaddon.com/download/us.battle.net/symb/GoingPrice_US_Dawnbringer.zip"
 
-		if [ "${GP_DB_EPOCH}" -a "${GP_DB_URL}" ] ; then
+#	PLUGIN_DATE_EPOCH=$(basename "${GP_DB_URL}" | awk -F. '{print $3}')
+	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" --head -sL ${PLUGIN_FILE_URL} | grep Last-Modified | cut -d ' ' -f2-)" +%s)
+	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %r")
 
-			Freshness ${GP_DB_EPOCH} GoingPrice_Dawnbringer "${GP_DB_URL}" "${GP_DB_EPOCH}"
-		else
-			[ ${DEBUG} ] && echo "${PREFIX} Missing? GP_DB_EPOCH: \"${GP_DB_EPOCH}\" || GP_DB_URL: \"${GP_DB_URL}\""
-		fi
+	OUTPUT+="${PREFIX}\"${PLUGIN}\"\\n"
+	OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
 
-	if [ "${OUTPUT}" ] ; then
+	Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${PLUGIN_DATE_EPOCH}"
 
-		if [ ${DEBUG} ] ; then
-			if [ ${NOTDUMB} ] ; then
-				OUTPUT+="${BOLD}${WHITE}=========${RESET}"
-			else
-				OUTPUT+="========="
-			fi
-		else
-			OUTPUT+="========="
-		fi
+	outputTail
 
-#		echo -e ${OUTPUT}
-		[ ${DEBUG} ] && echo -e ${OUTPUT}
-	fi
+# 	if [ "${OUTPUT}" ] ; then
 
-	unset OUTPUT
+# 		if [ ${DEBUG} ] ; then
+# 			if [ ${NOTDUMB} ] ; then
+# 				OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+# 			else
+# 				OUTPUT+="========="
+# 			fi
+# 		else
+# 			OUTPUT+="========="
+# 		fi
+
+# #		echo -e ${OUTPUT}
+# 		[ ${DEBUG} ] && echo -e ${OUTPUT}
+# 	fi
+
+# 	unset OUTPUT
+}
+
+
+function WoWPro() {
+
+	###########################
+	# WOW-PRO
+
+	[ ${DEBUG} ] && PREFIX="WoWPro - "
+
+	PLUGIN="wowpro"
+	PLUGIN_INFO_URL="http://www.wow-pro.com"
+
+	outputHead
+
+	CURRENT_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | awk '/Version/ {print $3}')
+
+	PLUGIN_FILE_URL="https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip"
+
+#	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head https://s3.amazonaws.com/WoW-Pro/WoWPro+v${CURRENT_VERSION}.zip | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
+	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${PLUGIN_FILE_URL} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
+	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %r")
+
+	# if [ ${DEBUG} ] ; then
+	# 	if [ ${NOTDUMB} ] ; then
+	# 		OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+	# 	else
+	# 		OUTPUT+="========="
+	# 	fi
+	# else
+	# 	OUTPUT+="\"wowpro\"\\n"
+	# fi
+	OUTPUT+="\\n${PREFIX}Update Time: $(date -d @${PLUGIN_DATE_EPOCH})\\n"
+	OUTPUT+="${PREFIX}Current Version: ${CURRENT_VERSION}\\n"
+	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}/blog\\n"
+
+	Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${CURRENT_VERSION}"
+
+	outputTail
+
+	# if [ "${OUTPUT}" ] ; then
+	# 	if [ ${NOTDUMB} ] ; then
+	# 		OUTPUT+="${BOLD}${WHITE}=========${RESET}"
+	# 	else
+	# 		OUTPUT+="========="
+	# 	fi
+	# 	echo -e ${OUTPUT}
+	# fi
+
+	# unset OUTPUT
 }
 
 
@@ -468,6 +530,9 @@ function DoIt() {
 #		exit 1
 #	fi
 }
+
+###########################
+# MAIN
 
 if [ ! "$TERM" == "dumb" ] ; then
 
