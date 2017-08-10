@@ -29,6 +29,8 @@ UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrom
 ######################################################
 
 
+###########################
+# OUTPUT STUFF
 function outputHead() {
 #	${DEBUG} ] && PREFIX="outputHead - "
 	if [ ${DEBUG} ] ; then
@@ -69,7 +71,12 @@ function outputTail() {
 
 	unset OUTPUT
 }
+###########################
 
+
+
+###########################
+# GET PLUGIN
 function GetPlugin() {
 
 #	1: EPOCH
@@ -121,17 +128,12 @@ function GetPlugin() {
 
 	unset PLUGIN_LOCAL_SIZE PLUGIN_SERVER_SIZE
 }
+###########################
 
 
-function UpdateGit() {
 
-	cd ${ADDON_DIR}
-	git add $(git ls-files -o --exclude-standard)
-	git commit -am "$(date +%Y-%m-%d) push updates to git"
-	git push
-}
-
-
+###########################
+# UPDATE STAMP
 function UpdateStamp() {
 
 #	1: EPOCH
@@ -157,8 +159,12 @@ function UpdateStamp() {
 		touch -t "${TOUCH_TIME}" "${TOP_DIR}"
 	done
 }
+###########################
 
 
+
+###########################
+# FRESHNESS
 function Freshness() {
 
 #	1: EPOCH
@@ -205,8 +211,12 @@ function Freshness() {
 		echo "${PREFIX}Arg count bad: ${ARG_COUNT} || CMD: $*"
 	fi
 }
+###########################
 
 
+
+###########################
+# GET PLUGIN PAGE
 function GetPluginPage() {
 
 	[ ${DEBUG} ] && PREFIX="GetPluginPage - "
@@ -234,7 +244,12 @@ function GetPluginPage() {
 		fi
 	fi
 }
+###########################
 
+
+
+###########################
+# PLUGINS
 function Plugins() {
 
 	[ ${DEBUG} ] && PREFIX="Plugins - "
@@ -242,15 +257,6 @@ function Plugins() {
 	for PLUGIN in ${CURSE_PLUGINS} ; do
 
 		PLUGIN_INFO_URL="http://www.curse.com/addons/wow/${PLUGIN}"
-
-		# if [ ${DEBUG} ] ; then
-		# 	if [ ${NOTDUMB} ] ; then
-		# 		echo "${PREFIX}${BOLD}${BLUE}${PLUGIN}${RESET}"
-		# 	else
-		# 		echo "${PREFIX}${PLUGIN}"
-		# 	fi
-		# 	echo "${PREFIX}PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
-		# fi
 
 		outputHead
 
@@ -261,14 +267,6 @@ function Plugins() {
 		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE}" | grep newest-file | sed "s/.* \(.*\)<.*/\1/g")
 		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/")
 		PLUGIN_FILE_URL=$(curl -A "${UA}" -Ls ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
-
-		# if [ ${DEBUG} ] ; then
-		# 	if [ ${NOTDUMB} ] ; then
-		# 		echo "${BOLD}${BLUE}${PLUGIN_TITLE}${RESET}"
-		# 	else
-		# 		echo "${PLUGIN_TITLE}"
-		# 	fi
-		# fi
 
 		unset PLUGIN_PAGE
 
@@ -282,27 +280,16 @@ function Plugins() {
 
 		outputTail
 
-		# if [ "${OUTPUT}" ] ; then
-		# 	if [ ${DEBUG} ] ; then
-		# 		if [ ${NOTDUMB} ] ; then
-		# 			OUTPUT+="${BOLD}${WHITE}=========${RESET}"
-		# 		else
-		# 			OUTPUT+="========="
-		# 		fi
-		# 	else
-		# 		OUTPUT+="========="
-		# 	fi
-		# 	echo -e "${OUTPUT}"
-		# fi
-
-		# unset OUTPUT
-
 		FETCH_COUNTER=0
 	done
 
 }
+###########################
 
 
+
+###########################
+# GOINGPRICE DAWNBRINGER
 function GPDawnbringer() {
 
 	[ ${DEBUG} ] && PREFIX="GPDawnbringer - "
@@ -326,31 +313,14 @@ function GPDawnbringer() {
 	Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${PLUGIN_DATE_EPOCH}"
 
 	outputTail
-
-# 	if [ "${OUTPUT}" ] ; then
-
-# 		if [ ${DEBUG} ] ; then
-# 			if [ ${NOTDUMB} ] ; then
-# 				OUTPUT+="${BOLD}${WHITE}=========${RESET}"
-# 			else
-# 				OUTPUT+="========="
-# 			fi
-# 		else
-# 			OUTPUT+="========="
-# 		fi
-
-# #		echo -e ${OUTPUT}
-# 		[ ${DEBUG} ] && echo -e ${OUTPUT}
-# 	fi
-
-# 	unset OUTPUT
 }
+###########################
 
 
+
+###########################
+# WOW PRO
 function WoWPro() {
-
-	###########################
-	# WOW-PRO
 
 	[ ${DEBUG} ] && PREFIX="WoWPro - "
 
@@ -367,15 +337,6 @@ function WoWPro() {
 	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${PLUGIN_FILE_URL} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
 	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %r")
 
-	# if [ ${DEBUG} ] ; then
-	# 	if [ ${NOTDUMB} ] ; then
-	# 		OUTPUT+="${BOLD}${WHITE}=========${RESET}"
-	# 	else
-	# 		OUTPUT+="========="
-	# 	fi
-	# else
-	# 	OUTPUT+="\"wowpro\"\\n"
-	# fi
 	OUTPUT+="\\n${PREFIX}Update Time: $(date -d @${PLUGIN_DATE_EPOCH})\\n"
 	OUTPUT+="${PREFIX}Current Version: ${CURRENT_VERSION}\\n"
 	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}/blog\\n"
@@ -383,20 +344,13 @@ function WoWPro() {
 	Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${CURRENT_VERSION}"
 
 	outputTail
-
-	# if [ "${OUTPUT}" ] ; then
-	# 	if [ ${NOTDUMB} ] ; then
-	# 		OUTPUT+="${BOLD}${WHITE}=========${RESET}"
-	# 	else
-	# 		OUTPUT+="========="
-	# 	fi
-	# 	echo -e ${OUTPUT}
-	# fi
-
-	# unset OUTPUT
 }
+###########################
 
 
+
+###########################
+# WOWAUCTION
 function WoWAuctionWGet() {
 
 	[ ${DEBUG} ] && echo "WoWAuctionWGet"
@@ -411,7 +365,6 @@ function WoWAuctionWGet() {
 
 function WoWAuction() {
 
-	[ ${DEBUG} ] && echo WoWAuction
 	[ ${DEBUG} ] && PREFIX="WoWAuction - "
 
 	WOWUCTION_URL="http://www.wowuction.com/us/dawnbringer/alliance"
@@ -515,21 +468,24 @@ function WoWAuction() {
 # 	Both
 # 	http://www.wowuction.com/us/dawnbringer/alliance/Tools/GetTSMDataStatic?dl=true&token=xe7bW9nG3wqdDVYJrrfVcA2&both=true
 }
+###########################
 
+
+
+###########################
+# DO IT
 function DoIt() {
 
 	[ ${DEBUG} ] && V="v"
 
- 	WoWPro
 	Plugins
 #	WoWAuction
 	GPDawnbringer
-
-#	if [ ${UPDATES} ] ; then
-#		UpdateGit
-#		exit 1
-#	fi
+ 	WoWPro
 }
+###########################
+
+
 
 ###########################
 # MAIN
