@@ -29,7 +29,7 @@ function flushCurl() {
 
 	$curl = curl_init();
 //	if ( file_exists($fh) ) {
-		curl_setopt($curl, CURLOPT_STDERR, $fh);
+//		curl_setopt($curl, CURLOPT_STDERR, $fh);
 //	}
 	curl_setopt($curl, CURLOPT_USERAGENT,'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36');
 //	curl_setopt($curl, CURLOPT_USERAGENT,'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13');
@@ -223,12 +223,12 @@ if ( $forecastLong ) {
 	print $weatherArray['today']['detailedForecast'] ."\n\n";
 	print "Tonight will be ". $weatherArray['tonight']['detailedForecast'] ."\n\n";
 	print $tomorrow ."\n\n";
-	print "$fortune\n";
+	print "$fortune";
 } else {
 //	print "FALSE $forecastLong\n";
 	print $day ."'s forecast for $city is ";
 	print $weatherArray['today']['shortForecast'] ."\n\n";
 	print "Tonight will be ". $weatherArray['tonight']['shortForecast'] ."\n\n";
 	print $tomorrow ."\n\n";
-	print "$fortune\n";
+	print "$fortune";
 }
