@@ -145,6 +145,46 @@ function getWeather($name, $lat, $lon) {
 ///////////////////////////
 
 
+///////////////////////////
+// CHECK FOR SAVE
+function checkForSave($csvFile, $thisEpoch) {
+
+	global $debug;
+
+//	$csvFile = "/usr/local/palermo/Pictures/Cams/Weather/2017-Tucson.csv";
+
+	$file = fopen($csvFile,"r");
+
+	$csvWeather = array();
+	$csvCounter = 0;
+
+	while (($data = fgetcsv($file)) !== FALSE) {
+		$csvWeather[$csvCounter] = $data;
+		$csvCounter++;
+	}
+
+	fclose($file);
+
+//	print "COUNT: ". count($csvWeather) ."\n";
+//	print_r($csvWeather[count($csvWeather) - 1]);
+
+	$lastEpoch = $csvWeather[count($csvWeather) - 1][0];
+
+	if ($thisEpoch > $lastEpoch ) {
+		if ( $debug ) { print "TRUE - NEW: $thisEpoch || OLD: $lastEpoch\n"; }
+		$savevalues = TRUE;
+	} else {
+		if ( $debug ) { print "FALSE - NEW: $thisEpoch || OLD: $lastEpoch\n"; }
+		$savevalues = FALSE;
+	}
+
+	return $savevalues;
+
+}
+
+///////////////////////////
+
+
 $conditions = array();
 
 
@@ -174,9 +214,16 @@ foreach ($locations as $location) {
 
 		if ($debug) { print $directory ."/". $filename ."\n"; }
 
-		file_put_contents($directory ."/". $filename, $csvString, FILE_APPEND);
+		$dosave = checkForSave($directory ."/". $filename, $condition['epoch']);
+		if ($debug) { print "dosave: $dosave\n"; }
+
+		if ($dosave) {
+			file_put_contents($directory ."/". $filename, $csvString, FILE_APPEND);
+		}
 
 	} else {
 		print "condition empty: \"$condition\".  Skipping $name\n";
 	}
+
+	if ($debug) { print "\n===========================\n\n"; }
 }
