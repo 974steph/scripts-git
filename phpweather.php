@@ -1,6 +1,7 @@
 <?php
 
-$forcastLong = FALSE;
+$forecastLong = TRUE;
+$tomorrowLong = FALSE;
 
 //https://api.weather.gov/points/39.9677,-75.5725
 //https://api.weather.gov/points/39.9677,-75.5725/forecast
@@ -267,19 +268,27 @@ $tomorrowForecast = $weatherArray['tomorrow']['tomorrowForecast'];
 $tomorrowTemp = $weatherArray['tomorrow']['tomorrowTemp'];
 */
 
-if ( $forcastLong ) {
-//	print "TRUE $forcastLong\n";
+if ( $tomorrowLong ) {
+	$tomorrow = $weatherArray['tomorrow']['detailedForecast'];
+} else {
+	$tomorrow = "Tomorrow might be ". $weatherArray['tomorrow']['shortForecast'] ." with a high of ". $weatherArray['tomorrow']['temperature'];
+}
+
+if ( $forecastLong ) {
+//	print "TRUE $forecastLong\n";
 	print $day ."'s forecast for $city is ";
 	print $weatherArray['today']['detailedForecast'] ."\n\n";
 	print "Tonight will be ". $weatherArray['tonight']['detailedForecast'] ."\n\n";
-	print "Tomorrow might be ". $weatherArray['tomorrow']['detailedForecast'] ." with a high of ". $weatherArray['tomorrow']['temperature'] .".\n\n";
+//	print "Tomorrow might be ". $weatherArray['tomorrow']['detailedForecast'] ." with a high of ". $weatherArray['tomorrow']['temperature'] .".\n\n";
+	print $tomorrow ."\n\n";
 	print "$fortune\n";
 } else {
-//	print "FALSE $forcastLong\n";
+//	print "FALSE $forecastLong\n";
 	print $day ."'s forecast for $city is ";
 	print $weatherArray['today']['shortForecast'] ."\n\n";
 	print "Tonight will be ". $weatherArray['tonight']['shortForecast'] ."\n\n";
-	print "Tomorrow might be ". $weatherArray['tomorrow']['shortForecast'] ." with a high of ". $weatherArray['tomorrow']['temperature'] .".\n\n";
+//	print "Tomorrow might be ". $weatherArray['tomorrow']['shortForecast'] ." with a high of ". $weatherArray['tomorrow']['temperature'] .".\n\n";
+	print $tomorrow ."\n\n";
 	print "$fortune\n";
 }
 
