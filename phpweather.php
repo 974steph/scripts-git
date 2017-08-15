@@ -1,5 +1,11 @@
 <?php
 
+$forcastLong = FALSE;
+
+//https://api.weather.gov/points/39.9677,-75.5725
+//https://api.weather.gov/points/39.9677,-75.5725/forecast
+//https://api.weather.gov/points/39.9677,-75.5725/stations
+
 //include $_SERVER['HOME'] ."/Sources/scripts-git/secret_stuff.php";
 
 date_default_timezone_set('UTC');
@@ -45,25 +51,118 @@ function flushCurl() {
 ///////////////////////////
 
 
+
 ///////////////////////////
 // GET WEATHER
 //
-function getWeather($lat, $lon) {
+function doCURL($lat, $lon, $action) {
+
 
 	$curl = flushCurl();
 
-	$url = "http://forecast.weather.gov/MapClick.php?lat=". $lat ."&lon=". $lon ."&unit=0&lg=english&FcstType=dwml";
 
-// 	print "URL: $url\n";
+	if ( isset($action) ) {
+		$url = "https://api.weather.gov/points/". $lat .",". $lon ."/". $action ."";
+	} else {
+		$url = "https://api.weather.gov/points/". $lat .",". $lon ."";
+	}
+
+//	print "DO CURL: $lat, $lon, $action\n";
+//	print "URL: $url\n";
 
 	curl_setopt($curl, CURLOPT_URL, "$url");
 	curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "GET");
 
 	$outputRAW = curl_exec($curl);
+//	print $outputRAW;
 
-	$output = json_decode(json_encode(simplexml_load_string($outputRAW)), TRUE);
+	$outputJSON = json_decode($outputRAW, TRUE);
+//	print_r($outputJSON);
 
-	return $output;
+	return $outputJSON;
+}
+///////////////////////////
+
+
+///////////////////////////
+// GET WEATHER
+//
+function getWeather($lat, $lon) {
+
+
+	$station = doCURL($lat, $lon, "stations");
+//	print_r($station['features'][0]);
+	$stationName = $station['features'][0]['properties']['name'];
+	$stationName = explode(',', $stationName);
+//	print_r($stationName);
+	$stationName = trim($stationName[1]);
+//	print "stationName: $stationName\n";
+
+
+	$forecast = doCURL($lat, $lon, "forecast");
+
+//	$todayForecast = $forecast['properties']['periods'][0]['detailedForecast'];
+	$todayForecast = $forecast['properties']['periods'][0]['shortForecast'];
+	$todayTemp = $forecast['properties']['periods'][0]['temperature'];
+//	print_r($todayArray);
+//	print "TODAY: $today\n";
+
+//	$tonightForecast = $forecast['properties']['periods'][1]['detailedForecast'];
+	$tonightForecast = $forecast['properties']['periods'][1]['shortForecast'];
+	$tonightTemp = $forecast['properties']['periods'][1]['temperature'];
+//	print "TONIGHT: $tonight\n";
+
+	$tomorrowForecast = $forecast['properties']['periods'][2]['shortForecast'];
+	$tomorrowTemp = $forecast['properties']['periods'][2]['temperature'];
+
+//	print "TOMORROW: $tomorrowForecast with a high of $tomorrowTemp\n";
+
+
+	$weatherArray = array(
+		'stationName' => $stationName,
+		'today' => array(
+			'detailedForecast' => $forecast['properties']['periods'][0]['detailedForecast'],
+			'shortForecast' => $forecast['properties']['periods'][0]['shortForecast'],
+			'temperature' => $forecast['properties']['periods'][0]['temperature']
+			),
+		'tonight' => array(
+			'detailedForecast' => $forecast['properties']['periods'][1]['detailedForecast'],
+			'shortForecast' => $forecast['properties']['periods'][1]['shortForecast'],
+			'temperature' => $forecast['properties']['periods'][1]['temperature']
+			),
+		'tomorrow'=> array(
+			'detailedForecast' => $tomorrowForecast = $forecast['properties']['periods'][2]['detailedForecast'],
+			'shortForecast' => $tomorrowForecast = $forecast['properties']['periods'][2]['shortForecast'],
+			'temperature' => $forecast['properties']['periods'][2]['temperature']
+			)
+		);
+
+//	print_r($weatherArray);
+//exit();
+	return $weatherArray;
+
+//exit();
+//	$curl = flushCurl();
+
+////	$url = "http://forecast.weather.gov/MapClick.php?lat=". $lat ."&lon=". $lon ."&unit=0&lg=english&FcstType=dwml";
+//	$url = "https://api.weather.gov/points/". $lat .",". $lon ."/forecast";
+
+// 	print "URL: $url\n";
+
+//	curl_setopt($curl, CURLOPT_URL, "$url");
+//	curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "GET");
+
+//	$outputRAW = curl_exec($curl);
+//	print $outputRAW;
+
+//	$output = json_decode(json_encode(simplexml_load_string($outputRAW)), TRUE);
+//	$output = json_decode($outputRAW, TRUE);
+//	var_dump($output['properties']['periods'][0]['detailedForecast']);
+//	print $output['properties']['periods'][0]['detailedForecast'] ."\n";
+
+
+
+//	return $output;
 }
 ///////////////////////////
 
@@ -153,9 +252,48 @@ function getSillyQuote() {
 ///////////////////////////
 
 
-
+$fortune = shell_exec('fortune chalkboard | head -n1');
 
 $weatherArray = getWeather($lat, $lon);
+
+//print_r($weatherArray);
+
+$city = $weatherArray['stationName'];
+
+/*
+$today = $weatherArray['today']['todayForecast'];
+$tonight = $weatherArray['tonight']['tonightForecast'];
+$tomorrowForecast = $weatherArray['tomorrow']['tomorrowForecast'];
+$tomorrowTemp = $weatherArray['tomorrow']['tomorrowTemp'];
+*/
+
+if ( $forcastLong ) {
+//	print "TRUE $forcastLong\n";
+	print $day ."'s forecast for $city is ";
+	print $weatherArray['today']['detailedForecast'] ."\n\n";
+	print "Tonight will be ". $weatherArray['tonight']['detailedForecast'] ."\n\n";
+	print "Tomorrow might be ". $weatherArray['tomorrow']['detailedForecast'] ." with a high of ". $weatherArray['tomorrow']['temperature'] .".\n\n";
+	print "$fortune\n";
+} else {
+//	print "FALSE $forcastLong\n";
+	print $day ."'s forecast for $city is ";
+	print $weatherArray['today']['shortForecast'] ."\n\n";
+	print "Tonight will be ". $weatherArray['tonight']['shortForecast'] ."\n\n";
+	print "Tomorrow might be ". $weatherArray['tomorrow']['shortForecast'] ." with a high of ". $weatherArray['tomorrow']['temperature'] .".\n\n";
+	print "$fortune\n";
+}
+
+exit();
+
+
+
+print $day ."'s forecast for $city is ";
+print "$today\n\n";
+print "Tonight will be $tonight\n\n";
+print "Tomorrow might be $tomorrowForecast with a high of ". $tomorrowTemp .".\n\n";
+print "$fortune\n";
+
+exit();
 
 //$quoteArray = getSeriousQuote();
 //$quote = $quoteArray[0];
@@ -180,7 +318,7 @@ print "Tonight will be ". strtolower($tonight) ."\n\n";
 //$sillyQuote = shell_exec("randomquote.sh");
 //print "\n\n\n$sillyQuote\n";
 
-$fortune = shell_exec('fortune chalkboard | head -n1');
+//$fortune = shell_exec('fortune chalkboard | head -n1');
 //$fortune = shell_exec('fortune -s definitions | egrep -v "^[a-zA-Z0-9].*:|^[\t ]\+--" | sed "s/^[\t ]\+//g" | tr \\n " "');
 //$fortune = shell_exec('fortune -s | egrep -v "^[a-zA-Z0-9].*:|^[\t ]\+--" | sed "s/^[\t ]\+//g" | tr \\n " "');
 //print "FORTUNE: $fortune\n";
