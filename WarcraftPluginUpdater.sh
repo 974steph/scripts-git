@@ -136,25 +136,32 @@ function GetPlugin() {
 		echo "${PREFIX}PLUGIN_LOCAL_SIZE: ${PLUGIN_LOCAL_SIZE}"
 	fi
 
-	if [ "${PLUGIN_SERVER_SIZE}" -eq "${PLUGIN_LOCAL_SIZE}" ] ; then
-		OUTPUT+="${PREFIX}GOOD DOWNLOAD: Server: ${PLUGIN_SERVER_SIZE}K Local: ${PLUGIN_LOCAL_SIZE}K\\n"
-		cd ${ADDON_DIR}
-		unzip -q -o "${PLUGIN_FILE}"
+	[[ ! "${PLUGIN_SERVER_SIZE}" || "${PLUGIN_SERVER_SIZE}" =~ .*[a-zA-Z].* ]] && echo "Invalid PLUGIN_SERVER_SIZE: \"$PLUGIN_SERVER_SIZE\".  Bailing..."
+	[[ ! "${PLUGIN_LOCAL_SIZE}" || "${PLUGIN_LOCAL_SIZE}" =~ .*[a-zA-Z].* ]] && echo "Invalid PLUGIN_LOCAL_SIZE: \"$PLUGIN_LOCAL_SIZE\".  Bailing..."
 
-		TRAP=$?
+	if [ "${PLUGIN_SERVER_SIZE}" -a "${PLUGIN_LOCAL_SIZE}" ] ; then
+		if [ "${PLUGIN_SERVER_SIZE}" -eq "${PLUGIN_LOCAL_SIZE}" ] ; then
+			OUTPUT+="${PREFIX}GOOD DOWNLOAD: Server: ${PLUGIN_SERVER_SIZE}K Local: ${PLUGIN_LOCAL_SIZE}K\\n"
+			cd ${ADDON_DIR}
+			unzip -q -o "${PLUGIN_FILE}"
 
-		if [ ${TRAP} -eq 0 ] ; then
-			OUTPUT+="${PREFIX}UNZIPPED: $(unzip -l "${PLUGIN_FILE}" | tail -n1 | sed 's/\ \+/ /g' | cut -d' ' -f3-)\\n"
-			unset TRAP
-			UpdateStamp $1 $4 "${PLUGIN_FILE}"
+			TRAP=$?
+
+			if [ ${TRAP} -eq 0 ] ; then
+				OUTPUT+="${PREFIX}UNZIPPED: $(unzip -l "${PLUGIN_FILE}" | tail -n1 | sed 's/\ \+/ /g' | cut -d' ' -f3-)\\n"
+				unset TRAP
+				UpdateStamp $1 $4 "${PLUGIN_FILE}"
+			else
+				OUTPUT+="BAD UNZIP: ${TRAP}"
+				unset TRAP
+			fi
+
+			[ ! ${KEEP} ] && rm -f "${PLUGIN_FILE}"
 		else
-			OUTPUT+="BAD UNZIP: ${TRAP}"
-			unset TRAP
+			OUTPUT+="${PREFIX}BAD DOWNLOAD: Server: ${PLUGIN_SERVER_SIZE}K Local: ${PLUGIN_LOCAL_SIZE}K\\v"
 		fi
-
-		[ ! ${KEEP} ] && rm -f "${PLUGIN_FILE}"
 	else
-		OUTPUT+="${PREFIX}BAD DOWNLOAD: Server: ${PLUGIN_SERVER_SIZE}K Local: ${PLUGIN_LOCAL_SIZE}K\\v"
+		echo "Still missing PLUGIN_SERVER_SIZE ($PLUGIN_SERVER_SIZE) or PLUGIN_LOCAL_SIZE ($PLUGIN_LOCAL_SIZE).  Bailing..."
 	fi
 
 	unset PLUGIN_LOCAL_SIZE PLUGIN_SERVER_SIZE
