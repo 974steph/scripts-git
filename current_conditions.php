@@ -2,6 +2,7 @@
 <?php
 
 $debug = FALSE;
+//$debug = TRUE;
 
 $locations = array(
 		array(
@@ -95,8 +96,11 @@ function getWeather($name, $lat, $lon) {
 
 	global $debug;
 
-//	$station = doCURL($lat, $lon, "stations");
-	$station = doCURL("https://api.weather.gov/points/". $lat .",". $lon ."/stations");
+	$stationURL = "https://api.weather.gov/points/". $lat .",". $lon ."/stations";
+	if ($debug) { print "stationURL: $stationURL\n"; }
+
+//	$station = doCURL("https://api.weather.gov/points/". $lat .",". $lon ."/stations");
+	$station = doCURL($stationURL);
 
 //	print_r($station);
 
@@ -109,7 +113,11 @@ function getWeather($name, $lat, $lon) {
 //	print "stationName: $stationName\n";
 //	print "timezone: $timezone\n";
 
-	$current = doCURL("https://api.weather.gov/stations/". $stationID ."/observations/current");
+	$currentURL = "https://api.weather.gov/stations/". $stationID ."/observations/current";
+	if ($debug) { print "currentURL: $currentURL\n"; }
+
+//	$current = doCURL("https://api.weather.gov/stations/". $stationID ."/observations/current");
+	$current = doCURL($currentURL);
 
 	date_default_timezone_set($timezone);
 
@@ -147,7 +155,6 @@ foreach ($locations as $location) {
 	if ($debug) { print "NAME: $name\n"; }
 
 	$condition = getWeather($location['name'], $location['lat'], $location['lon']);
-
 
 	if ( isset($condition) ) {
 		$csvString = $condition['epoch'] .",".
