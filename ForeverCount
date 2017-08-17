@@ -360,11 +360,15 @@ function Event() {
 		[ ${DEBUG} ] && echo -e "CLEAN_LOC: ${CLEAN_LOC}"
 		[ ${DEBUG} ] && echo -e "LOCATION: ${LOCATION}"
 
-# 		LocationSearch "${CLEAN_LOC}"
+		LocationSearch "${CLEAN_LOC}"
 
 		if [ ${PLACE_LINK} ] ; then
-			LOCATION="<a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">Location Information</a>"
-# 			LOCATION="<a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\"><img style=\"${ICON_SIZE}\" src=\"http://fleag.us/images/google_maps.png\"></a>"
+			if [ ${PLACE_NAME} ] ; then
+				LOCATION="<a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">${PLACE_NAME}</a>"
+			else
+				LOCATION="<a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">Location Information</a>"
+# 				LOCATION="<a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\"><img style=\"${ICON_SIZE}\" src=\"http://fleag.us/images/google_maps.png\"></a>"
+			fi
 		else
 			URL="https://maps.google.com/maps?q=${CLEAN_LOC}"
 			LOCATION="<a href=\"${URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">Location Information</a>"
