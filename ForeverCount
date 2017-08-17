@@ -1033,14 +1033,16 @@ function SetStylesAndVariables() {
 
 	STYLE_BULLETS="border:0pt solid white; padding:0pt; margin:0pt;"
 
-	STYLE_BULLET_TEXT="vertical-align: top"
+#	STYLE_BULLET_TEXT="vertical-align: top"
+	STYLE_BULLET_TEXT="vertical-align: baseline; padding-left:0.3em;"
 
 # 	STYLE_UL="border:0px solid; padding:5pt; margin-left:1em; margin-right:0pt; margin-top:0pt; margin-bottom:0em;"
 # 	STYLE_UL_ZERO_PAD="border:0px solid; padding:0pt; margin-left:1em; margin-right:0pt; margin-top:0pt; margin-bottom:0em;"
 	STYLE_UL="border:0px solid; padding:3pt; margin-left:2em; margin-right:0pt; margin-top:0pt; margin-bottom:0em;"
 
 # 	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding:0px"
-	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding-left:2pt; padding-right:2pt;"
+#	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding-left:2pt; padding-right:2pt; vertaical-align:bottom;"
+	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding-left:2pt; padding-right:2pt; vertaical-align:baseline;"
 
 	STYLE_LI_DISC_FIRST="border:0px solid brown; padding:0pt; margin:0pt; list-style-type:disc;"
 	STYLE_LI_CIRCLE_FIRST="border:0px solid brown; padding:0pt; margin:0pt; list-style-type:circle;"
@@ -1054,7 +1056,8 @@ function SetStylesAndVariables() {
 	STYLE_LI_DISC_UNION="border:0px solid brown; padding:0pt; margin-left:0pt; list-style-type:disc;"
 	STYLE_LI__CIRCLE_UNION="border:0px solid brown; padding:0pt; margin-left:0pt; list-style-type:circle;"
 
-	STYLE_EVENT_TD="border-left:5px solid brown; border-bottom: 1px solid brown; padding-top: 3pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:none"
+#	STYLE_EVENT_TD="border-left:5px solid brown; border-bottom: 1px solid brown; padding-top: 5pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:none"
+	STYLE_EVENT_TD="border-left:5px solid brown; border-bottom: 1px solid brown; padding-top: 0.9em; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:none"
 
 # 	STYLE_UNION_IMAGE="background:url(http://imageshack.us/a/img90/6969/hh3smaller.png) no-repeat center rgba(255,255,255,0.5); background-size:auto 100%; border:2px; border-style:groove; padding:7pt;margin:2%;"
 	STYLE_UNION_IMAGE="background:url(http://s30.postimg.org/qfjs54pgh/hh3smaller.png) no-repeat center rgba(255,255,255,0.5); background-size:auto 100%; border:2px; border-style:groove; padding:7pt;margin:2%;"
