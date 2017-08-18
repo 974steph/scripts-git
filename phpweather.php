@@ -1,7 +1,7 @@
 <?php
 
 $forecastLong = TRUE;
-$tomorrowLong = FALSE;
+$tomorrowLong = TRUE;
 
 //https://api.weather.gov/points/39.9677,-75.5725
 //https://api.weather.gov/points/39.9677,-75.5725/forecast
@@ -212,7 +212,7 @@ $weatherArray = getWeather($lat, $lon);
 $city = $weatherArray['stationName'];
 
 if ( $tomorrowLong ) {
-	$tomorrow = $weatherArray['tomorrow']['detailedForecast'];
+	$tomorrow = "Tomorrow might be ". $weatherArray['tomorrow']['detailedForecast'];
 } else {
 	$tomorrow = "Tomorrow might be ". $weatherArray['tomorrow']['shortForecast'] ." with a high of ". $weatherArray['tomorrow']['temperature'];
 }
