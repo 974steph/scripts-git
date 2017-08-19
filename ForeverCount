@@ -362,8 +362,8 @@ function Event() {
 
 		LocationSearch "${CLEAN_LOC}"
 
-		if [ ${PLACE_LINK} ] ; then
-			if [ ${PLACE_NAME} ] ; then
+		if [ "${PLACE_LINK}" ] ; then
+			if [ "${PLACE_NAME}" ] ; then
 				LOCATION="<a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">${PLACE_NAME}</a>"
 			else
 				LOCATION="<a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">Location Information</a>"
