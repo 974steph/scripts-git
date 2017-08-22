@@ -213,7 +213,7 @@ function getSillyQuote() {
 ///////////////////////////
 
 
-$fortune = shell_exec('fortune chalkboard | head -n1');
+$fortune = strtolower(shell_exec('fortune chalkboard | head -n1'));
 
 $weatherArray = getWeather($lat, $lon);
 
