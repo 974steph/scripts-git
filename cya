@@ -47,4 +47,6 @@ rsync --exclude .DS_Store --exclude 'Icon*' --exclude 'NoSync' --delete -ai ${HO
 echo "${B}Git${N}"
 rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${HOME}/GIT/broom-closet palermo@${HOST}:${THERE}/
 rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${HOME}/GIT/splunk-docker palermo@${HOST}:${THERE}/
+rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${HOME}/GIT/packer palermo@${HOST}:${THERE}/
+rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${HOME}/GIT/docker-common palermo@${HOST}:${THERE}/
 ###########################
