@@ -1,7 +1,17 @@
 <?php
 
-$forecastLong = TRUE;
-$tomorrowLong = TRUE;
+if (isset($_GET['long'])) {
+	if ($_GET['long'] == "true") {
+		$forecastLong = TRUE;
+		$tomorrowLong = TRUE;
+	} else {
+		$forecastLong = FALSE;
+		$tomorrowLong = FALSE;
+	}
+} else {
+	$forecastLong = TRUE;
+	$tomorrowLong = TRUE;
+}
 
 //https://api.weather.gov/points/39.9677,-75.5725
 //https://api.weather.gov/points/39.9677,-75.5725/forecast
