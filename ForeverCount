@@ -176,29 +176,6 @@ function UnionDayBreakDown() {
 
 
 ##########################################
-# UNION CHECK LEX DAY
-#
-function UnionCheckLexDay() {
-
-	UNION_START_MIN=$(date -d "${1}" +%Y-%m-%d)
-	UNION_START_MAX=$(date -d "${1} +1 days" +%Y-%m-%d)
-
-	IS_LEX=0
-
-	if [ ${IS_LEX} -gt 0 ] ; then
-		UNION_IS_LEX+="<li style=\"${STYLE_LI_DISC_UNION}\">$(date -d "${UNION_COUNT}" '+%A, %B %-d, %Y')</li>"
-		[ ${DEBUG} ] && echo "${UNION_COUNT} - IS"
-		unset IS_LEX
-	else
-		UNION_NON_LEX+="<li style=\"${STYLE_LI_DISC_UNION}\">$(date -d "${UNION_COUNT}" '+%A, %B %-d, %Y')</li>"
-		[ ${DEBUG} ] && echo "${UNION_COUNT} - NON"
-		unset IS_LEX
-	fi
-}
-
-
-
-##########################################
 # UNION FINDER
 #
 function UnionFinder() {
@@ -233,7 +210,6 @@ function UnionFinder() {
 		[ ${#UNION_CHECK_2} -gt 1 ] && UNION_CHECK_2=$(UnionDayBreakDown ${UNION_CHECK_2})
 
 		if [ ${UNION_CHECK_4} -eq 9 -o ${UNION_CHECK_2} -eq 9 ] ; then
-			UnionCheckLexDay ${UNION_COUNT}
 # 			$(date -d "${UNION_COUNT} + 1 days" +%Y%m%d)
 			UNION_TOTAL_COUNT=$(( ${UNION_TOTAL_COUNT} + 1 ))
 			[ ${DEBUG} ] && echo "UNION_TOTAL_COUNT: ${UNION_TOTAL_COUNT}"
@@ -259,34 +235,6 @@ function UnionFinder() {
 	fi
 
 	echo -e "</ul></div>" >> ${BODY}
-}
-
-
-##########################################
-# EVENT CHECK LEX DAY
-#
-function EventCheckLexDay() {
-
-	EVENT_START_MIN=$(date -d "${1}" +%Y-%m-%d)
-	EVENT_START_MAX=$(date -d "${1} +1 days" +%Y-%m-%d)
-
-	if [ ${DEBUG} ] ; then
-		echo EVENT_START_MIN: $EVENT_START_MIN
-		echo EVENT_START_MAX: $EVENT_START_MAX
-	fi
-
-	IS_LEX="$(curl -A "${UA}" -sL  -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
-		-d fields=entry/title,entry/content \
-		-d q=nathan \
-		-d start-min=${EVENT_START_MIN} \
-		-d start-max=${EVENT_START_MAX} | grep -c -i nathan)"
-
-	if [ ${IS_LEX} -gt 0 ] ; then
-
-		EVENT_IS_LEX="<li style=\"${STYLE_LI_CIRCLE}\">Lex Event</li>"
-		echo ${EVENT_IS_LEX} >> ${BODY}
-		[ ${DEBUG} ] && echo "EVENT IS LEX DAY - ${EVENT_IS_LEX}"
-	fi
 }
 
 
