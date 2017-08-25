@@ -187,8 +187,6 @@ function UnionFinder() {
 
 	[ ${DEBUG} ] && echo -e \\v~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\\v
 
-	[ ${UNION_TOTAL_COUNT} -gt 1 -o ${UNION_TOTAL_COUNT} -eq 0 ] && UNION_S="s"
-
 
 	while [ ${UNION_COUNT} -lt ${UNION_END} ] ; do
 		UNION_SPACES="$(echo ${UNION_COUNT} | sed -e 's/\([0-9][0-9][0-9][0-9]\)\([0-9][0-9]\)\([0-9][0-9]\)/\1 \2 \3/')"
@@ -210,9 +208,9 @@ function UnionFinder() {
 		[ ${#UNION_CHECK_2} -gt 1 ] && UNION_CHECK_2=$(UnionDayBreakDown ${UNION_CHECK_2})
 
 		if [ ${UNION_CHECK_4} -eq 9 -o ${UNION_CHECK_2} -eq 9 ] ; then
-# 			$(date -d "${UNION_COUNT} + 1 days" +%Y%m%d)
+			UNION_DAY_BULLET+="<li style=\"${STYLE_LI_DISC_UNION}\">$(date -d "${UNION_COUNT}" '+%A, %B %-d, %Y')</li>"
 			UNION_TOTAL_COUNT=$(( ${UNION_TOTAL_COUNT} + 1 ))
-			[ ${DEBUG} ] && echo "UNION_TOTAL_COUNT: ${UNION_TOTAL_COUNT}"
+			[ ${DEBUG} ] && echo "UNION_TOTAL_COUNT: ${UNION_TOTAL_COUNT} - ${UNION_COUNT}"
 		fi
 
 		UNION_COUNT=$(date -d "${UNION_COUNT} + 1 day" +%Y%m%d)
@@ -220,21 +218,41 @@ function UnionFinder() {
 
 	[ ${DEBUG} ] && echo -e \\v
 
+	[ ${UNION_TOTAL_COUNT} -gt 1 -o ${UNION_TOTAL_COUNT} -eq 0 ] && UNION_S="s"
+
 	echo -e "<BR><div style=\"${STYLE_UNION_IMAGE}\">" >> ${BODY}
-
 	echo -e "<p style=\"${STYLE_UNIONHEAD}\">${UNION_TOTAL_COUNT} Union Day${UNION_S} in $(date -d "@${TODAY}" +%B)</p>" >> ${BODY}
+	echo -e "<ul style=\"${STYLE_UL}\">" >> ${BODY}
+	echo -e "${UNION_DAY_BULLET}" >> ${BODY}
+	echo -e "</ul></div>" >> ${BODY}
+}
 
-	[ ${DEBUG} ] && echo "UNION_NON_LEX: $(echo ${UNION_NON_LEX} | wc -w)"
 
-	if [ $(echo ${UNION_NON_LEX} | wc -w) -gt 0 ] ; then
-# 		echo "<u><b>Non-Lex Union Days</b></u>"  >> ${BODY}
-		echo -e "<ul style=\"${STYLE_UL}\">" >> ${BODY}
-		echo -e "${UNION_NON_LEX}" >> ${BODY}
-#	else
-#		echo -e "No Union Days this month." >> ${BODY}
+##########################################
+# EVENT CHECK LEX DAY
+#
+function EventCheckLexDay() {
+
+	EVENT_START_MIN=$(date -d "${1}" +%Y-%m-%d)
+	EVENT_START_MAX=$(date -d "${1} +1 days" +%Y-%m-%d)
+
+	if [ ${DEBUG} ] ; then
+		echo EVENT_START_MIN: $EVENT_START_MIN
+		echo EVENT_START_MAX: $EVENT_START_MAX
 	fi
 
-	echo -e "</ul></div>" >> ${BODY}
+	IS_LEX="$(curl -A "${UA}" -sL  -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
+		-d fields=entry/title,entry/content \
+		-d q=nathan \
+		-d start-min=${EVENT_START_MIN} \
+		-d start-max=${EVENT_START_MAX} | grep -c -i nathan)"
+
+	if [ ${IS_LEX} -gt 0 ] ; then
+
+		EVENT_IS_LEX="<li style=\"${STYLE_LI_CIRCLE}\">Lex Event</li>"
+		echo ${EVENT_IS_LEX} >> ${BODY}
+		[ ${DEBUG} ] && echo "EVENT IS LEX DAY - ${EVENT_IS_LEX}"
+	fi
 }
 
 
@@ -912,6 +930,15 @@ case $1 in
 		AutoEvent
 # 		UnionFinder
 		FinishMail
+		exit
+		;;
+	"union")
+		EMAILS="${EMAIL_MINE}"
+		DEBUG="TRUE"
+		SetStylesAndVariables
+		StartMail
+		UnionFinder
+# 		CleanUp
 		exit
 		;;
 	"bland")
