@@ -429,15 +429,30 @@ function Event() {
 
 	############
 	# Bullet Label
-	[ ${EVENT_TIME_UNTIL} -gt 1 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ${STARTS} in $(HumanizeTime ${TODAY} ${EVENT_START} FUZZY).</b>"
-	[ ${EVENT_TIME_UNTIL} -eq 1 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ${STARTS} tomorrow!</b>"
-	[ ${EVENT_TIME_UNTIL} -eq 0 ] && [ ! ${EVENT_START} -eq ${TODAY} ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ${STARTS} tomorrow!</b>"
-	[ ${EVENT_TIME_UNTIL} -eq 0 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ${STARTS} today!</b>"
+
+	EVENT_BULLET_PREFIX="<span style=\"${STYLE_EVENT_SPAN}\">${EVENT_NAME}"
+
+# 	[ ${EVENT_TIME_UNTIL} -gt 1 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ${STARTS} in $(HumanizeTime ${TODAY} ${EVENT_START} FUZZY).</b>"
+	[ ${EVENT_TIME_UNTIL} -gt 1 ] && EVENT_BULLET="${EVENT_BULLET_PREFIX} ${STARTS} in $(HumanizeTime ${TODAY} ${EVENT_START} FUZZY).</span>"
+
+# 	[ ${EVENT_TIME_UNTIL} -eq 1 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ${STARTS} tomorrow!</b>"
+	[ ${EVENT_TIME_UNTIL} -eq 1 ] && EVENT_BULLET="${EVENT_BULLET_PREFIX} ${STARTS} tomorrow!</span>"
+
+# 	[ ${EVENT_TIME_UNTIL} -eq 0 ] && [ ! ${EVENT_START} -eq ${TODAY} ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ${STARTS} tomorrow!</b>"
+	[ ${EVENT_TIME_UNTIL} -eq 0 ] && [ ! ${EVENT_START} -eq ${TODAY} ] && EVENT_BULLET="${EVENT_BULLET_PREFIX} ${STARTS} tomorrow!</span>"
+
+# 	[ ${EVENT_TIME_UNTIL} -eq 0 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ${STARTS} today!</b>"
+	[ ${EVENT_TIME_UNTIL} -eq 0 ] && EVENT_BULLET="${EVENT_BULLET_PREFIX} ${STARTS} today!</span>"
 
 	if [ ! ${EVENT_START} -eq ${TODAY} -a ${EVENT_DURATION} -gt 0 ] ; then
-		[ ${EVENT_TIME_UNTIL} -lt 1 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ends in ${EVENT_TIME_THERE} days.</b>"
-		[ ${EVENT_TIME_THERE} -eq 1 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ends tomorrow...</b>"
-		[ ${EVENT_TIME_THERE} -eq 0 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ends today...</b>"
+# 		[ ${EVENT_TIME_UNTIL} -lt 1 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ends in ${EVENT_TIME_THERE} days.</b>"
+		[ ${EVENT_TIME_UNTIL} -lt 1 ] && EVENT_BULLET="${EVENT_BULLET_PREFIX} ends in ${EVENT_TIME_THERE} days.</span>"
+
+# 		[ ${EVENT_TIME_THERE} -eq 1 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ends tomorrow...</b>"
+		[ ${EVENT_TIME_THERE} -eq 1 ] && EVENT_BULLET="${EVENT_BULLET_PREFIX} ends tomorrow...</span>"
+
+# 		[ ${EVENT_TIME_THERE} -eq 0 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ends today...</b>"
+		[ ${EVENT_TIME_THERE} -eq 0 ] && EVENT_BULLET="${EVENT_BULLET_PREFIX} ends today...</span>"
 	fi
 
 
@@ -458,9 +473,12 @@ function Event() {
 
 
 	echo "<table width=\"100%\" style=\"margin-top: 1em;\"><tr>" >> ${BODY}
-	echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\">${EVENT_BULLET}</td>" >> ${BODY}
-	echo "<td width=\"25%\"></td></tr></table>" >> ${BODY}
+	echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img align=\"top\" style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\">${EVENT_BULLET}</td>" >> ${BODY}
+	echo "<td width=\"25%\"></td></tr>" >> ${BODY}
 # 	echo "<ul style=\"${STYLE_UL_ZERO_PAD}\">" >> ${BODY}
+
+
+	echo "<tr><td colspan=\"2\">" >> ${BODY}
 
 	if [ ${EVENT_DURATION} -gt 1 ] ; then
 		echo "<ul style=\"${STYLE_UL}\"><li style=\"${STYLE_LI_CIRCLE_FIRST}\">Start: $(date -d "$1" '+%A, %B %-d, %Y')" >> ${BODY}
@@ -481,7 +499,7 @@ function Event() {
 	#######################
 
 # 	echo "</ul></ul>" >> ${BODY}
-	echo "</ul>" >> ${BODY}
+	echo "</ul></td></tr></table>" >> ${BODY}
 
 	[ ${DEBUG} ] && echo -e "EVENT_BULLET: ${EVENT_BULLET}"
 
@@ -550,7 +568,7 @@ function AutoEvent() {
 	TOTAPTS=$(grep -c . ${AUTOEVENT_DUMP_FILE})
 	x=1
 
-	echo -e "<div style=\"${STYLE_BULLETS}\">" >> ${BODY}
+# 	echo -e "<div style=\"${STYLE_BULLETS}\">" >> ${BODY}
 
 	while [[ $x -lt ${TOTAPTS} || $x -eq ${TOTAPTS} ]] ; do
 		head -n$x ${AUTOEVENT_DUMP_FILE} | tail -n1 | sed -e 's/!/\n/g' -e 's/\([0-9]\)$/\1\"/g' -e 's/""/"/g' | tail -n +2 > "${AUTOEVENT_APT_FILE}"
@@ -724,12 +742,12 @@ function GetHolidays() {
 
 	HOLIDAYLIST=$(curl -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | xmllint --format - | awk '/<item>/,/<\/item>/' | egrep "<title>|<link>" | sed 's/^ \+//g;s/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/')
 
-#	HOLIDAYLIST=""
+	echo -e "<div style=\"${STYLE_BULLETS}\">" >> ${BODY}
 
 	if [ "${HOLIDAYLIST}" ] ; then
-
 		echo "<table width=\"100%\" style=\"margin-top: 1em;\"><tr>" >> ${BODY}
-		echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img Style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\"><b style=\"${STYLE_BULLET_TEXT}\">Holidays today:</b></td>" >> ${BODY}
+# 		echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\"><b style=\"${STYLE_BULLET_TEXT}\">Holidays today:</b></td>" >> ${BODY}
+		echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img align="top" style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\"><span style=\"${STYLE_EVENT_SPAN}\">Holidays today:</span></td>" >> ${BODY}
 		echo "<td width=\"25%\"></td></tr></table>" >> ${BODY}
 		echo "<ul style=\"${STYLE_UL}\">" >> ${BODY}
 
@@ -764,8 +782,8 @@ function GetHolidays() {
 		done
 	else
 		echo "<table width=\"100%\" style=\"margin-top: 1em;\"><tr>" >> ${BODY}
-#		echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img Style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\"><b style=\"${STYLE_BULLET_TEXT}\">Holidays today:</b></td>" >> ${BODY}
-		echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img Style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\"><b style=\"${STYLE_BULLET_TEXT}\">Unable to fetch holiday list:</b></td>" >> ${BODY}
+#		echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\"><b style=\"${STYLE_BULLET_TEXT}\">Holidays today:</b></td>" >> ${BODY}
+		echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\"><b style=\"${STYLE_BULLET_TEXT}\">Unable to fetch holiday list:</b></td>" >> ${BODY}
 		echo "<td width=\"25%\"></td></tr></table>" >> ${BODY}
 		echo "<ul style=\"${STYLE_UL}\">" >> ${BODY}
 #		echo "<li style=\"${STYLE_LI_CIRCLE}\">UNABLE TO FETCH HOLIDAYS<br>" >> ${BODY}
@@ -1042,7 +1060,8 @@ function SetStylesAndVariables() {
 
 # 	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding:0px"
 #	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding-left:2pt; padding-right:2pt; vertaical-align:bottom;"
-	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding-left:2pt; padding-right:2pt; vertaical-align:baseline;"
+# 	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding-left:2pt; padding-right:2pt; vertaical-align:baseline;"
+	STYLE_GOOGLE_IMAGE="width:20px; height:20px;"
 
 	STYLE_LI_DISC_FIRST="border:0px solid brown; padding:0pt; margin:0pt; list-style-type:disc;"
 	STYLE_LI_CIRCLE_FIRST="border:0px solid brown; padding:0pt; margin:0pt; list-style-type:circle;"
@@ -1057,7 +1076,10 @@ function SetStylesAndVariables() {
 	STYLE_LI__CIRCLE_UNION="border:0px solid brown; padding:0pt; margin-left:0pt; list-style-type:circle;"
 
 #	STYLE_EVENT_TD="border-left:5px solid brown; border-bottom: 1px solid brown; padding-top: 5pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:none"
-	STYLE_EVENT_TD="border-left:5px solid brown; border-bottom: 1px solid brown; padding-top: 0.9em; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:none"
+# 	STYLE_EVENT_TD="border-left:5px solid brown; border-bottom: 1px solid brown; padding-top: 0.9em; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:none"
+	STYLE_EVENT_TD="border-left:5px solid brown; border-bottom: 1px solid brown; padding-top: 0.9em; margin-left:0pt; margin-top:0.5em;"
+
+	STYLE_EVENT_SPAN="vertical-align:bottom; font-weight: bold; margin-left:1pt;"
 
 # 	STYLE_UNION_IMAGE="background:url(http://imageshack.us/a/img90/6969/hh3smaller.png) no-repeat center rgba(255,255,255,0.5); background-size:auto 100%; border:2px; border-style:groove; padding:7pt;margin:2%;"
 	STYLE_UNION_IMAGE="background:url(http://s30.postimg.org/qfjs54pgh/hh3smaller.png) no-repeat center rgba(255,255,255,0.5); background-size:auto 100%; border:2px; border-style:groove; padding:7pt;margin:2%;"
