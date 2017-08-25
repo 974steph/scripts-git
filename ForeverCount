@@ -774,20 +774,13 @@ function StartMail() {
 
 		#############
 		# EndOfTime
-# 		if [ ! ${SOBER_ONLY} ] ; then
-# 			echo -e "<p style=\"text-align:center; padding:1em; border:0px solid;\">We are <B>${EOT_EXACT}</B><br> away from the end of time.</p>" >> ${BODY}
-# 		fi
+# 		echo -e "<p style=\"text-align:center; padding:1em; border:0px solid;\">We are <B>${EOT_EXACT}</B><br> away from the end of time.</p>" >> ${BODY}
 		#############
-#	elif [ "${LEX_ONLY}" ] ; then
+
 	if [ "${LEX_ONLY}" ] ; then
-#		echo -e "<p style=\"text-align:center; padding:1em; border:0px solid;\"><BR><BR></p>" >> ${BODY}
 		echo -e "<br>" >> ${BODY}
 	else
-		#############
-		if [ ! ${SOBER_ONLY} ] ; then
-			[ ! ${BLAND} ] && echo -e "<p style=\"text-align:center; padding:1em; border:0px solid;\">We are <B>$(HumanizeTime ${START_DATE} ${TODAY} EXACT)</B><br>into the rest of our lives.</p>" >> ${BODY}
-		fi
-		#############
+		[ ! ${BLAND} ] && echo -e "<p style=\"text-align:center; padding:1em; border:0px solid;\">We are <B>$(HumanizeTime ${START_DATE} ${TODAY} EXACT)</B><br>into the rest of our lives.</p>" >> ${BODY}
 	fi
 }
 
@@ -809,9 +802,7 @@ function FinishMail() {
 	echo -e "</body></html>" >> ${BODY}
 
 
-	if [ "${SOBER_ONLY}" ] ; then
-		SUBJECT="Sober"
-	elif [ "${END_OF_TIME}" ] ; then
+	if [ "${END_OF_TIME}" ] ; then
 		SUBJECT="The ${EOT_DAYS}${NUMEND} day until the End of Time"
  	elif [ "${LEX_ONLY}" ] ; then
 		SUBJECT="Daily Shared Calendar Update"
@@ -844,9 +835,6 @@ function SetStylesAndVariables() {
 
 	DO_SCHOOL="yes"
 	NOTICE_DAYS=10
-
-	MY_CAL="https://www.google.com/calendar/feeds/${EMAIL_URL}/private-0e51e37191f79ffc0cbd55fc86e424bc"
-	SHARED_CAL="https://www.google.com/calendar/feeds/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.com/private-2fde973cf30e98a7fa64de507bd8eb56"
 
 	UNION_TOTAL_COUNT=0
 
@@ -946,41 +934,36 @@ function CleanUp() {
 ##########################################
 # DO IT
 #
-
 case $1 in
-	"sober")
-		EMAILS="${EMAIL_MINE}, ${EMAIL_CYN}"
-# 		EMAILS="${EMAIL_MINE}"
-		SOBER_ONLY="yes"
-		;;
 	"debug")
 		EMAILS="${EMAIL_MINE}"
-# 		DEBUG="TRUE"
-# 		SetStylesAndVariables
-# 		GetHolidays
-# 		exit
+		DEBUG="TRUE"
+		SetStylesAndVariables
+		StartMail
+		GetQuote
+		SobrietyCount
+		SmokeCount
+		GetHolidays
+		AutoEvent
+# 		UnionFinder
+		FinishMail
+		CleanUp
+		exit
 		;;
 	"me")
 		EMAILS="${EMAIL_MINE}"
 		DEBUG="yes"
 		ONLY_ME="yes"
-#		SOBER_ONLY="yes"
 #		BLAND="yes"
-#		SetStylesAndVariables
-#		StartMail
-#		GetQuote
-#		SobrietyCount
-#		SmokeCount
-#		GetHolidays
-#		AutoEvent
-#		FinishMail
-#		exit
-		;;
-	"holi")
-		EMAILS="${EMAIL_MINE}"
-		DEBUG="yes"
-		ONLY_ME="yes"
+		SetStylesAndVariables
+		StartMail
+		GetQuote
+		SobrietyCount
+		SmokeCount
 		GetHolidays
+		AutoEvent
+# 		UnionFinder
+		FinishMail
 		exit
 		;;
 	"bland")
@@ -991,6 +974,7 @@ case $1 in
 		GetQuote
 		GetHolidays
 		FinishMail
+		Cleanup
 		exit
 		;;
 	"lex")
@@ -1001,51 +985,25 @@ case $1 in
 		GetHolidays
 		AutoEvent
 		FinishMail
+		Cleanup
 		exit
 		;;
 	*)
 		EMAILS="${EMAIL_MINE}, ${EMAIL_CYN}"
+		EMAILS="${EMAIL_MINE}"
+		SetStylesAndVariables
+		StartMail
+		GetQuote
+		SobrietyCount
+		SmokeCount
+		GetHolidays
+		AutoEvent
+# 		UnionFinder
+		FinishMail
+		CleanUp
+		exit
 		;;
 esac
-
-[ ${DEBUG} ] && echo -e "\\v\\v\033[0;30;44m         SetStylesAndVariables         \033[0m\\v\\v"
-SetStylesAndVariables ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM: SetStylesAndVariables - ${TRAP}" ; TRAP=0
-
-# EndOfTime
-
-[ ${DEBUG} ] && echo -e "\\v\\v\033[0;30;44m         StartMail         \033[0m\\v\\v"
-StartMail ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM: StartMail - ${TRAP}" ; TRAP=0
-
-[ ${DEBUG} ] && echo  -e "\\v\\v\033[0;30;44m         GetQuote         \033[0m\\v\\v"
-GetQuote ; TRAP=$? ; [ ! ${TRAP} -eq 0 ] && echo "BOOM: GetQuote - ${TRAP}" ; TRAP=0
-
-[ ${DEBUG} ] && echo  -e "\\v\\v\033[0;30;44m         SobrietyCount         \033[0m\\v\\v"
-SobrietyCount ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM SobrietyCount - ${TRAP}" ; TRAP=0
-
-[ ${DEBUG} ] && echo  -e "\\v\\v\033[0;30;44m         SmokeCount         \033[0m\\v\\v"
-SmokeCount ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM SmokeCount - ${TRAP}" ; TRAP=0
-
-[ ${DEBUG} ] && echo  -e "\\v\\v\033[0;30;44m         GetHolidays         \033[0m\\v\\v"
-GetHolidays ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM GetHolidays - ${TRAP}" ; TRAP=0
-
-if [ ! ${SOBER_ONLY} ] ; then
-#	AutoEvent ${EMAIL_MINE_SHORT} ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM AutoEvent - ${TRAP}" ; TRAP=0
-	AutoEvent ${EMAIL_CYN_SHORT} ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM AutoEvent - ${TRAP}" ; TRAP=0
-
-#	[ ! ${BLAND} ] && UnionFinder ; TRAP=$? ; [ ! $? -eq 0 ] && echo "BOOM UnionFinder - ${TRAP}" ; TRAP=0
-fi
-
-[ ${DEBUG} ] && echo  -e "\\v\\v\033[0;30;44m         FinishMail         \033[0m\\v\\v"
-FinishMail ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM FinishMail - ${TRAP}" ; TRAP=0
-
-[ ${DEBUG} ] && echo  -e "\\v\\v\033[0;30;44m         CleanUp         \033[0m\\v\\v"
-[ ! ${DEBUG} ] && CleanUp
-# [ ! ${DEBUG} -o ! ${ONLY_ME} ] && rm -rf "${TMP_DIR}"
-# [ ! ${DEBUG} ] && rm -rf "${TMP_DIR}"
-
-exit 0
-##############################################################3
-
 
 # HOLIDAYS TODAY
 # curl -sL https://www.checkiday.com/rss.php 2>/dev/null | xmllint --format -
