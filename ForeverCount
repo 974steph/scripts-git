@@ -2,18 +2,6 @@
 
 source $HOME/Sources/scripts-git/secret_stuff.sh
 
-# HOLIDAYS TODAY
-# curl -sL https://www.checkiday.com/rss.php 2>/dev/null | xmllint --format -
-
-#XML
-#https://www.checkiday.com/rss.php?tz=America/New_York
-#https://www.checkiday.com/rss.php?tz=America/New_York&adult=true
-
-#ICAL
-#https://www.checkiday.com/ical.php
-#https://www.checkiday.com/ical.php?adult=true
-
-
 ##########################################
 # HUMANIZE TIME
 #
@@ -195,15 +183,6 @@ function UnionCheckLexDay() {
 	UNION_START_MIN=$(date -d "${1}" +%Y-%m-%d)
 	UNION_START_MAX=$(date -d "${1} +1 days" +%Y-%m-%d)
 
-# 	echo "$1 UNION_START_MIN: $UNION_START_MIN"
-# 		-d fields=entry/title,entry/content \
-
-# 	IS_LEX="$(curl -A "${UA}" -sL -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
-# 		-d fields=entry/title \
-# 		-d q=nathan \
-# 		-d start-min=${UNION_START_MIN} \
-# 		-d start-max=${UNION_START_MAX} | grep -c -i nathan)"
-
 	IS_LEX=0
 
 	if [ ${IS_LEX} -gt 0 ] ; then
@@ -279,18 +258,6 @@ function UnionFinder() {
 #		echo -e "No Union Days this month." >> ${BODY}
 	fi
 
-# 	echo -e "</ul>" >> ${BODY}
-#
-# 	[ ${DEBUG} ] && echo "UNION_IS_LEX: $(echo ${UNION_IS_LEX} | wc -w)"
-#
-# 	if [ $(echo ${UNION_IS_LEX} | wc -w) -gt 0 ] ; then
-# 		echo "<u><b>Lex Union Days</b></u>"  >> ${BODY}
-# 		echo -e "<ul style=\"${STYLE_UL}\">" >> ${BODY}
-# 		echo -e "${UNION_IS_LEX}" >> ${BODY}
-# #	else
-# #		echo -e "No Union Days this month." >> ${BODY}
-# 	fi
-
 	echo -e "</ul></div>" >> ${BODY}
 }
 
@@ -303,8 +270,10 @@ function EventCheckLexDay() {
 	EVENT_START_MIN=$(date -d "${1}" +%Y-%m-%d)
 	EVENT_START_MAX=$(date -d "${1} +1 days" +%Y-%m-%d)
 
-# 	echo EVENT_START_MIN: $EVENT_START_MIN
-# 	echo EVENT_START_MAX: $EVENT_START_MAX
+	if [ ${DEBUG} ] ; then
+		echo EVENT_START_MIN: $EVENT_START_MIN
+		echo EVENT_START_MAX: $EVENT_START_MAX
+	fi
 
 	IS_LEX="$(curl -A "${UA}" -sL  -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
 		-d fields=entry/title,entry/content \
@@ -350,31 +319,27 @@ function Event() {
 		echo -e "EVENT_DURATION: ${EVENT_DURATION}"
 	fi
 
-# 	Google API Key: ${GOOGLE_KEY}
-# 	https://maps.googleapis.com/maps/api/place/textsearch/xml?query=tom%27s%20Cove%Park,%20Chincoteague,%20VA&sensor=false&output=xml&key=${GOOGLE_KEY}
 
 	if [ "${LOCATION}" ] ; then
 
 		CLEAN_LOC="$(echo "${LOCATION}" | sed -e 's/ /+/g')"
+		PLACE_LINK="https://maps.google.com/maps?q=${CLEAN_LOC}"
+# 		PLACE_NAME="Location Information"
+		PLACE_NAME="$(echo ${LOCATION} | awk -F, '{print $1}')"
 
-		[ ${DEBUG} ] && echo -e "CLEAN_LOC: ${CLEAN_LOC}"
 		[ ${DEBUG} ] && echo -e "LOCATION: ${LOCATION}"
+		[ ${DEBUG} ] && echo -e "CLEAN_LOC: ${CLEAN_LOC}"
 
 		LocationSearch "${CLEAN_LOC}"
 
-		if [ "${PLACE_LINK}" ] ; then
-			if [ "${PLACE_NAME}" ] ; then
-				LOCATION="<a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">${PLACE_NAME}</a>"
-			else
-				LOCATION="<a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">Location Information</a>"
-# 				LOCATION="<a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\"><img style=\"${ICON_SIZE}\" src=\"http://fleag.us/images/google_maps.png\"></a>"
-			fi
-		else
-			URL="https://maps.google.com/maps?q=${CLEAN_LOC}"
-			LOCATION="<a href=\"${URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">Location Information</a>"
-# 			LOCATION="<a href=\"${URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\"><img style=\"${ICON_SIZE}\" src=\"http://fleag.us/images/google_maps.png\"></a>"
-#			LOCATION="<a href=\"${URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\"><img style=\"${ICON_SIZE}\" src=\"http://imageshack.us/a/img713/6100/vxnf.png\"></a>"
+		if [ ${DEBUG} ] ; then
+			echo "PLACE_LOCATION: ${PLACE_LOCATION}"
+			echo "PLACE_NAME: ${PLACE_NAME}"
+			echo "PLACE_ADDRESS: ${PLACE_ADDRESS}"
+			echo "PLACE_LINK: ${PLACE_LINK}"
 		fi
+
+		LOCATION="Maps: <a href=\"${PLACE_LINK}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">${PLACE_NAME}</a>"
 	else
 		[ ${DEBUG} ] && echo -e "LOCATION: NO LOCATION"
 	fi
@@ -387,16 +352,11 @@ function Event() {
 
 		if [ $(echo "${CONTENT}" | egrep -c "^http://|^www\.|^https://") -gt 0 ] ; then
 			CONTENT_URL="${CONTENT}"
-# 			PAGE_TITLE="$(curl -A "${UA}" -sL "${CONTENT}" | grep \<[tT][iI][tT][lL][eE]\> | sed -e 's/.*<[tT][iI][tT][lL][eE]>//g' -e 's/<\/[tT][iI][tT][lL][eE]>.*//g' -e 's/ - .*//g' -e 's/\(.*\)|.*/\1/')"
-			PAGE_TITLE="$(curl -A "${UA}" -sL "${CONTENT}" | awk '/<[tT][iI][tT][lL][eE]>/,/<\/[tT][iI][tT][lL][eE]>/' | cut -d \| -f1 | tr -d "\r\n" | sed -e 's/<[^>]*>//g;s/ - .*//g;s/\(.*\)|.*/\1/;s/ \+/ /g;s/^ \+//')"
+# 			PAGE_TITLE="$(curl -A "${UA}" -sL "${CONTENT}" | awk '/<[tT][iI][tT][lL][eE]>/,/<\/[tT][iI][tT][lL][eE]>/' | cut -d \| -f1 | tr -d "\r\n" | sed -e 's/<[^>]*>//g;s/ - .*//g;s/\(.*\)|.*/\1/;s/ \+/ /g;s/^ \+//')"
+			PAGE_TITLE="$(curl -A "${UA}" -sL "${CONTENT}" | awk '/<[tT][iI][tT][lL][eE]>/,/<\/[tT][iI][tT][lL][eE]>/' | sed 's/.*<[tT][iI][tT][lL][eE]>//g;s/<\/[tT][iI][tT][lL][eE]>.*//g' | sed 's/^[ \t]*//;s/[ \t]*$//' | head -n1)"
+			[ $(echo "${PAGE_TITLE}" | wc -w) -eq 0 ] && PAGE_TITLE="Event Details"
 
-			if [ $(echo "${PAGE_TITLE}" | wc -w) -eq 0 ] ; then
-				PAGE_TITLE="Event Details"
-			fi
-			CONTENT="<a href=\"${CONTENT_URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">${PAGE_TITLE}</a>"
-# 			CONTENT="<a href=\"${CONTENT_URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\"><img style=\"${ICON_SIZE}\" src=\"http://fleag.us/images/internet-icon.png\"></a>"
-#			CONTENT="<a href=\"${CONTENT_URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\"><img style=\"${ICON_SIZE}\" src=\"http://img40.imageshack.us/img40/4929/w41.png\"></a>"
-# 			http://img40.imageshack.us/img40/4929/w41.png
+			CONTENT="Web: <a href=\"${CONTENT_URL}\" style=\"color:${STYLE_A_COLOR}; text-decoration:${STYLE_A_DECO};\">${PAGE_TITLE}</a>"
 		else
 			CONTENT="${CONTENT}"
 		fi
@@ -406,26 +366,8 @@ function Event() {
 	fi
 	##################################
 
-	if [ ${EVENT_DURATION} -lt 2 ] ; then
-		STARTS="is"
-	else
-		STARTS="starts"
-	fi
-
-# 	http://maps.googleapis.com/maps/api/staticmap?center=harrisburg+farm+show+complex&zoom=15&size=370x370&markers=color:blue&sensor=false
-# 	https://developers.google.com/maps/documentation/staticmaps
-# 	links -dump http://www.whitepages.com/business?key=quentin+riding+club
-
-# 	########################
-# 	curl -A "${UA}"-sL "https://maps.googleapis.com/maps/api/place/textsearch/xml?query=PA%20Farm%20Show%20Complex,%20Harrisburg,%20PA&sensor=false&output=xml&key=${GOOGLE_KEY}"
-# 	https://maps.googleapis.com/maps/api/staticmap?center=2300%20North%20Cameron%20Street,%20Harrisburg,%20PA,%20United%20States&zoom=15&maptype=satellite&size=190x190&markers=color:blue&sensor=false
-
-# 	curl -A "${UA}" -sL -G https://maps.googleapis.com/maps/api/place/textsearch/xml?query=PA%20Farm%20Show%20Complex,%20Harrisburg,%20PA \
-# 		-d sensor=false \
-# 		-d output=xml \
-# 		-d key=${GOOGLE_KEY}
-
-# 	########################
+	STARTS="starts"
+	[ ${EVENT_DURATION} -lt 2 ] && STARTS="is"
 
 	############
 	# Bullet Label
@@ -454,16 +396,10 @@ function Event() {
 # 		[ ${EVENT_TIME_THERE} -eq 0 ] && EVENT_BULLET="<b style=\"${STYLE_BULLET_TEXT}\">${EVENT_NAME} ends today...</b>"
 		[ ${EVENT_TIME_THERE} -eq 0 ] && EVENT_BULLET="${EVENT_BULLET_PREFIX} ends today...</span>"
 	fi
-
-
-#	[ ${DEBUG} ] && echo "EVENT_BULLET: ${EVENT_BULLET}"
-
 	############
 
 	############
 	# Bullets
-# 	echo "<ul style=\"${STYLE_UL}\"><li style=\"${STYLE_LI_DISC}\">${EVENT_BULLET}" >> ${BODY}
-
 
 	if [ "${LOCATION}" ] ; then
 		GooglePlaceIcon "${CLEAN_LOC}"
@@ -471,12 +407,9 @@ function Event() {
 		GooglePlaceIcon "$(echo ${EVENT_NAME} | sed 's/ /+/g;s/\// /g')"
 	fi
 
-
 	echo "<table width=\"100%\" style=\"margin-top: 1em;\"><tr>" >> ${BODY}
 	echo "<td style=\"${STYLE_EVENT_TD}\" nowrap><img align=\"top\" style=\"${STYLE_GOOGLE_IMAGE}\" src=\"${GOOGLE_ICON}\">${EVENT_BULLET}</td>" >> ${BODY}
 	echo "<td width=\"25%\"></td></tr>" >> ${BODY}
-# 	echo "<ul style=\"${STYLE_UL_ZERO_PAD}\">" >> ${BODY}
-
 
 	echo "<tr><td colspan=\"2\">" >> ${BODY}
 
@@ -492,73 +425,22 @@ function Event() {
 
 	[ "${CONTENT}" ] && echo "<li style=\"${STYLE_LI_CIRCLE}\">${CONTENT}" >> ${BODY}
 	[ "${LOCATION}" ] && echo "<li style=\"${STYLE_LI_CIRCLE}\">${LOCATION}" >> ${BODY}
-
-	#EVENT_LEX
-# 	EventCheckLexDay $(date -d "${START}" +%Y%m%d)
-
 	#######################
 
 # 	echo "</ul></ul>" >> ${BODY}
 	echo "</ul></td></tr></table>" >> ${BODY}
 
-	[ ${DEBUG} ] && echo -e "EVENT_BULLET: ${EVENT_BULLET}"
-
-#	ClearCalVars
-
-	[ ${DEBUG} ] && echo -e ~~~~~~~
+	[ ${DEBUG} ] && echo -e "EVENT_BULLET: ${EVENT_BULLET}\\n~~~~~~~~~"
 }
 
 
 function AutoEvent() {
 # 	https://developers.google.com/google-apps/calendar/v2/reference#Parameters
 
-#	START_MIN=$(date -d "$(date -d "@${TODAY}" +%Y-%m-%d) -1 day" +%Y-%m-%d)
-#	START_MIN="2013-01-01"
-
-# 	START_MIN=$(date -d "@${TODAY}" +%Y-01-01)
 	START_MIN=$(date -d "$(date -d @${TODAY}) - 1 day" +%Y-%m-%d)
 	START_MAX=$(date -d "${START_MIN} + 1 year" +%Y-%m-%d)
 
-#	CAL_QUERY="\"${MY_CAL}/basic?orderby=starttime&sortorder=a\" -d fields=entry/title,entry/content -d max-results=70 -d start-min=${START_MIN} -d start-max=${START_MAX}"
-
-#	[ ${DEBUG} ] && echo -e "CURL: curl -A "${UA}" -sL -G \"${MY_CAL}/basic?orderby=starttime&sortorder=a\" -d fields=entry/title,entry/content -d q=${1} -d start-min=${START_MIN} -d start-max=${START_MAX}" \\v
 	[ ${DEBUG} ] && echo "CURL: curl -A "${UA}" -sL -G \"${SHARED_CAL}/basic?orderby=starttime&sortorder=a\" -d fields=entry/title,entry/content -d q=${1} -d start-min=${START_MIN} -d start-max=${START_MAX}"
-#	[ ${DEBUG} ] && echo "CURL: curl -A "${UA}" -sL -G \"${CAL_QUERY}\""
-
-
-#-d q=${1} \
-#	curl -A "${UA}" -sL -G "${MY_CAL}/basic?orderby=starttime&sortorder=a" \
-
-	###########################
-	# LAST GOOD
-	# BROKEN AS OF 2015-11
-	# GOOGLE STOPPED XML OUTPUT
-	#
-# 	curl -A "${UA}"-sL -G "${SHARED_CAL}/basic?orderby=starttime&sortorder=a" \
-# 			-d max-results=170 \
-# 			-d fields=entry/title,entry/content \
-# 			-d start-min=${START_MIN} \
-# 			-d start-max=${START_MAX} | sed \
-# 			-e 's/<entry>/\n===\n/g' \
-# 			-e 's/&lt;br \/&gt;//g' \
-# 			-e 's/ //g' \
-# 			-e "s/<title type='html'>/!TITLE=\"/g" \
-# 			-e "s/<\/title>.*<content type='html'>/\"\n/g" \
-# 			-e 's/Who: \(.*\)/!WHO="\1"/g' \
-# 			-e 's/Where: \(.*\)/!LOCATION="\1"/g' \
-# 			-e 's/When: \(.*\)/!WHEN_RAW="\1"/g' \
-# 			-e 's/Duration: \(.*\)$/!EVENT_DURATION="\1"/g' \
-# 			-e 's/Event Description: /!CONTENT="/g' \
-# 			-e 's/Event Status: \(.*\)$/!EVENT_STATUS="\1"/g' \
-# 			-e 's/First start: \(.*\) UTC$/!FIRST_START="\1"/g' \
-# 			-e 's/Recurring Event/!EVENT_TYPE="Recurring Event"/g' \
-# 			-e 's/""/"/g' \
-# 			-e 's/<\/content><\/entry><\/feed>/"\n/g' \
-# 			-e 's/<\/content><\/entry>/"/g' \
-# 			-e '/^$/d' \
-# 			-e "s/&amp;#39;/'/g" \
-# 			-e '/E[SD]T/d' | tail -n +3 | tr -d \\n | sed -e 's/===/\n/g' -e 's/""/"/g' > ${AUTOEVENT_DUMP_FILE}
-	###########################
 
 	if [ ${LEX_ONLY} ] ; then PASS_LEX="TRUE" ; else PASS_LEX="FALSE" ; fi
 	if [ ${DEBUG} ] ; then PASS_DEBUG="TRUE" ; else PASS_DEBUG="FALSE" ; fi
@@ -568,8 +450,6 @@ function AutoEvent() {
 	TOTAPTS=$(grep -c . ${AUTOEVENT_DUMP_FILE})
 	x=1
 
-# 	echo -e "<div style=\"${STYLE_BULLETS}\">" >> ${BODY}
-
 	while [[ $x -lt ${TOTAPTS} || $x -eq ${TOTAPTS} ]] ; do
 		head -n$x ${AUTOEVENT_DUMP_FILE} | tail -n1 | sed -e 's/!/\n/g' -e 's/\([0-9]\)$/\1\"/g' -e 's/""/"/g' | tail -n +2 > "${AUTOEVENT_APT_FILE}"
 		[ ${DEBUG} ] && cp "${AUTOEVENT_APT_FILE}" "${AUTOEVENT_APT_FILE}-$x"
@@ -578,7 +458,6 @@ function AutoEvent() {
 
 		# Ignore without "TITLE", "SCHOOL", Recurring
 		if [ $(echo ${TITLE} | wc -w) -gt 0 -a ! "$(echo ${TITLE} | grep -i school)" -a ! "${FIRST_START}" ] ; then
-#		if [ $(echo ${TITLE} | wc -w) -gt 0 -a ! "${FIRST_START}" ] ; then
 			if [ "${WHEN_RAW}" -a ! "${FIRST_START}" ] ; then
 				HERE_CHECK="$x IF"
 
@@ -603,13 +482,10 @@ function AutoEvent() {
 			fi
 
 			if [ ! $(date -d "${END}" +%Y%m%d) -lt $(date -d @${TODAY} +%Y%m%d) -a "${START}" -a "${END}" ] ; then
-# 			if [ ! $(date -d "${END}" +%Y%m%d) -lt $(date -d @${TODAY} +%Y%m%d) ] ; then
 				Event $(date -d "${START}" +%Y%m%d) $(date -d "${END}" +%Y%m%d) "${TITLE}"
-#				ClearCalVars
 				x=$(( $x + 1 ))
 			else
-				[ ${DEBUG} ] && echo "Skipping: $x - ${TITLE} - $(date -d "${END}" +%Y%m%d) - $(date -d @${TODAY} +%Y%m%d) - ${HERE_CHECK}"
-#				ClearCalVars
+				[ ${DEBUG} ] && echo -e "\\vSkipping: $x - ${TITLE} - TODAY: $(date -d @${TODAY} +%Y%m%d) - START: $(date -d "${START}" +%Y%m%d) - END: $(date -d "${END}" +%Y%m%d) - HERE_CHECK: ${HERE_CHECK}"
 				x=$(( $x + 1 ))
 			fi
 		elif [ $(echo ${DO_SCHOOL} | wc -w) -gt 0 -a $(echo ${TITLE} | wc -w) -gt 0 -a "$(echo ${TITLE} | grep -i school)" ] ; then
@@ -621,7 +497,6 @@ function AutoEvent() {
 					WHEN_END=$(date -d "$(echo "${WHEN_RAW}" | sed 's/.* to \(.*\)/\1/')" +%Y-%m-%d)
 				else
 					WHEN_START=$(date -d "${WHEN_RAW}" +%Y-%m-%d)
-# 					WHEN_END=$(date -d @$(( $(date -d ${WHEN_START} +%s) + 86400 )) +%Y-%m-%d)
 					WHEN_END=${WHEN_START}
 				fi
 
@@ -653,13 +528,6 @@ function AutoEvent() {
 					[ ${DEBUG} ] && echo "SCHOOL: \"${TITLE}\" in $(( ${SCHOOL_NOTICE_DIFF} / 86400 )) days is longer than ${NOTICE_DAYS} away."
 				fi
 
-# 				[ ${DEBUG} ] && echo "------------------------------------"
-#			else
-#				[ ${DEBUG} ] && echo "Bypassing: $x - ${TITLE} - $(date -d "${END}" +%Y%m%d) - $(date -d @${TODAY} +%Y%m%d) - ${HERE_CHECK}"
-#			fi
-
-
-#			ClearCalVars
 			x=$(( $x + 1 ))
 		####################################
 		# MORE EXCLUDES HERE
@@ -695,18 +563,17 @@ function ClearCalVars() {
 
 function LocationSearch() {
 
+# 	echo LOCATION SEARCH: $*
+# 	echo UA: $UA
+# 	echo GOOGLE_KEY: $GOOGLE_KEY
+
 	PLACE_LOCATION=$(curl -A "${UA}" -sL -G https://maps.googleapis.com/maps/api/place/textsearch/xml?key=${GOOGLE_KEY} -d output=xml -d sensor=false -d query=${CLEAN_LOC} | egrep -m2 'name|formatted_address' | tr -d \\n)
-	PLACE_NAME="$(echo ${PLACE_LOCATION} | sed -e 's/.*<name>\(.*\)<\/name>.*/\1/g')"
-	PLACE_ADDRESS="$(echo ${PLACE_LOCATION} | sed -e 's/.*<formatted_address>\(.*\)<\/formatted_address>.*/\1/g')"
-	PLACE_LINK="https://maps.google.com/maps?q=$(echo ${PLACE_NAME} | sed -e 's/ /+/g'),+$(echo ${PLACE_ADDRESS} | sed -e 's/ /+/g')"
 
-	if [ ${DEBUG} ] ; then
-		[ "${PLACE_LOCATION}" ] && echo PLACE_LOCATION: ${PLACE_LOCATION}
-		[ "${PLACE_NAME}" ] && echo PLACE_NAME: ${PLACE_NAME}
-		[ "${PLACE_ADDRESS}" ] && echo PLACE_ADDRESS: ${PLACE_ADDRESS}
-		[ "${PLACE_LINK}" ] && echo PLACE_LINK: ${PLACE_LINK}
+	if [ "${PLACE_LOCATION}" ] ; then
+		PLACE_NAME="$(echo ${PLACE_LOCATION} | sed -e 's/.*<name>\(.*\)<\/name>.*/\1/g')"
+		PLACE_ADDRESS="$(echo ${PLACE_LOCATION} | sed -e 's/.*<formatted_address>\(.*\)<\/formatted_address>.*/\1/g')"
+		PLACE_LINK="https://maps.google.com/maps?q=$(echo ${PLACE_NAME} | sed -e 's/ /+/g'),+$(echo ${PLACE_ADDRESS} | sed -e 's/ /+/g')"
 	fi
-
 }
 ##########################################
 
@@ -737,8 +604,6 @@ function GooglePlaceIcon() {
 function GetHolidays() {
 
 	GOOGLE_ICON="https://maps.gstatic.com/mapfiles/place_api/icons/generic_business-71.png"
-
-#	curl -A "${UA}" -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | sed 's/&\([a-zA-Z]\)\+\;/\1/g' | xmllint --format - | grep -A3 "<item>" | egrep "<title>|<link>" | sed 's/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/'  | while IFS= read -r HOLIDAY ; do
 
 	HOLIDAYLIST=$(curl -sL "https://www.checkiday.com/rss.php?tz=America/New_York" | xmllint --format - | awk '/<item>/,/<\/item>/' | egrep "<title>|<link>" | sed 's/^ \+//g;s/<title>/NAME="/;s/<\/title>/"/;s/<link>/PAGE_URL="/;s/<\/link>/"/')
 
@@ -977,22 +842,11 @@ function SetStylesAndVariables() {
 	#END_OF_TIME="yes"
 	###########################
 
-
 	DO_SCHOOL="yes"
 	NOTICE_DAYS=10
 
-	GOOGLE_KEY="AIzaSyB9w5fBKge4EiWlFZXDYY9DlIYOhvSyZug"
-
-#	UA="$(curl -sL "https://techblog.willshouse.com/2012/01/03/most-common-user-agents/" | grep -i "^Mozilla" | shuf -n1)"
-	UA="$(curl -sL "https://udger.com/resources/ua-list/browser-detail?browser=Chrome" | awk '/Useragentstring example/,/<\/td><\/tr>/' | sed 's/<[^>]\+>/ /g;s/ \+/ /g;s/.*Useragentstring example.*//' | egrep -v "^$|^ $" | shuf | head -n1)"
-
-# 	SHARED_CAL_ICAL="https://www.google.com/calendar/ical/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.com/private-2fde973cf30e98a7fa64de507bd8eb56/basic.ics"
-# 	SHARED_CAL_XML="https://www.google.com/calendar/feeds/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.com/private-2fde973cf30e98a7fa64de507bd8eb56/basic"
-
 	MY_CAL="https://www.google.com/calendar/feeds/${EMAIL_URL}/private-0e51e37191f79ffc0cbd55fc86e424bc"
-# 	MY_CAL="https://www.google.com/calendar/feeds/${EMAIL_URL}/private-0e51e37191f79ffc0cbd55fc86e424bc"
 	SHARED_CAL="https://www.google.com/calendar/feeds/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.com/private-2fde973cf30e98a7fa64de507bd8eb56"
-# 	SHARED_CAL="https://www.google.com/calendar/feeds/c0s7i7b0efq4pf47bkdaf7lfbk%40group.calendar.google.coe-2fde973cf30e98a7fa64de507bd8eb5"
 
 	UNION_TOTAL_COUNT=0
 
@@ -1015,15 +869,9 @@ function SetStylesAndVariables() {
 	########################
 	# TIME
 	#
-#	START_DATE=$(date -d 20120214 +%s)
 	START_DATE=$(date -d 20041122 +%s)
-	# START_DATE="20121127"
-
 	TODAY=$(date -d "$(date +%Y%m%d)" +%s)
-# 	TODAY=$(date -d "20131202" +%s)
-
 	TODAY_PRETTY=$(date -d @${TODAY} '+%A, %B %-d, %Y')
-
 
 	if [ ${TODAY} -lt ${START_DATE} ] ; then
 		echo -e \\v"$(date -d @${TODAY} '+%A, %B %-d, %Y') is before $(date -d @${START_DATE} '+%A, %B %-d, %Y').\\nSomething is very wrong."\\v
@@ -1054,12 +902,9 @@ function SetStylesAndVariables() {
 #	STYLE_BULLET_TEXT="vertical-align: top"
 	STYLE_BULLET_TEXT="vertical-align: baseline; padding-left:0.3em;"
 
-# 	STYLE_UL="border:0px solid; padding:5pt; margin-left:1em; margin-right:0pt; margin-top:0pt; margin-bottom:0em;"
 # 	STYLE_UL_ZERO_PAD="border:0px solid; padding:0pt; margin-left:1em; margin-right:0pt; margin-top:0pt; margin-bottom:0em;"
 	STYLE_UL="border:0px solid; padding:3pt; margin-left:2em; margin-right:0pt; margin-top:0pt; margin-bottom:0em;"
 
-# 	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding:0px"
-#	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding-left:2pt; padding-right:2pt; vertaical-align:bottom;"
 # 	STYLE_GOOGLE_IMAGE="width:20px; height:20px; border:0px; padding-left:2pt; padding-right:2pt; vertaical-align:baseline;"
 	STYLE_GOOGLE_IMAGE="width:20px; height:20px;"
 
@@ -1068,14 +913,11 @@ function SetStylesAndVariables() {
 	STYLE_LI_DISC="border:0px solid brown; padding:0pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:disc;"
 
 	STYLE_LI_CIRCLE="border:0px solid brown; padding:0pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:circle;"
-# 	STYLE_LI_CIRCLE="border:0px solid brown; padding:0pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-image:url('http://maps.gstatic.com/mapfiles/place_api/icons/camping-71.png');"
-
 
 	STYLE_LI_NONE="border:0px solid brown; padding:0pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:none;"
 	STYLE_LI_DISC_UNION="border:0px solid brown; padding:0pt; margin-left:0pt; list-style-type:disc;"
 	STYLE_LI__CIRCLE_UNION="border:0px solid brown; padding:0pt; margin-left:0pt; list-style-type:circle;"
 
-#	STYLE_EVENT_TD="border-left:5px solid brown; border-bottom: 1px solid brown; padding-top: 5pt; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:none"
 # 	STYLE_EVENT_TD="border-left:5px solid brown; border-bottom: 1px solid brown; padding-top: 0.9em; margin-left:0pt; margin-right:0pt; margin-bottom:0pt; margin-top:0.5em; list-style-type:none"
 	STYLE_EVENT_TD="border-left:5px solid brown; border-bottom: 1px solid brown; padding-top: 0.9em; margin-left:0pt; margin-top:0.5em;"
 
@@ -1203,3 +1045,15 @@ FinishMail ; TRAP=$? ; [ ! $? -eq 0 ] && echo -e "BOOM FinishMail - ${TRAP}" ; T
 
 exit 0
 ##############################################################3
+
+
+# HOLIDAYS TODAY
+# curl -sL https://www.checkiday.com/rss.php 2>/dev/null | xmllint --format -
+
+#XML
+#https://www.checkiday.com/rss.php?tz=America/New_York
+#https://www.checkiday.com/rss.php?tz=America/New_York&adult=true
+
+#ICAL
+#https://www.checkiday.com/ical.php
+#https://www.checkiday.com/ical.php?adult=true
