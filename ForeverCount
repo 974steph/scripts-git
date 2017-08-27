@@ -949,7 +949,7 @@ case $1 in
 		GetQuote
 		GetHolidays
 		FinishMail
-		Cleanup
+		CleanUp
 		exit
 		;;
 	"lex")
@@ -960,7 +960,7 @@ case $1 in
 		GetHolidays
 		AutoEvent
 		FinishMail
-		Cleanup
+		CleanUp
 		exit
 		;;
 	*)
