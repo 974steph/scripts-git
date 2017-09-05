@@ -138,7 +138,7 @@ function ParseRadio() {
 	RADIO_DUMP_FILE="${TMP_DIR}/radio_dump_file"
 	RADIO_SHOW_FILE="${TMP_DIR}/radio_show_file"
 
-	curl -s http://jmmsandbox.com/podcast/Radio.xml | xmllint --format - | tail -n +23 | sed \
+	curl -sL http://jmmsandbox.com/podcast/Radio.xml | xmllint --format - | tail -n +23 | sed \
 		-e 's/^[ \t]*//;s/[ \t]*$//' \
 		-e 's/\&#x2013;/\-/g' \
 		-e 's/\&#x2014;/\&mdash;/g' \
@@ -303,7 +303,7 @@ function ParseTV() {
 
 	TV_HOLDING_DIR="${JOYCE_DIR}/TV"
 
-	curl -s http://www.jmmsandbox2.com/hd_rss_client/SDPodcastProxy.ashx | xmllint --format - | tail -n+22 | sed \
+	curl -sL http://www.jmmsandbox2.com/hd_rss_client/SDPodcastProxy.ashx | xmllint --format - | tail -n+22 | sed \
 		-e 's/^[ \t]*//;s/[ \t]*$//' \
 		-e 's/\&#x2013;/\-/g' \
 		-e 's/\&#x2014;/\&mdash;/g' \
@@ -452,7 +452,7 @@ function GetDevotional() {
 	DEVOTIONAL_FILE="$HOME/Joyce_Devotional.html"
 	DEVOTIONAL_FILE="$HOME/devosource"
 
-	curl -s "http://www.joycemeyer.org/Articles/Devotional.aspx" \
+	curl -sL "http://www.joycemeyer.org/Articles/Devotional.aspx" \
 		| sed -n -e '/devotionalTitle/,$p' -e '/From the book/q;d' \
 		| sed -e '/From the book/d' \
 		| xmllint --format --html --nowarning --nowrap - \
@@ -477,6 +477,19 @@ function GetDevotional() {
 			-e 's/[ \t]*(emphasis mine)//g' \
 			-e 's/>[ \t]*</></g' \
 		> ${DEVOTEMP}
+
+	# PRAYER STARTER
+# 	https://www.joycemeyer.org/-/media/joycemeyer/daily-devotional/daily-devos-pins/2017/090716_daily_devos_pin.png
+# 	https://www.joycemeyer.org/-/media/joycemeyer/daily-devotional/daily-devos-pins/$(date +%Y/%m%d)16_daily_devos_pin.png
+
+#	VERSE
+# 	curl -sL https://www.joycemeyer.org/dailydevo | awk '/section class="hero article"/,/<\/span>/' | egrep -A1 "<span class|<p class" | sed 's/^ \+//g' | grep -v "class="
+
+#	DATE and TITLE
+# 	curl -sL https://www.joycemeyer.org/dailydevo | grep -A1 "time datetime=" | sed 's/^ \+//g'
+
+# 	BODY
+# 	curl -sL https://www.joycemeyer.org/dailydevo | awk '/div id="articleSpacer" class="article-spacer"/,/<div class="highlight hide"/'
 
 	DEVOTIONAL_TITLE=$(grep -i devotionalTitle ${DEVOTEMP} \
 		| sed -e 's/.*<h2>\(.*\)<\/h2>.*/\1/g' \
@@ -691,10 +704,18 @@ function CleanUp() {
 #
 case $1 in
 	"debug")
+		echo DEBUG
 		EMAILS="${EMAIL_MINE}"
 		DEBUG="yes"
 # 		CLEAN="no"
 		FAKE_ATTACH="true"
+		SetStylesAndVariables
+		StartMail
+		GetDevotional
+		#ParseEverydayMoments
+		#ParseRadio
+#		ParseTV
+		FinishMail
 		;;
 	"me")
 		EMAILS="${EMAIL_MINE}"
@@ -722,7 +743,7 @@ case $1 in
 		GetDevotional
 # 		ParseEverydayMoments
 # 		ParseRadio
-# 		[ ${FILE_TODAY} ] && 
+# 		[ ${FILE_TODAY} ] &&
 # 		ParseTV
 # 		FinishMail
 # 		CleanUp
