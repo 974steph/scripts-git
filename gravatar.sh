@@ -9,7 +9,12 @@
 # http://en.gravatar.com/site/implement/profiles/
 
 function DumpHelp() {
-	echo -e "\\v$0 [EMAIL]\\v"
+	echo -e "\\v$0 [EMAIL] [STYLE]\\v"
+	echo -e "STYLE is optional.  Choices are:"
+	echo -e "\tidenticon"
+	echo -e "\tmonsterid"
+	echo -e "\tretro"
+	echo -e "\twavatar"
 	exit 1
 }
 
@@ -20,16 +25,31 @@ else
 	EMAIL="$1"
 fi
 
+case $2 in
+	identicon) STYLE=$2;;
+	monsterid) STYLE=$2;;
+	retro) STYLE=$2;;
+	wavatar) STYLE=$2;;
+#	*) DumpHelp;;
+esac
 
 HASH=$(echo "${EMAIL}" | tr '[:upper:]' '[:lower:]' | md5)
 
-STYLES="identicon monsterid wavatar retro"
+STYLES="identicon monsterid retro wavatar"
 RATINGS="g pg r x"
 
-for STYLE in ${STYLES} ; do
-	for RATING in ${RATINGS} ; do
-		echo "Getting ${STYLE}-${RATING}"
-		wget "http://www.gravatar.com/avatar/${HASH}?s=512&r=${RATING}&d=${STYLE}" -O ${EMAIL}-${STYLE}-${RATING}.jpg
+if [ ${STYLE} ] ; then
+#	for RATING in ${RATINGS} ; do
+#		wget "http://www.gravatar.com/avatar/${HASH}?s=512&r=${RATING}&d=${STYLE}" -O "${EMAIL}-${STYLE}-${RATING}.jpg"
+		wget --quiet --show-progress "http://www.gravatar.com/avatar/${HASH}?s=512&r=x&d=${STYLE}" -O "${EMAIL}-${STYLE}.jpg"
+#	done
+else
+	for STYLE in ${STYLES} ; do
+#		for RATING in ${RATINGS} ; do
+#			echo "Getting ${STYLE}-${RATING}"
+#			wget "http://www.gravatar.com/avatar/${HASH}?s=512&r=${RATING}&d=${STYLE}" -O "${EMAIL}-${STYLE}-${RATING}.jpg"
+			echo "Getting ${STYLE}"
+			wget --quiet --show-progress "http://www.gravatar.com/avatar/${HASH}?s=512&r=x&d=${STYLE}" -O "${EMAIL}-${STYLE}.jpg"
+#		done
 	done
-done
-
+fi
