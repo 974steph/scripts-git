@@ -5,6 +5,8 @@
 HOST="aragorn.fleag.us"
 THERE="Work/Ring"
 TANK="${HOME}/Google Drive/BACKUP"
+GITBASE="${HOME}/GIT"
+
 B=$(tput bold)
 R=$(tput setaf 1)
 LB=$(tput setaf 6)
@@ -45,8 +47,8 @@ echo "${B}Google${N}"
 rsync --exclude .DS_Store --exclude 'Icon*' --exclude 'NoSync' --delete -ai ${HOME}/Google\ Drive palermo@${HOST}:${THERE}/
 
 echo "${B}Git${N}"
-rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${HOME}/GIT/broom-closet palermo@${HOST}:${THERE}/
-rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${HOME}/GIT/splunk-docker palermo@${HOST}:${THERE}/
-rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${HOME}/GIT/packer palermo@${HOST}:${THERE}/
-rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${HOME}/GIT/docker-common palermo@${HOST}:${THERE}/
+GITS="broom-closet directory_utilities docker-common packer splunk-docker"
+for GIT in ${GITS} ; do
+	rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${GITBASE}/${GIT} palermo@${HOST}:${THERE}/
+done
 ###########################
