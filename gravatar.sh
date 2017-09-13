@@ -15,6 +15,7 @@ function DumpHelp() {
 	echo -e "\tmonsterid"
 	echo -e "\tretro"
 	echo -e "\twavatar"
+	echo -e "\tall"
 	exit 1
 }
 
@@ -30,6 +31,7 @@ case $2 in
 	monsterid) STYLE=$2;;
 	retro) STYLE=$2;;
 	wavatar) STYLE=$2;;
+	all) EMAIL=$(echo "${EMAIL}" | tr '[:upper:]' '[:lower:]');;
 #	*) DumpHelp;;
 esac
 
