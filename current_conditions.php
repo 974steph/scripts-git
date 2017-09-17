@@ -153,29 +153,34 @@ function checkForSave($csvFile, $thisEpoch) {
 
 //	$csvFile = "/usr/local/palermo/Pictures/Cams/Weather/2017-Tucson.csv";
 
-	$file = fopen($csvFile,"r");
+	if (file_exists($csvFile)) {
 
-	$csvWeather = array();
-	$csvCounter = 0;
+		$file = fopen($csvFile,"r");
 
-	while (($data = fgetcsv($file)) !== FALSE) {
-		$csvWeather[$csvCounter] = $data;
-		$csvCounter++;
-	}
+		$csvWeather = array();
+		$csvCounter = 0;
 
-	fclose($file);
+		while (($data = fgetcsv($file)) !== FALSE) {
+			$csvWeather[$csvCounter] = $data;
+			$csvCounter++;
+		}
 
-//	print "COUNT: ". count($csvWeather) ."\n";
-//	print_r($csvWeather[count($csvWeather) - 1]);
+		fclose($file);
 
-	$lastEpoch = $csvWeather[count($csvWeather) - 1][0];
+//		print "COUNT: ". count($csvWeather) ."\n";
+//		print_r($csvWeather[count($csvWeather) - 1]);
 
-	if ($thisEpoch > $lastEpoch ) {
-		if ( $debug ) { print "TRUE - NEW: $thisEpoch || OLD: $lastEpoch\n"; }
-		$savevalues = TRUE;
+		$lastEpoch = $csvWeather[count($csvWeather) - 1][0];
+
+		if ($thisEpoch > $lastEpoch ) {
+			if ( $debug ) { print "TRUE - NEW: $thisEpoch || OLD: $lastEpoch\n"; }
+			$savevalues = TRUE;
+		} else {
+			if ( $debug ) { print "FALSE - NEW: $thisEpoch || OLD: $lastEpoch\n"; }
+			$savevalues = FALSE;
+		}
 	} else {
-		if ( $debug ) { print "FALSE - NEW: $thisEpoch || OLD: $lastEpoch\n"; }
-		$savevalues = FALSE;
+		#savevalues = FALSE;
 	}
 
 	return $savevalues;
@@ -219,6 +224,9 @@ foreach ($locations as $location) {
 
 		if ($dosave) {
 			file_put_contents($directory ."/". $filename, $csvString, FILE_APPEND);
+		} else {
+			print "\"$dosave\" missing.  Bailing...";
+			exit(1);
 		}
 
 	} else {
