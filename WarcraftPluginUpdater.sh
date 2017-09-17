@@ -3,7 +3,7 @@
 
 ######################################################
 # USE THIS STUFF
-CURSE_PLUGINS="askmrrobot auctionator auctioneer altoholic datastore deadly-boss-mods \
+CURSE_PLUGINS="askmrrobot auctionator auctioneer altoholic bagnon datastore deadly-boss-mods \
 	dejacharacterstats farmhud gathermate2 gathermate2_data handynotes \
 	handynotes_legionrarestreasures pawn postal scrap scrap-cleaner skada tomtom world-quest-tracker"
 
@@ -468,10 +468,15 @@ function DoIt() {
 
 	[ ${DEBUG} ] && V="v"
 
-	Plugins
-#	WoWAuction
-	GPDawnbringer
- 	WoWPro
+	if [ ${SINGLE} ] ; then
+		echo "Installing ${CURSE_PLUGINS}"
+		Plugins
+	else
+		Plugins
+#		WoWAuction
+		GPDawnbringer
+ 		WoWPro
+	fi
 }
 ###########################
 
@@ -527,6 +532,15 @@ case $1 in
 		DoIt
 		;;
 	*)
-		DoIt
+#		echo test
+		case $1 in
+			*)	if [[ "$1" =~ *"${CURSE_PLUGINS}"* ]] ; then
+					echo "SINGLE: $1"
+					CURSE_PLUGINS=$1
+					SINGLE=yes
+				fi
+			;;
+		esac
+		DoIt $1
 		;;
 esac
