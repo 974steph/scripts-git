@@ -469,9 +469,10 @@ function DoIt() {
 	[ ${DEBUG} ] && V="v"
 
 	if [ ${SINGLE} ] ; then
-		echo "Installing ${CURSE_PLUGINS}"
+		[ ${DEBUG} ] && echo -e "\\n${RED}Single Installing:${RESET} ${BOLD}${BLUE}${CURSE_PLUGINS}${RESET}\\n"
 		Plugins
 	else
+		[ ${DEBUG} ] && echo "ALL - Checking Everything"
 		Plugins
 #		WoWAuction
 		GPDawnbringer
@@ -493,6 +494,7 @@ if [ ! "$TERM" == "dumb" ] ; then
 	BOLD=$(tput bold)
 	BLUE=$(tput setaf 4)
 	RED=$(tput setaf 1)
+	PURP=$(tput setaf 6)
 	WHITE=$(tput setaf 7)
 	RESET=$(tput sgr0)
 fi
@@ -532,15 +534,18 @@ case $1 in
 		DoIt
 		;;
 	*)
-#		echo test
-		case $1 in
-			*)	if [[ "$1" =~ *"${CURSE_PLUGINS}"* ]] ; then
-					echo "SINGLE: $1"
+		if [ "$1" ] ; then
+			for P in ${CURSE_PLUGINS} ; do
+				if [ $1 == $P ] ; then
+#					echo "$P == $1 - YES"
 					CURSE_PLUGINS=$1
-					SINGLE=yes
+					FORCE="yes"
+					DEBUG="yes"
+					SINGLE="yes"
 				fi
-			;;
-		esac
-		DoIt $1
+			done
+		fi
+
+		DoIt
 		;;
 esac
