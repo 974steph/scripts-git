@@ -2,13 +2,16 @@
 
 
 ######################################################
-# USE THIS STUFF
+# EDIT THIS STUFF FOR YOUR SYSTEM / SETUP
 CURSE_PLUGINS="askmrrobot auctionator auctioneer altoholic bagnon deadly-boss-mods \
 	dejacharacterstats farmhud gathermate2 gathermate2_data handynotes \
 	handynotes_legionrarestreasures pawn postal scrap scrap-cleaner skada tomtom world-quest-tracker"
 
 ADDON_DIR="/WoW_2014_11_28/AddOns"
+######################################################
 
+######################################################
+# DON'T TOUCH *ANYTHING* FROM HERE TO THE END OF THE SCRIPT
 WGET_TRIES=5
 WGET_LOOP=0
 WGET_PAUSE=10
