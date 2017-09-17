@@ -3,7 +3,7 @@
 
 ######################################################
 # EDIT THIS STUFF FOR YOUR SYSTEM / SETUP
-CURSE_PLUGINS="askmrrobot auctionator auctioneer altoholic bagnon deadly-boss-mods \
+CURSE_PLUGINS="askmrrobot auctionator auctioneer altoholic bagnon datastore deadly-boss-mods \
 	dejacharacterstats farmhud gathermate2 gathermate2_data handynotes \
 	handynotes_legionrarestreasures pawn postal scrap scrap-cleaner skada tomtom world-quest-tracker"
 
