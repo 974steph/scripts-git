@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
 
 ##########################################
 # Main Stuff
@@ -12,12 +12,10 @@ BODY="${BODY}"
 
 
 function doit {
-	[ ${DEBUG} ] && echo "DO IT"
+	[ ${DEBUG} ] && echo "DO IT - $*"
 	##########################################
 	# Quick syntax check.
 	#
-
-# 	echo "$1"
 
 	if [ -z "$1" ] ; then
 		echo -e "\\vSyntax: $0 [The File]\\v"
@@ -28,21 +26,21 @@ function doit {
 
 	##########################################
 	WS=$(echo $1 | awk '{print $1}' | sed -e 's/\.mp3//g' -e 's/[^a-zA-Z]//g')
-# 	DATE=$(echo $1 | cut -d. -f1 | sed 's/[^0-9]//g')
+#	DATE=$(echo $1 | cut -d. -f1 | sed 's/[^0-9]//g')
 
 	JUST_DATE=$(echo $1 | awk '{print $1}' | cut -d'.' -f-1 | sed 's/[^0-9]//g')
-# 	PRETTY_DATE=$(date --date="$JUST_DATE" "+%A, %B %d, %Y")
+#	PRETTY_DATE=$(date --date="$JUST_DATE" "+%A, %B %d, %Y")
 	NUMBER_DATE=$(date --date="$JUST_DATE" "+%m/%d/%Y, %A")
 	MONTH_YEAR=$(date --date="$JUST_DATE" "+%B - %Y")
 	YEAR=$(date --date="$JUST_DATE" +%Y)
 	MONTH=$(date --date="$JUST_DATE" "+%m-%B")
 	TRACK=$(date --date="$JUST_DATE" "+%d")
 
-	MONTH_REPO="$REPO/$YEAR/$MONTH"
+	MONTH_REPO="${REPO}/${YEAR}/${MONTH}"
 	##########################################
 
 
-###################################
+##########################################
 #
 function MakeAFist() {
 
@@ -51,16 +49,11 @@ function MakeAFist() {
 	FIST_YEAR_PNG="${WORKDIR}/fyear.png"
 	FIST_FISTED="${WORKDIR}/fist.png"
 
-# 	JUST_DATE=140801
-
 	FIST_A_MONTH=$(date -d ${JUST_DATE} +%B)
 	FIST_A_YEAR=$(date -d ${JUST_DATE} +%Y)
 
 	MONTH_ROT=$(( $(expr length "${FIST_A_MONTH}") * 7 ))
 	YEAR_ROT=$(( $(expr length "${FIST_A_YEAR}") * 7 ))
-
-	#echo DATE_ROT: ${DATE_ROT}
-	#echo DAY_ROT: ${DAY_ROT}
 
 	convert \
 		-virtual-pixel Background \
@@ -84,9 +77,7 @@ function MakeAFist() {
 	echo "Icon=./.folder.png" >> "${MONTH_REPO}/.directory"
 	rm -f "${FIST_MONTH_PNG}" "${FIST_YEAR_PNG}"
 }
-###################################
-# MakeAFist
-# exit 0
+##########################################
 
 ##########################################
 # If the repo's not there, make it
@@ -123,7 +114,7 @@ ionice -c3 sox -S "$1" "$MONTH_REPO/$JUST_DATE.wav"
 #
 [ ${DEBUG} ] && echo "Make mp3"
 # nice lame --resample 24 -mj -q2 --abr 32 -b24 -B56 --lowpass 8047 --scale 1.5 \
-# 	"$MONTH_REPO/$JUST_DATE.wav" "$MONTH_REPO/$JUST_DATE.mp3"
+# "$MONTH_REPO/$JUST_DATE.wav" "$MONTH_REPO/$JUST_DATE.mp3"
 
 sox --multi-threaded -S "$MONTH_REPO/$JUST_DATE.wav" -r 16k -C -7 "$MONTH_REPO/$JUST_DATE.mp3" lowpass 8k
 
@@ -141,7 +132,7 @@ $HOME/Sources/scripts-git/Retag "$MONTH_REPO/$JUST_DATE.mp3"
 
 ##########################################
 # Send the mail
-if [ $DOMAIL = "yes" ] ; then
+if [ ${DOMAIL} ] ; then
 	OLDSIZE=$(ls -sh "$1" | awk '{print $1}' | sed -e 's/[a-zA-Z]//g')
 	NEWSIZE=$(ls -sh "$MONTH_REPO/$JUST_DATE.mp3" | awk '{print $1}' | sed -e 's/[a-zA-Z]//g')
 	PERCENT=$(echo "(1-($NEWSIZE/$OLDSIZE)) * 100" | bc -l | sed -e 's/\(\.[0-9]\).*/\1/g')
@@ -160,7 +151,6 @@ fi
 ##########################################
 # See if I should mail results
 #
-#DOMAIL="no"
 
 
 case $1 in
@@ -168,27 +158,15 @@ case $1 in
 		DOMAIL="yes"
 		;;
 	month)
-		DOMAIL="no"
+#		DOMAIL="no"
 		MakeAFist
 		exit
 		;;
-	*)
-		DOMAIL="no"
+#	*)
+#		DOMAIL="no"
+		;;
 esac
-
-#if [ $1 ] ; then
-#	if [ -n "$1" ] ; then
-#		if [ "$1" = "mail" ] ; then
-#			DOMAIL="yes"
-#		else
-#			DOMAIL="no"
-#		fi
-#	fi
-#else
-#	DOMAIL="no"
-#fi
 ##########################################
-
 
 cd "$REPO/Weekly"
 
