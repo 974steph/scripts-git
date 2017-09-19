@@ -11,22 +11,29 @@ BODY="${BODY}"
 ##########################################
 
 
-function doit {
-	[ ${DEBUG} ] && echo "DO IT - $*"
-	##########################################
-	# Quick syntax check.
-	#
+##########################################
+# DO MAIL
+function domail() {
+	OLDSIZE=$(ls -sh "$1" | awk '{print $1}' | sed -e 's/[a-zA-Z]//g')
+	NEWSIZE=$(ls -sh "$MONTH_REPO/$JUST_DATE.mp3" | awk '{print $1}' | sed -e 's/[a-zA-Z]//g')
+	PERCENT=$(echo "(1-($NEWSIZE/$OLDSIZE)) * 100" | bc -l | sed -e 's/\(\.[0-9]\).*/\1/g')
 
-	if [ -z "$1" ] ; then
-		echo -e "\\vSyntax: $0 [The File]\\v"
-		exit
-	fi
-	##########################################
+	echo -e "Name: ${NUMBER_DATE}" > ${BODY}
+	echo -e "Album: Howard Stern - $MONTH_YEAR" >> ${BODY}
+	echo -e "Old size: ${OLDSIZE}M" >> ${BODY}
+	echo -e "New size: ${NEWSIZE}M" >> ${BODY}
+	echo -e "$PERCENT% reduction" >> ${BODY}
+	${MAILER} -s "Success: $JUST_DATE.mp3" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+	rm -f ${BODY}
+}
+##########################################
 
 
-	##########################################
+##########################################
+# MAKE VARS
+function makevars() {
+
 	WS=$(echo $1 | awk '{print $1}' | sed -e 's/\.mp3//g' -e 's/[^a-zA-Z]//g')
-#	DATE=$(echo $1 | cut -d. -f1 | sed 's/[^0-9]//g')
 
 	JUST_DATE=$(echo $1 | awk '{print $1}' | cut -d'.' -f-1 | sed 's/[^0-9]//g')
 #	PRETTY_DATE=$(date --date="$JUST_DATE" "+%A, %B %d, %Y")
@@ -37,11 +44,12 @@ function doit {
 	TRACK=$(date --date="$JUST_DATE" "+%d")
 
 	MONTH_REPO="${REPO}/${YEAR}/${MONTH}"
-	##########################################
+}
+##########################################
 
 
 ##########################################
-#
+# MAKE A FIST
 function MakeAFist() {
 
 	FIST="$HOME/Pictures/Fist.png"
@@ -79,95 +87,81 @@ function MakeAFist() {
 }
 ##########################################
 
+
+##########################################
+# DO ARCHIVE
+function doArchive() {
+
+	# Make wavs
+	[ ${DEBUG} ] && echo "Make wavs"
+	ionice -c3 sox -S "$1" "$MONTH_REPO/$JUST_DATE.wav"
+
+	# Make mp3
+	[ ${DEBUG} ] && echo "Make mp3"
+#	nice lame --resample 24 -mj -q2 --abr 32 -b24 -B56 --lowpass 8047 --scale 1.5 \
+#	"$MONTH_REPO/$JUST_DATE.wav" "$MONTH_REPO/$JUST_DATE.mp3"
+
+	sox --multi-threaded -S "$MONTH_REPO/$JUST_DATE.wav" -r 16k -C -7 "$MONTH_REPO/$JUST_DATE.mp3" lowpass 8k
+
+	rm -f "$MONTH_REPO/$JUST_DATE.wav"
+
+	# Retag
+	[ ${DEBUG} ] && echo "Retag"
+	$HOME/Sources/scripts-git/Retag "$MONTH_REPO/$JUST_DATE.mp3"
+
+	# Send the mail
+	[ ${DOMAIL} ] && domail
+}
+##########################################
+
+
 ##########################################
 # If the repo's not there, make it
 #
-if [ ! -d "$MONTH_REPO" ] ; then 
-	mkdir -p "$MONTH_REPO"
-	MakeAFist
-fi
-##########################################
-
-
-##########################################
-# If the target file exists, bail
-
-[ ${DEBUG} ] && echo "If the target file exists, bail"
-
-if [ -e "$MONTH_REPO/$JUST_DATE.mp3" ] ; then
-	echo -e "$MONTH_REPO/$JUST_DATE.mp3" already exists
-	continue
-fi
-##########################################
-
-
-##########################################
-# Make wavs
-# -S
-[ ${DEBUG} ] && echo "Make wavs"
-ionice -c3 sox -S "$1" "$MONTH_REPO/$JUST_DATE.wav"
-##########################################
-
-
-##########################################
-# Make mp3
-#
-[ ${DEBUG} ] && echo "Make mp3"
-# nice lame --resample 24 -mj -q2 --abr 32 -b24 -B56 --lowpass 8047 --scale 1.5 \
-# "$MONTH_REPO/$JUST_DATE.wav" "$MONTH_REPO/$JUST_DATE.mp3"
-
-sox --multi-threaded -S "$MONTH_REPO/$JUST_DATE.wav" -r 16k -C -7 "$MONTH_REPO/$JUST_DATE.mp3" lowpass 8k
-
-rm -f "$MONTH_REPO/$JUST_DATE.wav"
-##########################################
-
-
-##########################################
-# Retag
-#
-[ ${DEBUG} ] && echo "Retag"
-$HOME/Sources/scripts-git/Retag "$MONTH_REPO/$JUST_DATE.mp3"
-##########################################
-
-
-##########################################
-# Send the mail
-if [ ${DOMAIL} ] ; then
-	OLDSIZE=$(ls -sh "$1" | awk '{print $1}' | sed -e 's/[a-zA-Z]//g')
-	NEWSIZE=$(ls -sh "$MONTH_REPO/$JUST_DATE.mp3" | awk '{print $1}' | sed -e 's/[a-zA-Z]//g')
-	PERCENT=$(echo "(1-($NEWSIZE/$OLDSIZE)) * 100" | bc -l | sed -e 's/\(\.[0-9]\).*/\1/g')
-
-	echo -e "Name: ${NUMBER_DATE}" > ${BODY}
-	echo -e "Album: Howard Stern - $MONTH_YEAR" >> ${BODY}
-	echo -e "Old size: ${OLDSIZE}M" >> ${BODY}
-	echo -e "New size: ${NEWSIZE}M" >> ${BODY}
-	echo -e "$PERCENT% reduction" >> ${BODY}
-	${MAILER} -s "Success: $JUST_DATE.mp3" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
-	rm -f ${BODY}
-fi
-##########################################
+function checkrepo() {
+	if [ ! -d "${MONTH_REPO}" ] ; then
+		mkdir -p "${MONTH_REPO}"
+		MakeAFist
+	fi
 }
+##########################################
+
 
 ##########################################
-# See if I should mail results
-#
+# CHECK FOR WORK
+function checkforwork() {
+
+	makevars "${FILE}"
+
+	if [ -f "$MONTH_REPO/$JUST_DATE.mp3" ] ; then
+		echo -e "$MONTH_REPO/$JUST_DATE.mp3 already exists.  Skipping..."
+
+		unset WS JUST_DATE NUMBER_DATE MONTH_YEAR YEAR MONTH TRACK
+	else
+		echo -e "$MONTH_REPO/$JUST_DATE.mp3 doesn't exist.  Archiving..."
+		checkrepo
+		doArchive "${FILE}"
+	fi
+}
+##########################################
 
 
 case $1 in
 	mail)
+#		echo "case - mail"
 		DOMAIL="yes"
 		;;
 	month)
-#		DOMAIL="no"
+#		echo "case - month"
 		MakeAFist
 		exit
 		;;
 #	*)
-#		DOMAIL="no"
-		;;
+#		echo "case - *"
+#		;;
 esac
-##########################################
 
+
+# DO IT
 cd "$REPO/Weekly"
-
-for FILE in *.mp3 ; do doit "$FILE" ; done
+for FILE in *.mp3 ; do checkforwork "$FILE" ; done
