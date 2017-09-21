@@ -267,7 +267,7 @@ function Plugins() {
 		GetPluginPage
 
 		PLUGIN_DATE_EPOCH=$(echo "${PLUGIN_PAGE}" | grep Updated.*epoch | sed -e 's/.*data-epoch="//;s/">.*//')
-		PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %r")
+		PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE}" | grep newest-file | sed "s/.* \(.*\)<.*/\1/g")
 		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/")
 		PLUGIN_FILE_URL=$(curl -A "${UA}" -sL ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
@@ -302,7 +302,7 @@ function GPDawnbringer() {
 
 	PLUGIN_FILE_URL="http://goingpriceaddon.com/download/us.battle.net/symb/GoingPrice_US_Dawnbringer.zip"
 	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" --head -sL ${PLUGIN_FILE_URL} | grep Last-Modified | cut -d ' ' -f2-)" +%s)
-	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %r")
+	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 	PLUGIN_VERSION=${PLUGIN_DATE_EPOCH}
 
 	outputHead
@@ -330,7 +330,7 @@ function WoWPro() {
 	PLUGIN_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | awk '/Version/ {print $3}')
 	PLUGIN_FILE_URL="https://s3.amazonaws.com/WoW-Pro/WoWPro+v${PLUGIN_VERSION}.zip"
 	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${PLUGIN_FILE_URL} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
-	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %r")
+	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 
 	outputHead
 
@@ -385,10 +385,10 @@ function WoWAuction() {
 
 				WOWUCTION_LIVE_EPOCH=$(head "${WOWUCTION_LUA_LIVE}" | grep lastUpdate | awk '{print $3}' | sed "s/,//" | tr -d \\r)
 				[ ! "${WOWUCTION_LIVE_EPOCH}" ] && WOWUCTION_LIVE_EPOCH=122965200
-				WOWUCTION_LIVE_PRETTY=$(date -d @${WOWUCTION_LIVE_EPOCH} "+%Y-%m-%d %r")
+				WOWUCTION_LIVE_PRETTY=$(date -d @${WOWUCTION_LIVE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 
 				WOWUCTION_TEMP_EPOCH=$(head "${WOWUCTION_LUA_TEMP}" | grep lastUpdate | awk '{print $3}' | sed "s/,//" | tr -d \\r)
-				WOWUCTION_TEMP_PRETTY=$(date -d @${WOWUCTION_TEMP_EPOCH} "+%Y-%m-%d %r")
+				WOWUCTION_TEMP_PRETTY=$(date -d @${WOWUCTION_TEMP_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 
 				OUTPUT+="WoWAuction current date: ${WOWUCTION_LIVE_PRETTY}\\n"
 				OUTPUT+="WoWAuction server date: ${WOWUCTION_TEMP_PRETTY}\\n"
