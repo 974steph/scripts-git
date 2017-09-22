@@ -14,17 +14,31 @@ BODY="${BODY}"
 ##########################################
 # DO MAIL
 function domail() {
+
+	END_EPOCH=$(date +%s)
+	DURATION=$(( (${END_EPOCH} - ${START_EPOCH}) / 60 ))
 	OLDSIZE=$(ls -sh "$1" | awk '{print $1}' | sed -e 's/[a-zA-Z]//g')
 	NEWSIZE=$(ls -sh "$MONTH_REPO/$JUST_DATE.mp3" | awk '{print $1}' | sed -e 's/[a-zA-Z]//g')
 	PERCENT=$(echo "(1-($NEWSIZE/$OLDSIZE)) * 100" | bc -l | sed -e 's/\(\.[0-9]\).*/\1/g')
 
-	echo -e "Name: ${NUMBER_DATE}" > ${BODY}
-	echo -e "Album: Howard Stern - $MONTH_YEAR" >> ${BODY}
-	echo -e "Old size: ${OLDSIZE}M" >> ${BODY}
-	echo -e "New size: ${NEWSIZE}M" >> ${BODY}
-	echo -e "$PERCENT% reduction" >> ${BODY}
-	${MAILER} -s "Success: $JUST_DATE.mp3" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
-	rm -f ${BODY}
+	echo -e "$(date +%Y-%m-%d\ %H:%M:%S) Archive of ${FILE} completed."
+	echo -e "Name: ${NUMBER_DATE}"
+	echo -e "Album: Howard Stern - $MONTH_YEAR"
+	echo -e "Old size: ${OLDSIZE}M"
+	echo -e "New size: ${NEWSIZE}M"
+	echo -e "$PERCENT% reduction"
+	echo -e "Duration: ${DURATION} minutes"
+	echo -e "---------------------------"
+
+	unset START_EPOCH END_EPOCH DURATION OLDSIZE NEWSIZE PERCENT
+
+#	echo -e "Name: ${NUMBER_DATE}" > ${BODY}
+#	echo -e "Album: Howard Stern - $MONTH_YEAR" >> ${BODY}
+#	echo -e "Old size: ${OLDSIZE}M" >> ${BODY}
+#	echo -e "New size: ${NEWSIZE}M" >> ${BODY}
+#	echo -e "$PERCENT% reduction" >> ${BODY}
+#	${MAILER} -s "Success: $JUST_DATE.mp3" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+#	rm -f ${BODY}
 }
 ##########################################
 
@@ -92,6 +106,8 @@ function MakeAFist() {
 # DO ARCHIVE
 function doArchive() {
 
+	START_EPOCH=$(date +%s)
+
 	# Make wavs
 	[ ${DEBUG} ] && echo "Make wavs"
 	ionice -c3 sox -S "$1" "$MONTH_REPO/$JUST_DATE.wav"
@@ -110,7 +126,7 @@ function doArchive() {
 	$HOME/Sources/scripts-git/Retag "$MONTH_REPO/$JUST_DATE.mp3"
 
 	# Send the mail
-	[ ${DOMAIL} ] && domail
+	[ ${DOMAIL} ] && domail ${FILE}
 }
 ##########################################
 
@@ -134,11 +150,11 @@ function checkforwork() {
 	makevars "${FILE}"
 
 	if [ -f "$MONTH_REPO/$JUST_DATE.mp3" ] ; then
-		echo -e "$MONTH_REPO/$JUST_DATE.mp3 already exists.  Skipping..."
+		echo -e "$(date +%Y-%m-%d\ %H:%M:%S) $MONTH_REPO/$JUST_DATE.mp3 already exists.  Skipping..."
 
 		unset WS JUST_DATE NUMBER_DATE MONTH_YEAR YEAR MONTH TRACK
 	else
-		echo -e "$MONTH_REPO/$JUST_DATE.mp3 doesn't exist.  Archiving..."
+		echo -e "$(date +%Y-%m-%d\ %H:%M:%S) $MONTH_REPO/$JUST_DATE.mp3 doesn't exist.  Archiving..."
 		checkrepo
 		doArchive "${FILE}"
 	fi
