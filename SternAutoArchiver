@@ -150,11 +150,11 @@ function checkforwork() {
 	makevars "${FILE}"
 
 	if [ -f "$MONTH_REPO/$JUST_DATE.mp3" ] ; then
-		echo -e "$(date +%Y-%m-%d\ %H:%M:%S) $JUST_DATE.mp3 already exists.  Skipping..."
+		[ ${DEBUG} ] && echo -e "$(date +%Y-%m-%d\ %H:%M:%S) $JUST_DATE.mp3 already exists.  Skipping..."
 
 		unset WS JUST_DATE NUMBER_DATE MONTH_YEAR YEAR MONTH TRACK
 	else
-		echo -e "$(date +%Y-%m-%d\ %H:%M:%S) $JUST_DATE.mp3 doesn't exist.  Archiving..."
+		[ ${DEBUG} ] && echo -e "$(date +%Y-%m-%d\ %H:%M:%S) $JUST_DATE.mp3 doesn't exist.  Archiving..."
 		checkrepo
 		doArchive "${FILE}"
 	fi
