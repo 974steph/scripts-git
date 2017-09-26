@@ -254,20 +254,19 @@ function friggin() {
 	FRIGGIN_DATE=$(date -d ${DATE} +%D)
 
 	if [ ${DEBUG} ] ; then
-		echo DATE: ${DATE}
-		echo WHICH_MON: ${WHICH_MON}
-		echo FRIGGIN_WEEK: ${FRIGGIN_WEEK}
-		echo FRIGGIN_TODAY: ${FRIGGIN_TODAY}
-		echo FRIGGIN_DATE: ${FRIGGIN_DATE}
-		echo FRIGGIN_YEAR: ${FRIGGIN_YEAR}
-		echo FRIGGIN_DAY: ${FRIGGIN_DAY}
-		echo FRIGGIN_SHOW: ${FRIGGIN_SHOW}
-		echo  wget -q -O "${FRIGGIN_SHOW}" http://www.marksfriggin.com/news${FRIGGIN_YEAR}/${FRIGGIN_TODAY}
+		echo "DATE: ${DATE}"
+		echo "WHICH_MON: ${WHICH_MON}"
+		echo "FRIGGIN_WEEK: ${FRIGGIN_WEEK}"
+		echo "FRIGGIN_TODAY: ${FRIGGIN_TODAY}"
+		echo "FRIGGIN_DATE: ${FRIGGIN_DATE}"
+		echo "FRIGGIN_YEAR: ${FRIGGIN_YEAR}"
+		echo "FRIGGIN_DAY: ${FRIGGIN_DAY}"
+		echo "FRIGGIN_SHOW: ${FRIGGIN_SHOW}"
+		echo "wget -q -O \"${FRIGGIN_SHOW}\" http://www.marksfriggin.com/news${FRIGGIN_YEAR}/${FRIGGIN_TODAY}"
 	fi
 
-	wget -q -O "${FRIGGIN_SHOW}" http://www.marksfriggin.com/news${FRIGGIN_YEAR}/${FRIGGIN_TODAY}
-
 	echo "Friggin URL: http://www.marksfriggin.com/news${FRIGGIN_YEAR}/${FRIGGIN_TODAY}"
+	wget -q -O "${FRIGGIN_SHOW}" http://www.marksfriggin.com/news${FRIGGIN_YEAR}/${FRIGGIN_TODAY}
 
 	if [ $(ls -s "${FRIGGIN_SHOW}" | awk '{print $1}') != 0 ] ; then
 
@@ -370,11 +369,8 @@ function tagging() {
 		FrigginSed >> "${MAILFILE}"
 
 		echo -e \\n >> "${MAILFILE}"
-
 		echo -e "Show Size: ${SHOW_SIZE}" >> "${MAILFILE}"
-
 		echo -e "Show Duration: $(CountTime ${LENGTH})" >> "${MAILFILE}"
-
 		echo -e "${FRIGGIN_DUMP}" >> "${MAILFILE}"
 
 		if [ ${DUMPINFO} ] ; then
@@ -452,11 +448,10 @@ function attemptRename() {
 
 		read DO_RENAME in
 
-
 		case "${DO_RENAME}" in
 			[yY])
 				[ ${DEBUG} ] && echo "${THFILE} --> ${WHERENOW}/${REALDATE}.mp3"
-				mv -iv "${THEFILE}" "${WHERENOW}/${REALDATE}.mp3"
+				mv -i${V} "${THEFILE}" "${WHERENOW}/${REALDATE}.mp3"
 				THEFILE="${WHERENOW}/${REALDATE}.mp3"
 				;;
 			[nN])
@@ -469,24 +464,17 @@ function attemptRename() {
 		esac
 	else
 		[ ${DEBUG} ] && echo "Manual intervention required: ${THISFILE}"
-
 		echo -e "\\vGive me a new name for \"$THISFILE\"\\v"
-
 		read NEW_NAME in
 
-		mv -vi "${THEFILE}" "${WHERENOW}/${NEW_NAME}"
-
+		mv -v${V} "${THEFILE}" "${WHERENOW}/${NEW_NAME}"
 		TRAP=$?
 
 		if [ ${TRAP} -ne 0 ] ; then
-
 			echo -e "There was an error renaming \"${THEFILE}\" to \"${NEW_NAME}\".  Bailing..."
-
 			exit ${TRAP}
 		else
-
-			echo "Rename successful."
-
+			[ ${DEBUG} ] && echo "Rename successful."
 			THEFILE="${NEW_NAME}"
 		fi
 
@@ -505,6 +493,8 @@ function attemptRename() {
 ###################################
 #
 
+[ ${DEBUG} ] && V=v
+
 if [ ! -f "${THEFILE}" ] ; then
 	echo -e "\\vFILE DOESN'T EXIST"
 	echo -e "${THEFILE}"\\v
@@ -513,10 +503,9 @@ if [ ! -f "${THEFILE}" ] ; then
 	exit 1
 fi
 
-
 if [ ! -O "$(dirname "${THEFILE}")" ] ; then
-	echo "DIRECTORY NOT OWNED BY $(whoami).  Fixing..."
-	sudo chown -Rv $(whoami):$(id | sed 's/.*gid=[0-9]\+(\([a-zA-Z]\+\)).*/\1/') "$(dirname "${THEFILE}")"
+	[ ${DEBUG} ] && echo "DIRECTORY NOT OWNED BY $(whoami).  Fixing..."
+	sudo chown -R${V} $(whoami):$(id | sed 's/.*gid=[0-9]\+(\([a-zA-Z]\+\)).*/\1/') "$(dirname "${THEFILE}")"
 
 	TRAP=$?
 
@@ -534,13 +523,10 @@ fi
 
 if [ ! -w "${THEFILE}" ] ; then
 
-	echo -e \\v"FILE IS NOT WRITABLE BY $(whoami).  Fixing..."
+	[ ${DEBUG} ] && echo -e \\v"FILE IS NOT WRITABLE BY $(whoami).  Fixing..."
 
 	sudo chown $(whoami):$(id | sed 's/.*gid=[0-9]\+(\([a-zA-Z]\+\)).*/\1/') "${THEFILE}"
 	chmod 0644 "${THEFILE}"
-
-#	ls -l "${THEFILE}"
-#	exit 1
 fi
 
 
