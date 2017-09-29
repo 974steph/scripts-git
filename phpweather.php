@@ -1,60 +1,38 @@
 <?php
 
-if (isset($_GET['long'])) {
-	if ($_GET['long'] == "true") {
-		$forecastLong = TRUE;
-		$tomorrowLong = TRUE;
-	} else {
-		$forecastLong = FALSE;
-		$tomorrowLong = FALSE;
-	}
-} else {
-	$forecastLong = TRUE;
-	$tomorrowLong = TRUE;
-}
+// curl "localhost/weathertest.php?loc=bend&long=true"
 
-//https://api.weather.gov/points/39.9677,-75.5725
-//https://api.weather.gov/points/39.9677,-75.5725/forecast
-//https://api.weather.gov/points/39.9677,-75.5725/stations
-
-//include $_SERVER['HOME'] ."/Sources/scripts-git/secret_stuff.php";
-
+///////////////////////////
 date_default_timezone_set('UTC');
 $day = date("l");
 
-// West Chester
-$lat = "39.967747";
-$lon = "-75.572458";
-
-// Santa Fe
-// $lat = "35.6870";
-// $lon = "-105.9378";
-
-// Kutztown
-// 40.508181, -75.782635
-
-
 $locations = array(
-	"Kutztown" => array(
+	"albuquerque" => array(
+		"title" => "Albuquerque",
+		"latitude" => "35.113281",
+		"longitude" => "-106.621216"
+		),
+	"bend" => array(
+		"title" => "Bend",
+		"latitude" => "44.058174",
+		"longitude" => "-121.315308"
+		),
+	"kutztown" => array(
 		"title" => "Kutztown",
 		"latitude" => "40.508181",
 		"longitude" => "-75.782635"
 		),
-	"SantaFe" => array(
+	"santafe" => array(
 		"title" => "Santa Fe",
 		"latitude" => "35.6870",
 		"longitude" => "-105.9378"
 		),
-	"WestChester" => array(
+	"westchester" => array(
 		"title" => "West Chester",
 		"latitude" => "39.967747",
 		"longitude" => "-75.572458"
 		)
 	);
-
-
-//print_r($locations);
-//exit;
 
 /*
 	"" => array(
@@ -63,6 +41,59 @@ $locations = array(
 		"longitude" => ""
 		),
 */
+///////////////////////////
+
+$forecastLong = FALSE;
+$tomorrowLong = FALSE;
+$location = "none";
+
+if (count($_GET) > 0) {
+
+//	print_r($_GET);
+
+	foreach ($_GET as $k=>$v) {
+//		print "k: $k || v: $v\n";
+		if (trim($k) == "long" and trim($v) == "true") {
+			$forecastLong = TRUE;
+			$tomorrowLong = TRUE;
+		} elseif (trim($k) == "long" and trim($v) == "false") {
+			$forecastLong = FALSE;
+			$tomorrowLong = FALSE;
+		} elseif ($k = "loc") {
+			$location = strtolower(trim($v));
+
+			if (! array_key_exists($location, $locations)) {
+				print "\"$location\" is NOT a valid location\n";
+				exit(1);
+//			} else {
+//				print "YES, $location is valid\n";
+			}
+
+		} else {
+			$forecastLong = FALSE;
+			$tomorrowLong = FALSE;
+			$location = "westchester";
+		}
+	}
+}
+
+$lat = trim($locations[$location]['latitude']);
+$lon = trim($locations[$location]['longitude']);
+$locName = trim($locations[$location]['title']);
+
+/*
+print "forecastLong: $forecastLong\n";
+print "tomorrowLong: $tomorrowLong\n";
+print "location: $location\n";
+print "locName: $locName\n";
+print "lat: $lat\n";
+print "lon: $lon\n";
+*/
+
+
+//https://api.weather.gov/points/39.9677,-75.5725
+//https://api.weather.gov/points/39.9677,-75.5725/forecast
+//https://api.weather.gov/points/39.9677,-75.5725/stations
 
 
 ///////////////////////////
@@ -111,8 +142,10 @@ function doCURL($lat, $lon, $action) {
 		$url = "https://api.weather.gov/points/". $lat .",". $lon ."";
 	}
 
-//	print "DO CURL: $lat, $lon, $action\n";
-//	print "URL: $url\n";
+/*
+	print "DO CURL: $lat, $lon, $action\n";
+	print "URL: $url\n";
+*/
 
 	curl_setopt($curl, CURLOPT_URL, "$url");
 	curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "GET");
@@ -133,30 +166,31 @@ function doCURL($lat, $lon, $action) {
 //
 function getWeather($lat, $lon) {
 
-	$station = doCURL($lat, $lon, "stations");
-	$stationName = explode(',', $station['features'][0]['properties']['name']);
-	$stationName = trim($stationName[1]);
+	$weatherArray = array();
+
+//	$station = doCURL($lat, $lon, "stations");
+//	$stationName = explode(',', $station['features'][0]['properties']['name']);
+//	$stationName = trim($stationName[1]);
+//	$weatherArray['stationName'] = $stationName;
+
 //	print "stationName: $stationName\n";
 
 	$forecast = doCURL($lat, $lon, "forecast");
 
-	$weatherArray = array(
-		'stationName' => $stationName,
-		'today' => array(
-			'detailedForecast' => $forecast['properties']['periods'][0]['detailedForecast'],
-			'shortForecast' => $forecast['properties']['periods'][0]['shortForecast'],
-			'temperature' => $forecast['properties']['periods'][0]['temperature']
-			),
-		'tonight' => array(
-			'detailedForecast' => $forecast['properties']['periods'][1]['detailedForecast'],
-			'shortForecast' => $forecast['properties']['periods'][1]['shortForecast'],
-			'temperature' => $forecast['properties']['periods'][1]['temperature']
-			),
-		'tomorrow'=> array(
-			'detailedForecast' => $tomorrowForecast = $forecast['properties']['periods'][2]['detailedForecast'],
-			'shortForecast' => $tomorrowForecast = $forecast['properties']['periods'][2]['shortForecast'],
-			'temperature' => $forecast['properties']['periods'][2]['temperature']
-			)
+	$weatherArray['today'] = array(
+		'detailedForecast' => $forecast['properties']['periods'][0]['detailedForecast'],
+		'shortForecast' => $forecast['properties']['periods'][0]['shortForecast'],
+		'temperature' => $forecast['properties']['periods'][0]['temperature']
+		);
+	$weatherArray['tonight'] = array(
+		'detailedForecast' => $forecast['properties']['periods'][1]['detailedForecast'],
+		'shortForecast' => $forecast['properties']['periods'][1]['shortForecast'],
+		'temperature' => $forecast['properties']['periods'][1]['temperature']
+		);
+	$weatherArray['tomorrow'] = array(
+		'detailedForecast' => $tomorrowForecast = $forecast['properties']['periods'][2]['detailedForecast'],
+		'shortForecast' => $tomorrowForecast = $forecast['properties']['periods'][2]['shortForecast'],
+		'temperature' => $forecast['properties']['periods'][2]['temperature']
 		);
 
 //	print_r($weatherArray);
@@ -254,7 +288,8 @@ $weatherArray = getWeather($lat, $lon);
 
 //print_r($weatherArray);
 
-$city = $weatherArray['stationName'];
+//$city = $weatherArray['stationName'];
+$city = $locations[$location]['title'];
 
 if ( $tomorrowLong ) {
 	$tomorrow = "Tomorrow might be ". $weatherArray['tomorrow']['detailedForecast'];
