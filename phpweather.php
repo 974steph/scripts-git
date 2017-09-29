@@ -30,6 +30,41 @@ $lon = "-75.572458";
 // $lat = "35.6870";
 // $lon = "-105.9378";
 
+// Kutztown
+// 40.508181, -75.782635
+
+
+$locations = array(
+	"Kutztown" => array(
+		"title" => "Kutztown",
+		"latitude" => "40.508181",
+		"longitude" => "-75.782635"
+		),
+	"SantaFe" => array(
+		"title" => "Santa Fe",
+		"latitude" => "35.6870",
+		"longitude" => "-105.9378"
+		),
+	"WestChester" => array(
+		"title" => "West Chester",
+		"latitude" => "39.967747",
+		"longitude" => "-75.572458"
+		)
+	);
+
+
+//print_r($locations);
+//exit;
+
+/*
+	"" => array(
+		"title" => "",
+		"latitude" => "",
+		"longitude" => ""
+		),
+*/
+
+
 ///////////////////////////
 // FLUSH CURL
 //
