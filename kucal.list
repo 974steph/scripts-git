@@ -1,4 +1,12 @@
 2-1	Academic Forum (AF)
+2-2	Beekey Education Center (BK)
+2-3	Boehm Science Building (BH)
+2-4	Schock Education House (EH)
+2-5	Exterior Locations
+2-6	Goggleworks
+2-7	Graduate Center (GC)
+2-8	Grim-Knedler Science Building (GR)
+2-9	Honors Building (HB)
 2-10	Keystone Hall (KY)
 2-11	Lytle Hall (LY)
 2-12	McFarland Student Union Building (NS)
@@ -9,7 +17,6 @@
 2-17	Risley Hall (RS)
 2-18	Rohrbach Library (RL)
 2-19	Schaeffer Auditorium (SA)
-2-2	Beekey Education Center (BK)
 2-20	Sharadin Art Building (SH)
 2-21	South Dining Hall (SO)
 2-22	Sports Field/Court
@@ -20,7 +27,6 @@
 2-27	University Place (UP)
 2-28	Wiesenberger Alumni Center (WA)
 2-29	DeFrancesco Building (DF)
-2-3	Boehm Science Building (BH)
 2-30	Health and Wellness Center (Beck Hall)
 2-31	Admissions Center (AC)
 2-32	Stratton Administration Center (AD)
@@ -30,7 +36,6 @@
 2-37	Berks Hall (BK)
 2-38	Dixon Hall (DI)
 2-39	Deatrick Hall (DT)
-2-4	Schock Education House (EH)
 2-40	Golden Bear Village West (GW)
 2-41	Johnson Hall (JH)
 2-42	Lehigh Hall (LH)
@@ -39,13 +44,16 @@
 2-45	Golden Bear Village South (S#)
 2-46	Boxwood House (BX)
 2-47	President's House
-2-5	Exterior Locations
-2-6	Goggleworks
-2-7	Graduate Center (GC)
-2-8	Grim-Knedler Science Building (GR)
-2-9	Honors Building (HB)
 19-0	Athletics
 19-1	Women's Volleyball
+19-2	Women's Soccer
+19-3	Women's Cross Country
+19-4	Men's Cross Country
+19-5	Football
+19-6	Field Hockey
+19-7	Women's Tennis
+19-8	Women's Golf
+19-9	Softball
 19-10	Men's Tennis
 19-11	Women's Bowling
 19-12	Women's Swimming
@@ -54,16 +62,8 @@
 19-15	Wrestling
 19-16	Men's Track and Field
 19-17	Women's Track and Field
-19-2	Women's Soccer
 19-24	Baseball
 19-25	Women's Lacrosse
-19-3	Women's Cross Country
-19-4	Men's Cross Country
-19-5	Football
-19-6	Field Hockey
-19-7	Women's Tennis
-19-8	Women's Golf
-19-9	Softball
 20-0	Academic
 21-0	Campus
 22-0	Community
