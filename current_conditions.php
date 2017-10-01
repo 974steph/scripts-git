@@ -2,7 +2,7 @@
 <?php
 
 $debug = FALSE;
-$debug = TRUE;
+//$debug = TRUE;
 
 $locations = array(
 		array(
@@ -228,11 +228,10 @@ foreach ($locations as $location) {
 		if ($debug) { print "dosave: $dosave\n"; }
 
 		if ($dosave) {
+			if ($debug) { print "Saving updated current conditions.\n"; }
 			file_put_contents($directory ."/". $filename, $csvString, FILE_APPEND);
 		} else {
-			print "Not saving since there's no weather update.\n";
-//			print "\"$dosave\" missing.  Bailing...";
-//			exit(1);
+			if ($debug) { print "Not saving since there's no weather update.\n"; }
 		}
 
 	} else {
