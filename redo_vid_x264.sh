@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
 
-#DEBUG="yes"
+DEBUG="yes"
 
 trap ctrl_c INT
 
 ###########################
 # VARS
-PRESET_V="fast"
+PRESET_V="slow"
 PRESET_A="fast"
-VBR=5
+#VBR=5
+VBR=3
 WIDTH_MAX="1080"
+
+#ENCODER_V="libopenh264"
+#ENCODER_V="libx264"
+ENCODER_V="h264_nvenc"
+
+#ENCODER_A="aac"
+ENCODER_A="libfdk_aac"
 
 DIR_TEMP="TempFiles"
 DIR_FINAL="Final"
@@ -31,9 +39,9 @@ else
 	eval $(midentify "${INFILE}" | egrep "ID_VIDEO_WIDTH|ID_VIDEO_HEIGHT|ID_LENGTH")
 
 	JUSTNAME="$(echo ${INFILE} | sed 's/\.[a-zA-Z]\+$//')"
-	OUTFILE_V="${DIR_TEMP}/${JUSTNAME}_pass2.mp4"
+	OUTFILE_V="${DIR_TEMP}/${JUSTNAME}_temp.mp4"
 	OUTFILE_A="${DIR_TEMP}/${JUSTNAME}.aac"
-	OUTFILE_FINAL="${DIR_FINAL}/${JUSTNAME}.mp4"
+	OUTFILE_FINAL="${DIR_FINAL}/${JUSTNAME}.mkv"
 
 	if [ ${DEBUG} ] ; then
 
@@ -60,7 +68,8 @@ case $2 in
 		;;
 	*)
 		WANT_SIZE=$2
-		VBR=3
+#		VBR=3
+		VBR=2
 		;;
 esac
 ###########################
@@ -73,6 +82,8 @@ else
 	VIDEO_WIDTH_FINAL="${ID_VIDEO_WIDTH}"
 	[ ${DEBUG} ] && echo "Keeping current width of ${VIDEO_WIDTH_FINAL}"
 fi
+
+[ ${DEBUG} ] && "VIDEO_WIDTH_FINAL: ${VIDEO_WIDTH_FINAL}"
 
 WIDTH_CHANGE=$(echo "${WIDTH_MAX} / ${ID_VIDEO_WIDTH}" | bc -l)
 [ ${DEBUG} ] && echo "WIDTH_CHANGE: ${WIDTH_CHANGE}"
@@ -96,7 +107,7 @@ function ctrl_c() {
 function errorcode() {
 
 	case $2 in
-		0) 	echo -e "\\v$1 exited $2.  Continuing...\\v"
+		0) 	[ ${DEBUG} ] && echo -e "\\v$1 exited $2.  Continuing...\\v"
 			unset TRAP;;
 		*)	echo -e "\\v$1 exited $2.  Bailing...\\v"
 			exit $2
@@ -111,11 +122,11 @@ function doaudio() {
 
 	echo -e "Writing audio file \"${OUTFILE_A}\""
 
-	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -vn -c:a libfdk_aac -vbr ${VBR} \"${OUTFILE_A}\""
-	ffmpeg -v 3 -stats -y -i "${INFILE}" -vn -c:a libfdk_aac -vbr ${VBR} -threads 0 "${OUTFILE_A}"
+	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -vn -c:a ${ENCODER_A} -vbr ${VBR} \"${OUTFILE_A}\""
+	ffmpeg -v 3 -stats -y -i "${INFILE}" -vn -c:a ${ENCODER_A} -vbr ${VBR} -crf 0 -threads 0 "${OUTFILE_A}"
 	TRAP=$?
 
-	[ ${DEBUG} ] && errorcode doaudio $TRAP
+	errorcode doaudio $TRAP
 }
 ###########################
 
@@ -126,11 +137,13 @@ function dovideo1() {
 
 	echo -e "\\vGetting pass 1 stats from \"${INFILE}\""
 
-	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v libx264 -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 1 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads 0 -f mp4 /dev/null"
-	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v libx264 -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 1 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads 0 -f mp4 /dev/null
+#	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 1 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads 0 -f mp4 /dev/null"
+#	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -crf 0 -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 1 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads 0 -f mp4 /dev/null
+	[ ${DEBUG} ] &&  echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 1 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads 0 -f mp4 /dev/null"
+	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -cq 0 -rc vbr -zerolatency 1 -crf 0 -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 1 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads 0 -f mp4 /dev/null
 	TRAP=$?
 
-	[ ${DEBUG} ] && errorcode dovideo1 $TRAP
+	errorcode dovideo1 $TRAP
 }
 ###########################
 
@@ -141,11 +154,28 @@ function dovideo2() {
 
 	echo -e "\\vWriting video file \"${OUTFILE_V}\""
 
-	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v libx264 -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 2 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads 0 -f mp4 \"${OUTFILE_V}\""
-	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v libx264 -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 2 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads 0 -f mp4 "${OUTFILE_V}"
+#	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 2 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads 0 -f mp4 \"${OUTFILE_V}\""
+#	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -crf 0 -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 2 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads 0 -f mp4 "${OUTFILE_V}"
+	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 2 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads 0 -f mp4 \"${OUTFILE_V}\""
+	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -cq 0 -rc vbr -zerolatency 1 -crf 0 -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 2 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads 0 -f mp4 "${OUTFILE_V}"
 	TRAP=$?
 
-	[ ${DEBUG} ] && errorcode dovideo2 $TRAP
+	errorcode dovideo2 $TRAP
+}
+###########################
+
+
+###########################
+# DO JUST ONE PASS
+function justonepass() {
+
+	echo -e "\\vWriting video file \"${OUTFILE_V}\""
+
+	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -crf 0 -cq 0 -rc vbr_2pass -zerolatency 1 -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -threads 0 -f mp4 \"${OUTFILE_V}\""
+	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -crf 0 -cq 0 -rc vbr_2pass -zerolatency 1 -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -threads 0 -f mp4 "${OUTFILE_V}"
+	TRAP=$?
+
+	errorcode justonepass $TRAP
 }
 ###########################
 
@@ -162,7 +192,7 @@ function combine() {
 	ffmpeg -v 3 -stats -y -i "${OUTFILE_V}" -i "${OUTFILE_A}" -c:v copy -map 0:v:0 -map 1:a:0 -c:a copy "${OUTFILE_FINAL}"
 	TRAP=$?
 
-	[ ${DEBUG} ] && errorcode combine $TRAP
+	errorcode combine $TRAP
 }
 ###########################
 
@@ -173,27 +203,28 @@ function combine() {
 
 echo
 
-doaudio
-
-[ ${DEBUG} ] && echo -e "\\v---------\\v"
+if [ ! -f "${OUTFILE_A}" ] ; then
+	time doaudio
+	[ ${DEBUG} ] && echo -e "\\v---------\\v"
+fi
 
 AUDIO_SIZE=$(du -m "${OUTFILE_A}" | awk '{print $1}')
 [ ${DEBUG} ] && echo "AUDIO_SIZE: $AUDIO_SIZE"
 
-#BITRATE_VIDEO=$(echo "((${WANT_SIZE} * 8192) - (${AUDIO_SIZE} * 8192)) / ${ID_LENGTH}" | bc)
-BITRATE_VIDEO=$(echo "((${WANT_SIZE} - ${AUDIO_SIZE}) * 8192) / ${ID_LENGTH}" | bc)
+BITRATE_VIDEO=$(echo "((${WANT_SIZE} * 8192) - (${AUDIO_SIZE} * 8192)) / ${ID_LENGTH}" | bc)
+#BITRATE_VIDEO=$(echo "((${WANT_SIZE} - ${AUDIO_SIZE}) * 8192) / ${ID_LENGTH}" | bc)
 [ ${DEBUG} ] && echo "BITRATE_VIDEO: $BITRATE_VIDEO"
 
-dovideo1
-
+time justonepass
 [ ${DEBUG} ] && echo -e "\\v---------\\v"
 
-dovideo2
+#time dovideo1
+#[ ${DEBUG} ] && echo -e "\\v---------\\v"
 
-[ ${DEBUG} ] && echo -e "\\v---------\\v"
+#time dovideo2
+#[ ${DEBUG} ] && echo -e "\\v---------\\v"
 
-combine
-
+time combine
 [ ${DEBUG} ] && echo -e "\\v---------\\v"
 
 
