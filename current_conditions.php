@@ -2,7 +2,7 @@
 <?php
 
 $debug = FALSE;
-//$debug = TRUE;
+$debug = TRUE;
 
 $locations = array(
 		array(
@@ -180,7 +180,7 @@ function checkForSave($csvFile, $thisEpoch) {
 			$savevalues = FALSE;
 		}
 	} else {
-		#savevalues = FALSE;
+		$savevalues = FALSE;
 	}
 
 	return $savevalues;
@@ -217,7 +217,12 @@ foreach ($locations as $location) {
 		$directory = $_SERVER['HOME'] ."/Pictures/Cams/Weather";
 		$filename = date('Y', $condition['epoch']) ."-". $name .".csv";
 
-		if ($debug) { print $directory ."/". $filename ."\n"; }
+		if ($debug) {
+			print $directory ."/". $filename ."\n";
+			print "directory: $directory\n";
+			print "filename: $filename\n";
+			print "epoch: ". $condition['epoch'] ."\n";
+		}
 
 		$dosave = checkForSave($directory ."/". $filename, $condition['epoch']);
 		if ($debug) { print "dosave: $dosave\n"; }
@@ -225,8 +230,9 @@ foreach ($locations as $location) {
 		if ($dosave) {
 			file_put_contents($directory ."/". $filename, $csvString, FILE_APPEND);
 		} else {
-			print "\"$dosave\" missing.  Bailing...";
-			exit(1);
+			print "Not saving since there's no weather update.\n";
+//			print "\"$dosave\" missing.  Bailing...";
+//			exit(1);
 		}
 
 	} else {
