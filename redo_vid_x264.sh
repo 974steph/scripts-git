@@ -84,7 +84,7 @@ else
 	[ ${DEBUG} ] && echo "Keeping current width of ${VIDEO_WIDTH_FINAL}"
 fi
 
-[ ${DEBUG} ] && "VIDEO_WIDTH_FINAL: ${VIDEO_WIDTH_FINAL}"
+[ ${DEBUG} ] && echo "VIDEO_WIDTH_FINAL: ${VIDEO_WIDTH_FINAL}"
 
 WIDTH_CHANGE=$(echo "${WIDTH_MAX} / ${ID_VIDEO_WIDTH}" | bc -l)
 [ ${DEBUG} ] && echo "WIDTH_CHANGE: ${WIDTH_CHANGE}"
