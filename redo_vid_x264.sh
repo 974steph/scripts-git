@@ -36,7 +36,8 @@ else
 		exit 1
 	fi
 
-	eval $(midentify "${INFILE}" | egrep "ID_VIDEO_WIDTH|ID_VIDEO_HEIGHT|ID_LENGTH")
+#	eval $(midentify "${INFILE}" | egrep "ID_VIDEO_WIDTH|ID_VIDEO_HEIGHT|ID_LENGTH")
+	eval $(mplayer -vo null -ao null -frames 0 -identify "${INFILE}" | egrep "ID_VIDEO_WIDTH|ID_VIDEO_HEIGHT|ID_LENGTH")
 
 	JUSTNAME="$(echo ${INFILE} | sed 's/\.[a-zA-Z]\+$//')"
 	OUTFILE_V="${DIR_TEMP}/${JUSTNAME}_temp.mp4"
