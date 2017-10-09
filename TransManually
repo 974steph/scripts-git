@@ -31,7 +31,8 @@ case $2 in
 		echo "" | ${MAILER} -s "Torrent Done - $(basename $1)" -a "Content-Type: text/html" "${EMAILS}"
 		;;
 	tail)
-		tail -F /var/log/transmission/transmission.log
+#		tail -F /var/log/transmission/transmission.log
+		watch transmission-remote -l
 		;;
 esac
 
