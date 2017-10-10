@@ -26,6 +26,7 @@ MAG_DATE_WORD=$(date -d ${DATE} +%b\+ | tr '[:lower:]' '[:upper:]')
 MAG_DATE_WORD+=$(date -d ${DATE} +%-d\+%Y)
 MAG_DATE_NUM=$(date -d ${DATE} +%-m-%d-%Y)
 MAG_DATE_LWORD=$(date -d ${DATE} +%Y\+%B\+%d)
+MAG_DATE_LEADING=$(date -d ${DATE} +%b\+%d\+%Y)
 
 STERN_DATE=$(date -d "${DATE}" "+%b %d %Y " | tr '[:lower:]' '[:upper:]')
 STERN_DATE+=$(date -d "${STERN_DATE}" +%a)
@@ -53,6 +54,7 @@ SEARCH_URL="${URL}/search/howard+stern/0/100/0"
 RESULTS=$(curl -sL -A "${UA}" "${SEARCH_URL}" | grep magnet:)
 
 MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard+Stern+Show+${MAG_DATE_WORD}" | sed -e 's/"//g')
+[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard.*Stern.*${MAG_DATE_LEADING}" | sed -e 's/"//g')
 [ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard.*Stern.*${MAG_DATE_LWORD}" | sed -e 's/"//g')
 [ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard+Stern+Show+${MAG_DATE_NUM}" | sed -e 's/"//g')
 
