@@ -2,6 +2,8 @@
 
 #DEBUG="yes"
 
+# curl -sL "https://m.thepiratebay.org/search/howard+stern/0/100/0" | egrep "sep.*27.*2017|2017.*September.*27|9.*27.*2017" | grep magnet:.*128
+
 case $1 in
 	[0-9]*-[0-9]*-[0-9]*)
 #		echo NUMBERS
@@ -64,6 +66,7 @@ if [ ${DEBUG} ] ; then
 	echo "MAG_DATE_WORD: $MAG_DATE_WORD"
 	echo "MAG_DATE_LWORD: $MAG_DATE_LWORD"
 	echo "MAG_DATE_NUM: $MAG_DATE_NUM"
+	echo "MAG_DATE_LEADING: $MAG_DATE_LEADING"
 	echo "SEARCH: Howard+Stern+Show+${MAG_DATE_WORD}"
 	echo "ACTUAL: Howard+Stern+Show+AUG+9+2016+Tue"
 	echo -e "---------\\n${MAG_RAW}\\n---------"
