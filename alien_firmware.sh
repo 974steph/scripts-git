@@ -7,7 +7,8 @@ esac
 #DEBUG="YES"
 
 #URL="http://www.smoktech.com/support/upgrade/toolsandfirmware/ispalien"
-URL="http://www.smoktech.com/support/upgrade/toolsandfirmware/ispalienv"
+#URL="http://www.smoktech.com/support/upgrade/toolsandfirmware/ispalienv"
+URL="http://www2.smoktech.com/support/upgrade/toolsandfirmware/ispalienv"
 
 TMP_FILE="/tmp/alien_firmware_$(date +%s).tmp"
 
