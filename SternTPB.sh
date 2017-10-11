@@ -2,8 +2,6 @@
 
 #DEBUG="yes"
 
-# curl -sL "https://m.thepiratebay.org/search/howard+stern/0/100/0" | egrep "sep.*27.*2017|2017.*September.*27|9.*27.*2017" | grep magnet:.*128
-
 case $1 in
 	[0-9]*-[0-9]*-[0-9]*)
 #		echo NUMBERS
@@ -24,11 +22,11 @@ case $1 in
 		;;
 esac
 
-MAG_DATE_WORD=$(date -d ${DATE} +%b\+ | tr '[:lower:]' '[:upper:]')
-MAG_DATE_WORD+=$(date -d ${DATE} +%-d\+%Y)
-MAG_DATE_NUM=$(date -d ${DATE} +%-m-%d-%Y)
-MAG_DATE_LWORD=$(date -d ${DATE} +%Y\+%B\+%d)
-MAG_DATE_LEADING=$(date -d ${DATE} +%b\+%d\+%Y)
+
+MAG_DATE_WORD=$(date -d ${DATE} +%b.%-d.%Y)
+MAG_DATE_NUM=$(date -d ${DATE} +%-m.%d.%Y)
+MAG_DATE_LWORD=$(date -d ${DATE} +%Y\.%B\.%d)
+MAG_DATE_LEADING=$(date -d ${DATE} +%b.%d.%Y)
 
 STERN_DATE=$(date -d "${DATE}" "+%b %d %Y " | tr '[:lower:]' '[:upper:]')
 STERN_DATE+=$(date -d "${STERN_DATE}" +%a)
@@ -72,6 +70,43 @@ if [ ${DEBUG} ] ; then
 	echo -e "---------\\n${MAG_RAW}\\n---------"
 fi
 
+POSSIBLES=$(echo ${RESULTS} | tidy - 2>/dev/null | egrep -i "Howard.*Stern.*${MAG_DATE_LEADING}|Howard.*Stern.*${MAG_DATE_LWORD}|Howard.*Stern.*${MAG_DATE_NUM}|Howard.*Stern.*${MAG_DATE_WORD}")
+
+SAVE_IFS=$IFS
+IFS=$'\n'
+
+for POSSIBLE in ${POSSIBLES} ; do
+
+	BITRATE=$(echo ${POSSIBLE} | sed 's/.*+\([0-9]\+\)k+.*/\1/')
+
+	if [ ! "$(echo ${BITRATE} | grep [a-zA-Z])" ] ; then
+
+		[ ! ${BESTBIT} ] && BESTBIT=${BITRATE}
+
+		if [ ${BITRATE} -ge ${BESTBIT} ] ; then
+			[ ${DEBUG} ] && echo "Updating BESTBIT to: ${BITRATE}"
+			BESTBIT=${BITRATE}
+			BESTMAG=${POSSIBLE}
+			[ ${DEBUG} ] && echo "IF BESTBIT: $BESTBIT || $BITRATE"
+		else
+			[ ${DEBUG} ] && echo "ELSE BESTBIT: $BESTBIT || $BITRATE"
+		fi
+	else
+		[ ${DEBUG} ] && echo "NOT FOUND: ${BITRATE}"
+		FALLBACK=${POSSIBLE}
+	fi
+done
+
+IFS=${SAVEIFS}
+
+if [ "${BESTMAG}" -a "${BESTBIT}" ] ; then
+	echo -e  "\\vFound the best bitrate: ${BESTBIT}k"
+	MAG_RAW=${BESTMAG}
+else
+	echo -e "\\vNo bitrates found.  Using fallback..."
+	MAG_RAW=${FALLBACK}
+fi
+
 
 if [ "${MAG_RAW}" ] ; then
 
@@ -83,7 +118,8 @@ if [ "${MAG_RAW}" ] ; then
 
 	$HOME/Sources/scripts-git/TransManually "${MAG_RAW}" tail
 
-	tail -F /var/log/transmission/transmission
+#	tail -F /var/log/transmission/transmission
+	watch transmission-remote -l
 
 #	if [ -f "${BASE}/Howard Stern Show ${STERN_DATE}/Howard Stern Show ${STERN_DATE}.mp3" ] ; then
 
