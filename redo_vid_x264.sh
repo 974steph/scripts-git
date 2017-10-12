@@ -144,7 +144,7 @@ function errorcode() {
 # DO AUDIO
 function doaudio() {
 
-	echo -e "Writing audio file \"${OUTFILE_A}\""
+	echo -e "${REV} Writing audio file \"${OUTFILE_A}\" ${N}"
 
 	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -vn -c:a ${ENCODER_A} -vbr ${VBR} \"${OUTFILE_A}\""
 #	ffmpeg -v 3 -stats -y -i "${INFILE}" -vn -c:a ${ENCODER_A} -vbr ${VBR} -crf 0 -threads ${THREADS} "${OUTFILE_A}"
@@ -160,7 +160,9 @@ function doaudio() {
 # DO VIDEO 1
 function dovideo1() {
 
-	echo -e "\\vGetting pass 1 stats from \"${INFILE}\""
+	echo -e "\\v${REV} Getting pass 1 stats from \"${INFILE}\" ${N}"
+
+	[ -f ${DIR_TEMP}/ffmpeg2pass ] && rm -f ${DIR_TEMP}/ffmpeg2pass
 
 #	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 1 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 /dev/null"
 #	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -crf 0 -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 1 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 /dev/null
@@ -169,8 +171,8 @@ function dovideo1() {
 #	[ ${DEBUG} ] &&  echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cq 0 -an -pass 1 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 /dev/null"
 #	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cq 0 -an -pass 1 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 /dev/null
 
-	[ ${DEBUG} ] &&  echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 1 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 /dev/null"
-	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 1 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 /dev/null
+	[ ${DEBUG} ] &&  echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 1 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 /dev/null"
+	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 1 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 /dev/null
 
 	TRAP=$?
 
@@ -183,7 +185,7 @@ function dovideo1() {
 # DO VIDEO 2
 function dovideo2() {
 
-	echo -e "\\vWriting video file \"${OUTFILE_V}\""
+	echo -e "\\v${REV} Writing video file \"${OUTFILE_V}\" ${N}"
 
 #	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 2 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 \"${OUTFILE_V}\""
 #	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -preset:v ${PRESET_V} -crf 0 -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 2 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 "${OUTFILE_V}"
@@ -192,8 +194,8 @@ function dovideo2() {
 #	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cq 0 -an -pass 2 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 \"${OUTFILE_V}\""
 #	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cq 0 -an -pass 2 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 "${OUTFILE_V}"
 
-	[ ${DEBUG} ] && echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -an -pass 2 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 \"${OUTFILE_V}\""
-	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 2 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 "${OUTFILE_V}"
+	[ ${DEBUG} ] && echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 2 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 \"${OUTFILE_V}\""
+	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 2 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 "${OUTFILE_V}"
 
 	TRAP=$?
 
@@ -206,7 +208,7 @@ function dovideo2() {
 # ALL IN ONE
 function allinone() {
 
-	echo -e "\\vAll in one: \"${OUTFILE_FINAL}\""
+	echo -e "\\v${REV} All in one: \"${OUTFILE_FINAL}\" ${N}"
 
 	[ ! -d "${DIR_FINAL}" ] && mkdir -p "${DIR_FINAL}"
 
@@ -224,7 +226,7 @@ function allinone() {
 # COMBINE PARTS
 function combine() {
 
-	echo -e "\\vWriting final file \"${OUTFILE_FINAL}\""
+	echo -e "\\v${REV} Writing final file \"${OUTFILE_FINAL}\" ${N}"
 
 	[ ! -d "${DIR_FINAL}" ] && mkdir -p "${DIR_FINAL}"
 
