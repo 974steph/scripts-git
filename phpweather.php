@@ -45,7 +45,7 @@ $locations = array(
 
 $forecastLong = FALSE;
 $tomorrowLong = FALSE;
-$location = "none";
+$location = "westchester";
 
 if (count($_GET) > 0) {
 
@@ -59,16 +59,23 @@ if (count($_GET) > 0) {
 		} elseif (trim($k) == "long" and trim($v) == "false") {
 			$forecastLong = FALSE;
 			$tomorrowLong = FALSE;
-		} elseif ($k = "loc") {
+		} elseif (trim($k) == "loc") {
+//		} elseif ($k == "loc") {
 			$location = strtolower(trim($v));
 
 			if (! array_key_exists($location, $locations)) {
-				print "\"$location\" is NOT a valid location\n";
+				print "\"$location\" is NOT a valid location\nk: \"$k\"\n";
 				exit(1);
 //			} else {
 //				print "YES, $location is valid\n";
 			}
-
+		} elseif ($k = "latlon") {
+//			print "got: $k\n";
+			$latlon = explode(',', trim($v));
+			$latitude = $latlon[0];
+			$longitude = $latlon[1];
+			print "Lat: $latitude || Lon: $longitude\n\n";
+//			print_r($latlon);
 		} else {
 			$forecastLong = FALSE;
 			$tomorrowLong = FALSE;
