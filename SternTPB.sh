@@ -72,47 +72,52 @@ fi
 
 POSSIBLES=$(echo ${RESULTS} | tidy - 2>/dev/null | egrep -i "Howard.*Stern.*${MAG_DATE_LEADING}|Howard.*Stern.*${MAG_DATE_LWORD}|Howard.*Stern.*${MAG_DATE_NUM}|Howard.*Stern.*${MAG_DATE_WORD}")
 
-SAVE_IFS=$IFS
-IFS=$'\n'
+function findbest() {
 
-for POSSIBLE in ${POSSIBLES} ; do
+	SAVE_IFS=$IFS
+	IFS=$'\n'
 
-	BITRATE=$(echo ${POSSIBLE} | sed 's/.*+\([0-9]\+\)k+.*/\1/')
+	for POSSIBLE in ${POSSIBLES} ; do
 
-	if [ ! "$(echo ${BITRATE} | grep [a-zA-Z])" ] ; then
+		BITRATE=$(echo ${POSSIBLE} | sed 's/.*+\([0-9]\+\)k+.*/\1/')
 
-		[ ! ${BESTBIT} ] && BESTBIT=${BITRATE}
+		if [ ! "$(echo ${BITRATE} | grep [a-zA-Z])" ] ; then
 
-		if [ ${BITRATE} -ge ${BESTBIT} ] ; then
-			[ ${DEBUG} ] && echo "Updating BESTBIT to: ${BITRATE}"
-			BESTBIT=${BITRATE}
-			BESTMAG=${POSSIBLE}
-			[ ${DEBUG} ] && echo "IF BESTBIT: $BESTBIT || $BITRATE"
+			[ ! ${BESTBIT} ] && BESTBIT=${BITRATE}
+
+			if [ ${BITRATE} -ge ${BESTBIT} ] ; then
+				[ ${DEBUG} ] && echo "Updating BESTBIT to: ${BITRATE}"
+				BESTBIT=${BITRATE}
+				BESTMAG=${POSSIBLE}
+				[ ${DEBUG} ] && echo "IF BESTBIT: $BESTBIT || $BITRATE"
+			else
+				[ ${DEBUG} ] && echo "ELSE BESTBIT: $BESTBIT || $BITRATE"
+			fi
 		else
-			[ ${DEBUG} ] && echo "ELSE BESTBIT: $BESTBIT || $BITRATE"
+			[ ${DEBUG} ] && echo "NOT FOUND: ${BITRATE}"
+			FALLBACK=${POSSIBLE}
 		fi
+	done
+
+	IFS=${SAVEIFS}
+
+	if [ "${BESTMAG}" -a "${BESTBIT}" ] ; then
+		echo -e  "\\vFound the best bitrate: ${BESTBIT}k"
+		MAG_RAW=${BESTMAG}
 	else
-		[ ${DEBUG} ] && echo "NOT FOUND: ${BITRATE}"
-		FALLBACK=${POSSIBLE}
+		echo -e "\\vNo bitrates found.  Using fallback..."
+		MAG_RAW=${FALLBACK}
 	fi
-done
-
-IFS=${SAVEIFS}
-
-if [ "${BESTMAG}" -a "${BESTBIT}" ] ; then
-	echo -e  "\\vFound the best bitrate: ${BESTBIT}k"
-	MAG_RAW=${BESTMAG}
-else
-	echo -e "\\vNo bitrates found.  Using fallback..."
-	MAG_RAW=${FALLBACK}
-fi
+}
 
 
-if [ "${MAG_RAW}" ] ; then
+if [ "${POSSIBLES}" ] ; then
 
-	echo -e "\\vShow for ${DATE} available!\\v"
+	echo -e "\\vShow for ${DATE} available!"
 
-	echo -e "${MAG_RAW}\\n"
+	findbest
+
+	echo -e "\\v${MAG_RAW}\\n"
 
 	[ ${CHECK} ] && exit 0
 
