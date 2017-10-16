@@ -4,7 +4,6 @@
 
 case $1 in
 	[0-9]*-[0-9]*-[0-9]*)
-#		echo NUMBERS
 		DATE=$1
 		;;
 	check)
@@ -16,8 +15,6 @@ case $1 in
 		fi
 		;;
 	*)
-#		echo nothing
-		#DATE="2015-09-08"
 		DATE=$(date +%Y-%m-%d)
 		;;
 esac
@@ -51,13 +48,10 @@ SEARCH_URL="${URL}/search/howard+stern/0/100/0"
 [ ${DEBUG} ] && echo -e "\\vcurl -sL \"${SEARCH_URL}\""
 [ ${CHECK} ] && echo -e "\\vcurl -sL \"${SEARCH_URL}\""
 
-RESULTS=$(curl -sL -A "${UA}" "${SEARCH_URL}" | grep magnet:)
-
-MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard+Stern+Show+${MAG_DATE_WORD}" | sed -e 's/"//g')
-[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard.*Stern.*${MAG_DATE_LEADING}" | sed -e 's/"//g')
-[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard.*Stern.*${MAG_DATE_LWORD}" | sed -e 's/"//g')
-[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard+Stern+Show+${MAG_DATE_NUM}" | sed -e 's/"//g')
-
+#MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard+Stern+Show+${MAG_DATE_WORD}" | sed -e 's/"//g')
+#[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard.*Stern.*${MAG_DATE_LEADING}" | sed -e 's/"//g')
+#[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard.*Stern.*${MAG_DATE_LWORD}" | sed -e 's/"//g')
+#[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard+Stern+Show+${MAG_DATE_NUM}" | sed -e 's/"//g')
 
 if [ ${DEBUG} ] ; then
 	echo -e "========="
@@ -67,10 +61,10 @@ if [ ${DEBUG} ] ; then
 	echo "MAG_DATE_LEADING: $MAG_DATE_LEADING"
 	echo "SEARCH: Howard+Stern+Show+${MAG_DATE_WORD}"
 	echo "ACTUAL: Howard+Stern+Show+AUG+9+2016+Tue"
-	echo -e "---------\\n${MAG_RAW}\\n---------"
+#	echo -e "---------\\n${MAG_RAW}\\n---------"
+	echo "egrep -i \"Howard.*Stern.*${MAG_DATE_LEADING}|Howard.*Stern.*${MAG_DATE_LWORD}|Howard.*Stern.*${MAG_DATE_NUM}|Howard.*Stern.*${MAG_DATE_WORD}\""
+	echo -e "========="
 fi
-
-POSSIBLES=$(echo ${RESULTS} | tidy - 2>/dev/null | egrep -i "Howard.*Stern.*${MAG_DATE_LEADING}|Howard.*Stern.*${MAG_DATE_LWORD}|Howard.*Stern.*${MAG_DATE_NUM}|Howard.*Stern.*${MAG_DATE_WORD}")
 
 function findbest() {
 
@@ -89,9 +83,9 @@ function findbest() {
 				[ ${DEBUG} ] && echo "Updating BESTBIT to: ${BITRATE}"
 				BESTBIT=${BITRATE}
 				BESTMAG=${POSSIBLE}
-				[ ${DEBUG} ] && echo "IF BESTBIT: $BESTBIT || $BITRATE"
+				[ ${DEBUG} ] && echo "IF BESTBIT: $BESTBIT || BITRATE: $BITRATE"
 			else
-				[ ${DEBUG} ] && echo "ELSE BESTBIT: $BESTBIT || $BITRATE"
+				[ ${DEBUG} ] && echo "ELSE BESTBIT: $BESTBIT || BITRATE: $BITRATE"
 			fi
 		else
 			[ ${DEBUG} ] && echo "NOT FOUND: ${BITRATE}"
@@ -110,6 +104,20 @@ function findbest() {
 	fi
 }
 
+
+#curl -sL -A "${UA}" "${SEARCH_URL}" | grep magnet: > /tmp/curl.txt
+
+RESULTS=$(curl -sL -A "${UA}" "${SEARCH_URL}" | grep magnet:)
+#echo "RESULTS: $RESULTS"
+#echo "========="
+
+#POSSIBLESCLEAN=$(echo ${RESULTS} | tidy - 2>/dev/null)
+#echo "POSSIBLESCLEAN: $POSSIBLESCLEAN"
+#echo "========="
+
+POSSIBLES=$(echo ${RESULTS} | tidy - 2>/dev/null | egrep -i "Howard.*Stern.*${MAG_DATE_LEADING}|Howard.*Stern.*${MAG_DATE_LWORD}|Howard.*Stern.*${MAG_DATE_NUM}|Howard.*Stern.*${MAG_DATE_WORD}")
+#echo "POSSIBLES: $POSSIBLES"
+#echo "========="
 
 if [ "${POSSIBLES}" ] ; then
 
