@@ -29,6 +29,8 @@ WEEKLYDIR="$HOME/Stern/Weekly"
 if [ ! -d "${WEEKLYDIR}" ] ; then mkdir -p "${WEEKLYDIR}" ; fi
 [ ! -d "${WORKDIR}" ] && mkdir -p "${WORKDIR}"
 
+SYNCTHINGDIR="/usr/local/syncthing/Stern"
+
 if [ ${DEBUG} ] ; then
 	echo WORKDIR: ${WORKDIR}
 	echo MAILFILE: ${MAILFILE}
@@ -398,6 +400,10 @@ function tagging() {
 
 
 	if [[ ! -f "${WEEKLYDIR}/$(basename "${THESHOW}")" && "${WHERENOW}" != $(pwd .) && "${WHERENOW}" != "." ]] ; then
+		echo "Copy to ${SYNCTHINGDIR}"
+		cp -av "${THESHOW}" "${SYNCTHINGDIR}"
+
+		echo "Move to ${WEEKLYDIR}"
 		mv -vf "${THESHOW}" "${WEEKLYDIR}"
 	fi
 
@@ -444,24 +450,28 @@ function attemptRename() {
 
 		[ ${DEBUG} ] && echo "REALDATE: ${REALDATE}"
 
-		echo -e "\\vShould I rename \"${THISFILE}\" to \"${REALDATE}.mp3\"? (y/N)\\v"
+		echo "renaming \"${THISFILE}\" to \"${REALDATE}.mp3\"
 
-		read DO_RENAME in
+		mv -i${V} "${THEFILE}" "${WHERENOW}/${REALDATE}.mp3"
 
-		case "${DO_RENAME}" in
-			[yY])
-				[ ${DEBUG} ] && echo "${THFILE} --> ${WHERENOW}/${REALDATE}.mp3"
-				mv -i${V} "${THEFILE}" "${WHERENOW}/${REALDATE}.mp3"
-				THEFILE="${WHERENOW}/${REALDATE}.mp3"
-				;;
-			[nN])
-				echo "DON'T RENAME"
-				exit 0
-				;;
-			*)
-				echo "DEFAULT DON'T RENAME"
-				;;
-		esac
+#		echo -e "\\vShould I rename \"${THISFILE}\" to \"${REALDATE}.mp3\"? (y/N)\\v"
+
+#		read DO_RENAME in
+
+#		case "${DO_RENAME}" in
+#			[yY])
+#				[ ${DEBUG} ] && echo "${THFILE} --> ${WHERENOW}/${REALDATE}.mp3"
+#				mv -i${V} "${THEFILE}" "${WHERENOW}/${REALDATE}.mp3"
+#				THEFILE="${WHERENOW}/${REALDATE}.mp3"
+#				;;
+#			[nN])
+#				echo "DON'T RENAME"
+#				exit 0
+#				;;
+#			*)
+#				echo "DEFAULT DON'T RENAME"
+#				;;
+#		esac
 	else
 		[ ${DEBUG} ] && echo "Manual intervention required: ${THISFILE}"
 		echo -e "\\vGive me a new name for \"$THISFILE\"\\v"
