@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 ###################################
 #
@@ -401,10 +401,10 @@ function tagging() {
 
 	if [[ ! -f "${WEEKLYDIR}/$(basename "${THESHOW}")" && "${WHERENOW}" != $(pwd .) && "${WHERENOW}" != "." ]] ; then
 		echo "Copy to ${SYNCTHINGDIR}"
-		cp -av "${THESHOW}" "${SYNCTHINGDIR}"
+		cp -a${V} "${THESHOW}" "${SYNCTHINGDIR}"
 
 		echo "Move to ${WEEKLYDIR}"
-		mv -vf "${THESHOW}" "${WEEKLYDIR}"
+		mv -f${V} "${THESHOW}" "${WEEKLYDIR}"
 	fi
 
 #	[ -f "${FRIGGIN_SHOW}" ] && rm -f "${FRIGGIN_SHOW}"
@@ -450,9 +450,10 @@ function attemptRename() {
 
 		[ ${DEBUG} ] && echo "REALDATE: ${REALDATE}"
 
-		echo "renaming \"${THISFILE}\" to \"${REALDATE}.mp3\"
+		echo "renaming \"${THISFILE}\" to \"${REALDATE}.mp3\""
 
 		mv -i${V} "${THEFILE}" "${WHERENOW}/${REALDATE}.mp3"
+		THEFILE="${WHERENOW}/${REALDATE}.mp3"
 
 #		echo -e "\\vShould I rename \"${THISFILE}\" to \"${REALDATE}.mp3\"? (y/N)\\v"
 
