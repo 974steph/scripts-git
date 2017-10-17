@@ -73,7 +73,7 @@ function findbest() {
 
 	for POSSIBLE in ${POSSIBLES} ; do
 
-		BITRATE=$(echo ${POSSIBLE} | sed 's/.*+\([0-9]\+\)k+.*/\1/')
+		BITRATE=$(echo ${POSSIBLE} | sed 's/.*+\([0-9]\+\)[kK]+.*/\1/')
 
 		if [ ! "$(echo ${BITRATE} | grep [a-zA-Z])" ] ; then
 
