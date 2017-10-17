@@ -19,25 +19,18 @@ case $1 in
 		;;
 esac
 
-
 MAG_DATE_WORD=$(date -d ${DATE} +%b.%-d.%Y)
 MAG_DATE_NUM=$(date -d ${DATE} +%-m.%d.%Y)
 MAG_DATE_LWORD=$(date -d ${DATE} +%Y\.%B\.%d)
 MAG_DATE_LEADING=$(date -d ${DATE} +%b.%d.%Y)
 
-STERN_DATE=$(date -d "${DATE}" "+%b %d %Y " | tr '[:lower:]' '[:upper:]')
-STERN_DATE+=$(date -d "${STERN_DATE}" +%a)
-FILE_DATE=$(date -d "${DATE}" +%y%m%d)
-
-BASE="$HOME/Packages/Torrents"
-
-GOING=$(ps ax | grep "$(echo ${STERN_DATE} | sed 's/ /\./g')" | grep -v grep)
+GOING=$(ps ax | egrep -i "${MAG_DATE_LEADING}|${MAG_DATE_LWORD}|${MAG_DATE_NUM}|${MAG_DATE_WORD}" | grep -v grep)
 
 if [ "${GOING}" ] ; then
-	echo "Already downloading.  Bailing..."
+	echo "Already downloading ${DATE}.  Bailing..."
+	echo "${GOING}"
 	exit
 fi
-
 
 UA="Mozilla/5.0 (Linux; Android 6.0; XT1585 Build/MCK24.78-13.12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.89 Mobile Safari/537.36"
 
@@ -48,11 +41,6 @@ SEARCH_URL="${URL}/search/howard+stern/0/100/0"
 [ ${DEBUG} ] && echo -e "\\vcurl -sL \"${SEARCH_URL}\""
 [ ${CHECK} ] && echo -e "\\vcurl -sL \"${SEARCH_URL}\""
 
-#MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard+Stern+Show+${MAG_DATE_WORD}" | sed -e 's/"//g')
-#[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard.*Stern.*${MAG_DATE_LEADING}" | sed -e 's/"//g')
-#[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard.*Stern.*${MAG_DATE_LWORD}" | sed -e 's/"//g')
-#[ ! "${MAG_RAW}" ] && MAG_RAW=$(echo ${RESULTS} | tidy - 2>/dev/null | grep -i "Howard+Stern+Show+${MAG_DATE_NUM}" | sed -e 's/"//g')
-
 if [ ${DEBUG} ] ; then
 	echo -e "========="
 	echo "MAG_DATE_WORD: $MAG_DATE_WORD"
@@ -61,8 +49,7 @@ if [ ${DEBUG} ] ; then
 	echo "MAG_DATE_LEADING: $MAG_DATE_LEADING"
 	echo "SEARCH: Howard+Stern+Show+${MAG_DATE_WORD}"
 	echo "ACTUAL: Howard+Stern+Show+AUG+9+2016+Tue"
-#	echo -e "---------\\n${MAG_RAW}\\n---------"
-	echo "egrep -i \"Howard.*Stern.*${MAG_DATE_LEADING}|Howard.*Stern.*${MAG_DATE_LWORD}|Howard.*Stern.*${MAG_DATE_NUM}|Howard.*Stern.*${MAG_DATE_WORD}\""
+	echo "egrep -i \"${MAG_DATE_LEADING}|${MAG_DATE_LWORD}|${MAG_DATE_NUM}|${MAG_DATE_WORD}\""
 	echo -e "========="
 fi
 
@@ -73,7 +60,7 @@ function findbest() {
 
 	for POSSIBLE in ${POSSIBLES} ; do
 
-		BITRATE=$(echo ${POSSIBLE} | sed 's/.*+\([0-9]\+\)[kK]+.*/\1/')
+		BITRATE=$(echo "${POSSIBLE}" | sed 's/.*+\([0-9]\+\)[kK]+.*/\1/')
 
 		if [ ! "$(echo ${BITRATE} | grep [a-zA-Z])" ] ; then
 
@@ -81,15 +68,15 @@ function findbest() {
 
 			if [ ${BITRATE} -ge ${BESTBIT} ] ; then
 				[ ${DEBUG} ] && echo "Updating BESTBIT to: ${BITRATE}"
-				BESTBIT=${BITRATE}
-				BESTMAG=${POSSIBLE}
+				BESTBIT="${BITRATE}"
+				BESTMAG="${POSSIBLE}"
 				[ ${DEBUG} ] && echo "IF BESTBIT: $BESTBIT || BITRATE: $BITRATE"
 			else
 				[ ${DEBUG} ] && echo "ELSE BESTBIT: $BESTBIT || BITRATE: $BITRATE"
 			fi
 		else
 			[ ${DEBUG} ] && echo "NOT FOUND: ${BITRATE}"
-			FALLBACK=${POSSIBLE}
+			FALLBACK="${POSSIBLE}"
 		fi
 	done
 
@@ -97,29 +84,20 @@ function findbest() {
 
 	if [ "${BESTMAG}" -a "${BESTBIT}" ] ; then
 		echo -e  "\\vFound the best bitrate: ${BESTBIT}k"
-		MAG_RAW=${BESTMAG}
+		MAG_RAW="${BESTMAG}"
 	else
 		echo -e "\\vNo bitrates found.  Using fallback..."
-		MAG_RAW=${FALLBACK}
+		MAG_RAW="${FALLBACK}"
 	fi
 
-	MAG_RAW=$(echo $MAG_RAW | sed -e 's/"//g')
+	[ ${EBUG} ] && echo -e "\\v${MAG_RAW}\\n"
 }
 
 
-#curl -sL -A "${UA}" "${SEARCH_URL}" | grep magnet: > /tmp/curl.txt
-
 RESULTS=$(curl -sL -A "${UA}" "${SEARCH_URL}" | grep magnet:)
-#echo "RESULTS: $RESULTS"
-#echo "========="
 
-#POSSIBLESCLEAN=$(echo ${RESULTS} | tidy - 2>/dev/null)
-#echo "POSSIBLESCLEAN: $POSSIBLESCLEAN"
-#echo "========="
-
-POSSIBLES=$(echo ${RESULTS} | tidy - 2>/dev/null | egrep -i "Howard.*Stern.*${MAG_DATE_LEADING}|Howard.*Stern.*${MAG_DATE_LWORD}|Howard.*Stern.*${MAG_DATE_NUM}|Howard.*Stern.*${MAG_DATE_WORD}")
-#echo "POSSIBLES: $POSSIBLES"
-#echo "========="
+#POSSIBLES=$(echo ${RESULTS} | tidy - 2>/dev/null | egrep -i "Howard.*Stern.*${MAG_DATE_LEADING}|Howard.*Stern.*${MAG_DATE_LWORD}|Howard.*Stern.*${MAG_DATE_NUM}|Howard.*Stern.*${MAG_DATE_WORD}")
+POSSIBLES=$(echo ${RESULTS} | tidy - 2>/dev/null | egrep -i "${MAG_DATE_LEADING}|${MAG_DATE_LWORD}|${MAG_DATE_NUM}|${MAG_DATE_WORD}" | sed 's/"//g')
 
 if [ "${POSSIBLES}" ] ; then
 
@@ -127,25 +105,10 @@ if [ "${POSSIBLES}" ] ; then
 
 	findbest
 
-	echo -e "\\v${MAG_RAW}\\n"
-
 	[ ${CHECK} ] && exit 0
 
 	$HOME/Sources/scripts-git/TransManually "${MAG_RAW}" tail
 
-#	tail -F /var/log/transmission/transmission
-#	watch transmission-remote -l
-
-#	if [ -f "${BASE}/Howard Stern Show ${STERN_DATE}/Howard Stern Show ${STERN_DATE}.mp3" ] ; then
-
-#		mv "${BASE}/Howard Stern Show ${STERN_DATE}/Howard Stern Show ${STERN_DATE}.mp3" "${BASE}/Howard Stern Show ${STERN_DATE}/${FILE_DATE}.mp3"
-#		Retag "${BASE}/Howard Stern Show ${STERN_DATE}/${FILE_DATE}.mp3"
-
-#		exit
-#	else
-#		echo -e "\\v\"${BASE}/Howard Stern Show ${STERN_DATE}/Howard Stern Show ${STERN_DATE}.mp3\" not found.  Bailing...\\v"
-#		exit 1
-#	fi
 else
 	echo -e \\v"Nothing found for ${DATE}."\\v
 fi
