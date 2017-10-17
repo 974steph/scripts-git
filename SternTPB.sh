@@ -102,6 +102,8 @@ function findbest() {
 		echo -e "\\vNo bitrates found.  Using fallback..."
 		MAG_RAW=${FALLBACK}
 	fi
+
+	MAG_RAW=$(echo $MAG_RAW | sed -e 's/"//g')
 }
 
 
@@ -132,7 +134,7 @@ if [ "${POSSIBLES}" ] ; then
 	$HOME/Sources/scripts-git/TransManually "${MAG_RAW}" tail
 
 #	tail -F /var/log/transmission/transmission
-	watch transmission-remote -l
+#	watch transmission-remote -l
 
 #	if [ -f "${BASE}/Howard Stern Show ${STERN_DATE}/Howard Stern Show ${STERN_DATE}.mp3" ] ; then
 
