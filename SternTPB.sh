@@ -111,7 +111,14 @@ if [ "${POSSIBLES}" ] ; then
 
 	[ ${CHECK} ] && exit 0
 
-	$HOME/Sources/scripts-git/TransManually "${MAG_RAW}" tail
+	read DOIT in
+
+	case ${DOIT} in
+		[yY]) YES=yes;;
+		[nN]) exit;;
+	esac
+
+	[ ${DOIT} ] && 	$HOME/Sources/scripts-git/TransManually "${MAG_RAW}" tail
 
 else
 	echo -e \\v"Nothing found for ${DATE}."\\v
