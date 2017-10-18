@@ -73,12 +73,12 @@ function bail() {
 ///////////////////////////
 // FIX WIND
 //
-function fixWind($str, $winds) {
+function fixWind($str) {
 
 	global $winds;
 
 	$strArray = explode(' ',$str);
-	unset($str);
+	$str = '';
 
 	foreach ($strArray as $v) {
 		if (array_key_exists($v, $winds)) {
