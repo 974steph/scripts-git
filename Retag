@@ -343,7 +343,8 @@ function tagging() {
 
 #	exit
 
-	/usr/bin/id3convert -s "${THESHOW}"
+#	/usr/bin/id3convert -s "${THESHOW}"
+	eyeD3 --quiet --remove-all "${THESHOW}"
 
 #		--no-tagging-time-frame \
 #		--add-lyrics="eng::${RUNDOWN}" \
