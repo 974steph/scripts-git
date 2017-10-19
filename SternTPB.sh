@@ -111,11 +111,13 @@ if [ "${POSSIBLES}" ] ; then
 
 	[ ${CHECK} ] && exit 0
 
+	echo -e "\\vUse this one? [y|N]"
 	read DOIT in
 
 	case ${DOIT} in
-		[yY]) YES=yes;;
-		[nN]) exit;;
+		[yY])	YES=yes;;
+		[nN])	exit;;
+		*)	exit;;
 	esac
 
 	[ ${DOIT} ] && 	$HOME/Sources/scripts-git/TransManually "${MAG_RAW}" tail
