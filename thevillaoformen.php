@@ -171,9 +171,11 @@ foreach ($xml_object->channel->item as $item) {
 
 //	print_r($post);
 
+	libxml_use_internal_errors(true);
 	$DDoc = new DOMDocument();
 	$DDoc->loadHTML($post->text);
 	$DDoc->normalizeDocument();
+	libxml_use_internal_errors(false);
 
 	$replaceThese = array("thevillaoformen:","\n");
 
