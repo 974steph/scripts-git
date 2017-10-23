@@ -17,7 +17,7 @@ function giveFeedback() {
 
 #SUNRISE - OLD MILL
 MILL="67.210.198.15:7271/cgi-bin"
-curl -Gs ${MILL}/absctrl -d zoom=22 -d pan=2000 -d tilt=10
+curl -Gs ${MILL}/absctrl -d zoom=22 -d pan=1950 -d tilt=30
 TRAP=$?
 giveFeedback "Mill" ${TRAP}
 #echo "Mill: $(curl -Gs ${MILL}/absget | grep ^[A-Z] | awk -F\& '{print $1}' | tr \\n " ")"
