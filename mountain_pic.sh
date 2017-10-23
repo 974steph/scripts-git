@@ -13,9 +13,11 @@ FINAL_IMG="$(date -d @${NOW} +%Y%m%d_%H%M%S).jpg"
 
 URL_CAM="http://67.210.198.15:8081"
 
-TAR_PAN="1580"
+#TAR_PAN="1580"
+TAR_PAN="3390"
 TAR_TILT="0"
-TAR_ZOOM="44"
+#TAR_ZOOM="44"
+TAR_ZOOM="55"
 
 TANK="$HOME/Pictures/Mountain North Sister"
 
