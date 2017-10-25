@@ -228,6 +228,8 @@ if [ "${POSSIBLES}" ] ; then
 #	findbest
 	magstats
 
+	[ -f ${TMPFILE} ] && rm -f ${TMPFILE}
+
 	[ ${CHECK} ] && exit 0
 
 	echo -e "\\vUse this one? [y|N]"
