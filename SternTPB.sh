@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#DEBUG="yes"
+DEBUG="yes"
 
 case $1 in
 	[0-9]*-[0-9]*-[0-9]*)
@@ -38,6 +38,7 @@ UA="Mozilla/5.0 (Linux; Android 6.0; XT1585 Build/MCK24.78-13.12) AppleWebKit/53
 URL="https://m.thepiratebay.org"
 
 SEARCH_URL="${URL}/search/howard+stern/0/3/0"
+#SEARCH_URL="${URL}/search/howard+stern/0/10/0"
 
 [ ${DEBUG} ] && echo -e "\\vcurl -sL \"${SEARCH_URL}\""
 [ ${CHECK} ] && echo -e "\\vcurl -sL \"${SEARCH_URL}\""
@@ -201,7 +202,10 @@ function magstats() {
 #		fi
 }
 
-
+function cleanup() {
+	[ -f ${TMPFILE} ] && rm -f ${TMPFILE}
+	exit
+}
 
 
 #RESULTS=$(curl -sL -A "${UA}" "${SEARCH_URL}" | grep magnet:)
@@ -213,7 +217,6 @@ function magstats() {
 #POSSIBLES=$(echo ${RESULTS} | tidy - 2>/dev/null | egrep -i "${MAG_DATE_LEADING}|${MAG_DATE_LWORD}|${MAG_DATE_NUM}|${MAG_DATE_WORD}" | sed 's/"//g')
 POSSIBLES=$(grep magnet: ${TMPFILE} | tidy - 2>/dev/null | egrep -i "${MAG_DATE_LEADING}|${MAG_DATE_LWORD}|${MAG_DATE_NUM}|${MAG_DATE_WORD}" | sed 's/"//g')
 
-#echo $POSSIBLES
 #exit
 
 #magstats
@@ -228,9 +231,7 @@ if [ "${POSSIBLES}" ] ; then
 #	findbest
 	magstats
 
-	[ -f ${TMPFILE} ] && rm -f ${TMPFILE}
-
-	[ ${CHECK} ] && exit 0
+	[ ${CHECK} ] ; cleanup
 
 	echo -e "\\vUse this one? [y|N]"
 	read DOIT in
@@ -245,4 +246,8 @@ if [ "${POSSIBLES}" ] ; then
 
 else
 	echo -e \\v"Nothing found for ${DATE}."\\v
+
+	[ ${DEBUG} ] && echo "POSSIBLES: $POSSIBLES"
 fi
+
+cleanup
