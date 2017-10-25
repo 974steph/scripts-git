@@ -98,7 +98,6 @@ function findbest() {
 	fi
 
 	[ ${DEBUG} ] && echo -e "\\v${MAG_RAW}\\n"
-#	echo -e "\\v${MAG_RAW}\\n"
 
 	MAG_PRETTY=$(echo "${MAG_RAW}" | sed 's/&amp;tr=.*//g;s/^.*dn=\(.*\)/\1/;s/+/ /g')
 	echo "Using: ${MAG_PRETTY}"
@@ -111,7 +110,6 @@ function bestbit() {
 		[ ${DEBUG} ] && echo "Updating BESTBIT to: ${MAG_BITRATE}"
 		BESTBIT=${MAG_BITRATE}
 		BESTBITUID=${MAG_UID}
-#		echo BESTBITUID: ${MAG_UID}
 		BESTBITMAG=${POSSIBLE}
 		[ ${DEBUG} ] && echo "IF BESTBIT: $BESTBIT || MAG_BITRATE: $MAG_BITRATE"
 	else
@@ -143,14 +141,12 @@ function magstats() {
 		MAG_UID=$(echo "${POSSIBLE}" | sed 's/^.*btih:\(.*\)&amp;dn=.*/\1/')
 		MAG_BITRATE=$(echo "${POSSIBLE}" | sed 's/.*+\([0-9]\+\)[kK]+.*/\1/')
 		[ "$(echo ${MAG_BITRATE} | grep [a-zA-Z])" ] && MAG_BITRATE=0
-#		MAG_SIZE=$(curl -sL "${SEARCH_URL}" | grep -A2 -i "${MAG_UID}" | grep Size | sed 's/^.*Size \(.*\)\..*&nbsp\;MiB.*/\1/')
 		MAG_SIZE=$(grep -A2 -i "${MAG_UID}" ${TMPFILE} | grep Size | sed 's/^.*Size \(.*\)\..*&nbsp\;MiB.*/\1/')
 
 		if [ ${DEBUG} ] ; then
 			echo "MAG_UID: \"$MAG_UID\""
 			echo "MAG_BITRATE: \"$MAG_BITRATE\""
 			echo "MAG_SIZE: \"$MAG_SIZE\""
-#			echo "---------"
 		fi
 
 		bestbit
@@ -158,48 +154,43 @@ function magstats() {
 		bestsize
 
 		if [ ${DEBUG} ] ; then
-			echo "BESTBITUID: $BESTBITUID"
-			echo "BESTBITMAG: $BESTBITMAG"
-			echo "BESTBIT: $BESTBIT"
 			echo "~~~~~~~~~"
+			echo "BESTBITUID: $BESTBITUID"
+#			echo "BESTBITMAG: $BESTBITMAG"
+			echo "BESTBIT: $BESTBIT"
+			echo
 			echo "BESTSIZEUID: $BESTSIZEUID"
-			echo "BESTSIZEMAG: $BESTSIZEMAG"
+#			echo "BESTSIZEMAG: $BESTSIZEMAG"
 			echo "BESTSIZE: $BESTSIZE"
+			echo "~~~~~~~~~"
 		fi
 
 	done
 
-#		if [ ! ${BESTMAG} ] ; then
-			if [[ "${BESTSIZEUID}" == "${BESTBITUID}" ]] ; then
+	if [[ "${BESTSIZEUID}" == "${BESTBITUID}" ]] ; then
 
-				echo "Size ${BESTSIZE} and Bitrate ${BESTBIT} wins"
-#				MAG_RAW_UID=$(grep -i magnet:.*${BESTBITMAG} ${TMPFILE} | sed 's/^.*\(magnet:.*6969\)" title=".*/\1/')
-				MAG_RAW_UID=${BESTBITUID}
-				MAG_RAW=${BESTBITMAG}
-#				BESTMAG=yes
+		echo "Size ${BESTSIZE} M and ${BESTBIT} kbps wins"
+		MAG_RAW_UID=${BESTBITUID}
+		MAG_RAW=${BESTBITMAG}
 
-			elif [ "${BESTBIT}" -ge 128 ] ; then
-				echo "Bitrate of ${BESTBIT} wins"
-#				MAG_RAW_UID=$(grep -i magnet:.*${BESTBITMAG} ${TMPFILE} | sed 's/^.*\(magnet:.*6969\)" title=".*/\1/')
-				MAG_RAW_UID=${BESTBITUID}
-				MAG_RAW=${BESTBITMAG}
-#				BESTMAG=yes
-			else
-				echo "Falling back to size of ${BESTSIZE}"
-#				MAG_RAW_UID=$(grep -i magnet:.*${BESTSIZEMAG} ${TMPFILE} | sed 's/^.*\(magnet:.*6969\)" title=".*/\1/')
-				MAG_RAW_UID=${BESTSIZEUID}
-				MAG_RAW=${BESTSIZEMAG}
-#				BESTMAG=yes
-			fi
+	elif [ "${BESTBIT}" -ge 128 ] ; then
+		echo "Bitrate of ${BESTBIT} kbps wins"
+		MAG_RAW_UID=${BESTBITUID}
+		MAG_RAW=${BESTBITMAG}
+	else
+		echo "Falling back to size of ${BESTSIZE} M"
+		MAG_RAW_UID=${BESTSIZEUID}
+		MAG_RAW=${BESTSIZEMAG}
+	fi
 
-			MAG_PRETTY=$(echo "${MAG_RAW}" | sed 's/&amp;tr=.*//g;s/^.*dn=\(.*\)/\1/;s/+/ /g')
-#			MAG_RAW_UID=${MAG_RAW_UID}
-			echo
-			echo "BEST MAG_RAW_UID: ${MAG_RAW_UID}"
-			echo "BEST MAG_RAW: ${MAG_RAW}"
+	MAG_PRETTY=$(echo "${MAG_RAW}" | sed 's/&amp;tr=.*//g;s/^.*dn=\(.*\)/\1/;s/+/ /g')
 
-			[ ${DEBUG} ] && echo "========="
-#		fi
+	echo
+	echo "BEST MAG_RAW_UID: ${MAG_RAW_UID}"
+	echo "BEST MAG_RAW: ${MAG_RAW}"
+	echo "BEST MAG_PRETTY: $MAG_PRETTY"
+
+	[ ${DEBUG} ] && echo "========="
 }
 
 function cleanup() {
@@ -210,19 +201,11 @@ function cleanup() {
 
 #RESULTS=$(curl -sL -A "${UA}" "${SEARCH_URL}" | grep magnet:)
 #RESULTS=$(curl -sL "${SEARCH_URL}" | grep magnet:)
-
 [ ! -f ${TMPFILE} ] && curl -sL "${SEARCH_URL}" > ${TMPFILE}
 
-#POSSIBLES=$(echo ${RESULTS} | tidy - 2>/dev/null | egrep -i "Howard.*Stern.*${MAG_DATE_LEADING}|Howard.*Stern.*${MAG_DATE_LWORD}|Howard.*Stern.*${MAG_DATE_NUM}|Howard.*Stern.*${MAG_DATE_WORD}")
 #POSSIBLES=$(echo ${RESULTS} | tidy - 2>/dev/null | egrep -i "${MAG_DATE_LEADING}|${MAG_DATE_LWORD}|${MAG_DATE_NUM}|${MAG_DATE_WORD}" | sed 's/"//g')
 POSSIBLES=$(grep magnet: ${TMPFILE} | tidy - 2>/dev/null | egrep -i "${MAG_DATE_LEADING}|${MAG_DATE_LWORD}|${MAG_DATE_NUM}|${MAG_DATE_WORD}" | sed 's/"//g')
 
-#exit
-
-#magstats
-
-
-#exit
 
 if [ "${POSSIBLES}" ] ; then
 
