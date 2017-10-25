@@ -36,7 +36,7 @@ UA="Mozilla/5.0 (Linux; Android 6.0; XT1585 Build/MCK24.78-13.12) AppleWebKit/53
 
 URL="https://m.thepiratebay.org"
 
-SEARCH_URL="${URL}/search/howard+stern/0/100/0"
+SEARCH_URL="${URL}/search/howard+stern/0/3/0"
 
 [ ${DEBUG} ] && echo -e "\\vcurl -sL \"${SEARCH_URL}\""
 [ ${CHECK} ] && echo -e "\\vcurl -sL \"${SEARCH_URL}\""
