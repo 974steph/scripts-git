@@ -49,6 +49,7 @@ if [ ${DEBUG} ] ; then
 	echo "MAG_DATE_LEADING: $MAG_DATE_LEADING"
 	echo "SEARCH: Howard+Stern+Show+${MAG_DATE_WORD}"
 	echo "ACTUAL: Howard+Stern+Show+AUG+9+2016+Tue"
+	echo "SEARCH_URL: $SEARCH_URL"
 	echo "egrep -i \"${MAG_DATE_LEADING}|${MAG_DATE_LWORD}|${MAG_DATE_NUM}|${MAG_DATE_WORD}\""
 	echo -e "========="
 fi
@@ -98,7 +99,8 @@ function findbest() {
 }
 
 
-RESULTS=$(curl -sL -A "${UA}" "${SEARCH_URL}" | grep magnet:)
+#RESULTS=$(curl -sL -A "${UA}" "${SEARCH_URL}" | grep magnet:)
+RESULTS=$(curl -sL "${SEARCH_URL}" | grep magnet:)
 
 #POSSIBLES=$(echo ${RESULTS} | tidy - 2>/dev/null | egrep -i "Howard.*Stern.*${MAG_DATE_LEADING}|Howard.*Stern.*${MAG_DATE_LWORD}|Howard.*Stern.*${MAG_DATE_NUM}|Howard.*Stern.*${MAG_DATE_WORD}")
 POSSIBLES=$(echo ${RESULTS} | tidy - 2>/dev/null | egrep -i "${MAG_DATE_LEADING}|${MAG_DATE_LWORD}|${MAG_DATE_NUM}|${MAG_DATE_WORD}" | sed 's/"//g')
