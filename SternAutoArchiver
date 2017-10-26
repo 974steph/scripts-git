@@ -3,7 +3,7 @@
 ##########################################
 # Main Stuff
 source $HOME/Sources/scripts-git/secret_stuff.sh
-DEBUG="YES"
+#DEBUG="YES"
 REPO="$HOME/Stern"
 EMAILS="${EMAIL_MINE}"
 WORKDIR="/tmp"
