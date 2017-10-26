@@ -109,22 +109,18 @@ function doArchive() {
 
 	START_EPOCH=$(date +%s)
 
-	if [ ${DEBUG} ] ; then
-		SOX_V="-S"
-	else
-		SOX_V="-s"
-	fi
+	SOX_V="-S"
 
 	# Make wavs
 	[ ${DEBUG} ] && echo "Make wavs"
-	ionice -c3 sox ${SOX_V} "$1" "$MONTH_REPO/$JUST_DATE.wav"
+	ionice -c3 sox -V1 ${SOX_V} "$1" "$MONTH_REPO/$JUST_DATE.wav"
 
 	# Make mp3
 	[ ${DEBUG} ] && echo "Make mp3"
 #	nice lame --resample 24 -mj -q2 --abr 32 -b24 -B56 --lowpass 8047 --scale 1.5 \
 #	"$MONTH_REPO/$JUST_DATE.wav" "$MONTH_REPO/$JUST_DATE.mp3"
 
-	sox --multi-threaded ${SOX_V} "$MONTH_REPO/$JUST_DATE.wav" -r 16k -C -7 "$MONTH_REPO/$JUST_DATE.mp3" lowpass 8k
+	sox -V1 --multi-threaded ${SOX_V} "$MONTH_REPO/$JUST_DATE.wav" -r 16k -C -7 "$MONTH_REPO/$JUST_DATE.mp3" lowpass 8k
 
 	rm -f "$MONTH_REPO/$JUST_DATE.wav"
 
