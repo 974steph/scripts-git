@@ -3,7 +3,7 @@
 ##########################################
 # Main Stuff
 source $HOME/Sources/scripts-git/secret_stuff.sh
-#DEBUG="YES"
+DEBUG="YES"
 REPO="$HOME/Stern"
 EMAILS="${EMAIL_MINE}"
 WORKDIR="/tmp"
@@ -50,7 +50,7 @@ function makevars() {
 
 	WS=$(echo $1 | awk '{print $1}' | sed -e 's/\.mp3//g' -e 's/[^a-zA-Z]//g')
 
-	JUST_DATE=$(echo $1 | awk '{print $1}' | cut -d'.' -f-1 | sed 's/[^0-9]//g')
+	[ ! ${JUST_DATE} ] && JUST_DATE=$(echo $1 | awk '{print $1}' | cut -d'.' -f-1 | sed 's/[^0-9]//g')
 #	PRETTY_DATE=$(date --date="$JUST_DATE" "+%A, %B %d, %Y")
 	NUMBER_DATE=$(date --date="$JUST_DATE" "+%m/%d/%Y, %A")
 	MONTH_YEAR=$(date --date="$JUST_DATE" "+%B - %Y")
@@ -74,6 +74,9 @@ function MakeAFist() {
 
 	FIST_A_MONTH=$(date -d ${JUST_DATE} +%B)
 	FIST_A_YEAR=$(date -d ${JUST_DATE} +%Y)
+
+	[ ${DEBUG} ] && echo "FIST_A_MONTH: $FIST_A_MONTH"
+	[ ${DEBUG} ] && echo "FIST_A_YEAR: $FIST_A_YEAR"
 
 	MONTH_ROT=$(( $(expr length "${FIST_A_MONTH}") * 7 ))
 	YEAR_ROT=$(( $(expr length "${FIST_A_YEAR}") * 7 ))
@@ -120,7 +123,7 @@ function doArchive() {
 #	nice lame --resample 24 -mj -q2 --abr 32 -b24 -B56 --lowpass 8047 --scale 1.5 \
 #	"$MONTH_REPO/$JUST_DATE.wav" "$MONTH_REPO/$JUST_DATE.mp3"
 
-	sox -V1 --multi-threaded ${SOX_V} "$MONTH_REPO/$JUST_DATE.wav" -r 16k -C -7 "$MONTH_REPO/$JUST_DATE.mp3" lowpass 8k
+	sox -V1 --multi-threaded ${SOX_V} "$MONTH_REPO/$JUST_DATE.wav" -r 16k -C -7 "$MONTH_REPO/$JUST_DATE.mp3" lowpass 12k
 
 	rm -f "$MONTH_REPO/$JUST_DATE.wav"
 
@@ -172,6 +175,12 @@ case $1 in
 		;;
 	month)
 #		echo "case - month"
+		if [ ! $# -eq 2 ] ; then
+			echo "Give me a date like YYMMDD"
+			exit 1
+		fi
+		JUST_DATE=$2
+		makevars
 		MakeAFist
 		exit
 		;;
