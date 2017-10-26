@@ -214,7 +214,7 @@ if [ "${POSSIBLES}" ] ; then
 #	findbest
 	magstats
 
-	[ ${CHECK} ] ; cleanup
+	[ ${CHECK} ] && cleanup
 
 	echo -e "\\vUse this one? [y|N]"
 	read DOIT in
