@@ -112,7 +112,7 @@ function doArchive() {
 
 	START_EPOCH=$(date +%s)
 
-	SOX_V="-S"
+	[ ${DEBUG} ] && SOX_V="-S"
 
 	# Make wavs
 	[ ${DEBUG} ] && echo "Make wavs"
