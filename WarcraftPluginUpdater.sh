@@ -350,6 +350,12 @@ function WoWAuctionWGet() {
 
 	[ ! ${DEBUG} ] && Q="-q"
 
+#	TSV
+#	http://www.wowuction.com/us/dawnbringer/alliance/Tools/RealmDataExportGetFileStatic?token=xe7bW9nG3wqdDVYJrrfVcA2
+
+#	CSV
+#	http://www.wowuction.com/us/dawnbringer/alliance/Tools/RealmDataExportGetFileStatic?type=csv&token=xe7bW9nG3wqdDVYJrrfVcA2
+
 
 	wget --user-agent="${UA}" ${Q} -O "${WOWUCTION_LUA_TEMP}" "${WOWUCTION_URL}/Tools/GetTSMDataStatic?dl=true&token=xe7bW9nG3wqdDVYJrrfVcA2"
 
