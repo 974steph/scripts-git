@@ -398,9 +398,10 @@ function tagging() {
 
 
 	eyeD3 "${THESHOW}"
+	TRAP=$?
 
 
-	if [[ ! -f "${WEEKLYDIR}/$(basename "${THESHOW}")" && "${WHERENOW}" != $(pwd .) && "${WHERENOW}" != "." ]] ; then
+	if [[ ! -f "${WEEKLYDIR}/$(basename "${THESHOW}")" && "${WHERENOW}" != $(pwd .) && "${WHERENOW}" != "." && ${TRAP} == 0 ]] ; then
 		echo "Copy to ${SYNCTHINGDIR}"
 		cp -a${V} "${THESHOW}" "${SYNCTHINGDIR}"
 
