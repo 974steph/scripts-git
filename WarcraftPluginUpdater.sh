@@ -309,7 +309,8 @@ function GPDawnbringer() {
 
 	Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${PLUGIN_DATE_EPOCH}"
 
-#	unset OUTPUT
+	# unset to disable update notifications
+	unset OUTPUT
 
 	outputTail
 }
