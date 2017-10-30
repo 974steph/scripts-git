@@ -99,7 +99,7 @@ function findbest() {
 
 	[ ${DEBUG} ] && echo -e "\\v${MAG_RAW}\\n"
 
-	MAG_PRETTY=$(echo "${MAG_RAW}" | sed 's/&amp;tr=.*//g;s/^.*dn=\(.*\)/\1/;s/+/ /g')
+	MAG_PRETTY=$(echo "${MAG_RAW}" | sed 's/+%.*&amp;tr=.*//g;s/^.*dn=\(.*\)/\1/;s/+/ /g')
 	echo "Using: ${MAG_PRETTY}"
 }
 
