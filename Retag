@@ -345,6 +345,14 @@ function tagging() {
 
 #	/usr/bin/id3convert -s "${THESHOW}"
 	eyeD3 --quiet --remove-all "${THESHOW}"
+	TRAP=$?
+
+	if [ ${TRAP} -ne 0 ] ; then
+		echo -e "\\veyeD3 exited: ${TRAP}.  Bailing...\\v";
+		exit ${TRAP}
+	fi
+
+	unset TRAP
 
 #		--no-tagging-time-frame \
 #		--add-lyrics="eng::${RUNDOWN}" \
@@ -402,11 +410,16 @@ function tagging() {
 
 
 	if [[ ! -f "${WEEKLYDIR}/$(basename "${THESHOW}")" && "${WHERENOW}" != $(pwd .) && "${WHERENOW}" != "." && ${TRAP} == 0 ]] ; then
+		unset TRAP
+
 		echo "Copy to ${SYNCTHINGDIR}"
 		cp -a${V} "${THESHOW}" "${SYNCTHINGDIR}"
 
 		echo "Move to ${WEEKLYDIR}"
 		mv -f${V} "${THESHOW}" "${WEEKLYDIR}"
+	else
+		echo -e "\\veyeD3 exited: ${TRAP}.  Bailing...\\v";
+		exit ${TRAP}
 	fi
 
 #	[ -f "${FRIGGIN_SHOW}" ] && rm -f "${FRIGGIN_SHOW}"
