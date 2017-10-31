@@ -30,6 +30,7 @@ $slackEndPoint = "https://hooks.slack.com/services/T0HSA4K7E/B4YCB3W3X/FEHOex8b2
 
 $imageRepo = $myhome ."/Pictures/thevillaoformen";
 
+$shasumsCSV = $imageRepo ."/shasums.csv";
 
 class BlogPost {
 	var $date;
@@ -41,6 +42,59 @@ class BlogPost {
 	var $imgURL;
 }
 
+
+//function loadSHASums($shasumsCSV) {
+function loadSHASums($shasumsCSV) {
+
+	$shasums = array();
+	$csvCounter = 0;
+	$file = fopen($shasumsCSV,"r");
+
+	while (($data = fgetcsv($file)) !== FALSE) {
+		$shasums[$csvCounter] = $data;
+		$csvCounter++;
+	}
+
+	fclose($file);
+	return $shasums;
+}
+
+function verifySHA($fullImgPath) {
+
+	global $shasumsCSV;
+
+//	print "fullImgPath: $fullImgPath\n";
+
+	$fileA = explode('/',$fullImgPath);
+	$filename = $fileA[(count($fileA) - 1)];
+	print_r($fileA);
+	print "FILE: $filename\n";
+
+	$shasums = loadSHASums($shasumsCSV);
+	print_r($shasums);
+
+	$thisSHA = sha1_file($fullImgPath);
+	print "thisSHA: $thisSHA\n";
+
+	$saveImage = True;
+
+	foreach ($shasums as $k=>$v) {
+
+		print "K: $k || V: $v\n";
+		print "K: $k || V: ". $v[0] ." -> ". $v[1] ."\n";
+
+		if ($thisSHA == $v[0]) {
+			print "Skipping $fullImgPath.  $thisSHA == ". $v[0] ." from ". $v[1] ."\n";
+			$saveImage = False;
+		} else {
+//			fputcsv($shasumsCSV, array("$thisSHA","
+//			print "WRITE TO $shasumsCSV\n";
+		}
+	}
+
+//	exit();
+	return $saveImage;
+}
 
 function getRawRss($rssurl) {
 
@@ -133,16 +187,28 @@ function getImage($post) {
 	if ($debug) { print "fullImgPath: $fullImgPath\n"; }
 
 	if ( ! is_file($fullImgPath) ) {
-		file_put_contents($fullImgPath, file_get_contents($post->imgURL));
-		$haveImage = False;
+
+		$saveImage = verifySHA($fullImgPath);
+
+		if ($saveImage) {
+			file_put_contents($fullImgPath, file_get_contents($post->imgURL));
+			$haveImage = False;
+		}
 	} else {
-		print "Already have: ". $fullImgPath ."\n";
+//		print "Already have: ". $fullImgPath ."\n";
 		$haveImage = True;
 	}
 
 	return $haveImage;
 }
 
+// Duplicate:
+//$saveImage = verifySHA($imageRepo ."/20171030_233048.jpg");
+
+// OK:
+//$saveImage = verifySHA($imageRepo ."/20171029_152944.jpg");
+//print "saveImage: $saveImage\n";
+//exit();
 
 $xml_object = getRawRss($rssurl);
 
