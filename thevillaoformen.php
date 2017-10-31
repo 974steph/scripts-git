@@ -63,36 +63,36 @@ function verifySHA($fullImgPath) {
 
 	global $shasumsCSV;
 
-//	print "fullImgPath: $fullImgPath\n";
+//	print "verifySHA fullImgPath: $fullImgPath\n";
 
 	$fileA = explode('/',$fullImgPath);
 	$filename = $fileA[(count($fileA) - 1)];
-	print_r($fileA);
-	print "FILE: $filename\n";
+//	print_r($fileA);
+//	print "FILE: $filename\n";
 
 	$shasums = loadSHASums($shasumsCSV);
-	print_r($shasums);
+//	print_r($shasums);
 
 	$thisSHA = sha1_file($fullImgPath);
-	print "thisSHA: $thisSHA\n";
+//	print "thisSHA: $thisSHA\n";
 
 	$saveImage = True;
 
 	foreach ($shasums as $k=>$v) {
 
-		print "K: $k || V: $v\n";
-		print "K: $k || V: ". $v[0] ." -> ". $v[1] ."\n";
+//		print "K: $k || V: ". $v[0] ." -> ". $v[1] ."\n";
 
 		if ($thisSHA == $v[0]) {
-			print "Skipping $fullImgPath.  $thisSHA == ". $v[0] ." from ". $v[1] ."\n";
+//			print "Skipping $fullImgPath.  $thisSHA == ". $v[0] ." from ". $v[1] ."\n";
 			$saveImage = False;
-		} else {
-//			fputcsv($shasumsCSV, array("$thisSHA","
-//			print "WRITE TO $shasumsCSV\n";
 		}
 	}
 
-//	exit();
+	if ($saveImage) {
+//		print "WRITE TO $shasumsCSV\n";
+		fputcsv($shasumsCSV, array($thisSHA,$filename));
+	}
+
 	return $saveImage;
 }
 
@@ -185,21 +185,18 @@ function getImage($post) {
 	$fullImgPath = $imageRepo."/".$filename;
 
 	if ($debug) { print "fullImgPath: $fullImgPath\n"; }
+//	print "fullImgPath: $fullImgPath\n";
+
+	$saveImage = True;
 
 	if ( ! is_file($fullImgPath) ) {
 
-		$saveImage = verifySHA($fullImgPath);
+		file_put_contents($fullImgPath, file_get_contents($post->imgURL));
 
-		if ($saveImage) {
-			file_put_contents($fullImgPath, file_get_contents($post->imgURL));
-			$haveImage = False;
-		}
-	} else {
-//		print "Already have: ". $fullImgPath ."\n";
-		$haveImage = True;
+		$saveImage = verifySHA($fullImgPath);
 	}
 
-	return $haveImage;
+	return array($saveImage,$fullImgPath);
 }
 
 // Duplicate:
@@ -258,14 +255,23 @@ foreach ($xml_object->channel->item as $item) {
 
 			$haveImage = getImage($post);
 
-			if ($haveImage) {
-				if ($debug) { print "haveImage IF : $haveImage\n"; }
-			} else {
-				if ($debug) { print "haveImage ELSE: $haveImage\n"; }
+			$saveImage = $haveImage[0];
+			$fullImgPath = $haveImage[1];
+
+//			print "fullImgPath: $fullImgPath\n";
+
+			if ($saveImage) {
+				if ($debug) { print "saveImage IF : $saveImage\n"; }
 
 				doSlack($post);
 
 				unset ($haveImage);
+			} else {
+				if ($debug) { print "saveImage ELSE: $saveImage\n"; }
+
+//				print "Already have $fullImgPath.  Removing...\n";
+
+				unlink($fullImgPath);
 			}
 		}
 	}
