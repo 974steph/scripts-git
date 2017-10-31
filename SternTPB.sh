@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DEBUG="yes"
+#DEBUG="yes"
 
 case $1 in
 	[0-9]*-[0-9]*-[0-9]*)
