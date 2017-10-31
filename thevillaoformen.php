@@ -27,8 +27,6 @@ try {
 
 $rssurl = "http://thevillaoformen.tumblr.com/rss";
 
-$slackEndPoint = "https://hooks.slack.com/services/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";
-
 $imageRepo = $myhome ."/Pictures/thevillaoformen";
 
 $shasumsCSV = $imageRepo ."/shasums.csv";
@@ -133,11 +131,13 @@ function doSlack($post) {
 	$imgURL = $post->imgURL;
 	$desc = $post->desc;
 
+/*
 	if ($debug) {
 		print "TITLE: $title\n";
 		print "URL: $imgURL\n";
 		print "DESC: $desc\n";
 	}
+*/
 
 	// Create a constant to store your Slack URL
 	if ( ! defined('SLACK_WEBHOOK') ) {
@@ -250,15 +250,13 @@ foreach ($xml_object->channel->item as $item) {
 
 			$post->imgURL = $node->getAttribute('src');
 
-			$thisURL = $post->imgURL;
-
-			$saveImage = verifySHA($thisURL);
+			$saveImage = verifySHA($post->imgURL);
 
 			if ($saveImage) {
 
 				$fromGetImage = getImage($post);
 
-				print_r($fromGetImage);
+//				print_r($fromGetImage);
 
 				$gotImage = $fromGetImage[0];
 				$fullImgPath = $fromGetImage[1];
@@ -266,7 +264,7 @@ foreach ($xml_object->channel->item as $item) {
 
 			if ($gotImage) {
 
-				if ($debug) { print "saveImage IF : $saveImage || $fullImgPath is a new image.  Saving...\n"; }
+				if ($debug) { print "saveImage IF : $saveImage || $fullImgPath is a new image.  Slacking...\n"; }
 
 				doSlack($post);
 
