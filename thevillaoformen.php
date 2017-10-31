@@ -11,6 +11,7 @@ exit();
 include 'secret_stuff.php';
 
 $debug = False;
+//$debug = True;
 
 // MENTIAL NOTE TO SELF
 // curl -sL "https://thevillaoformen.tumblr.com" | awk '/<figure class="post-content high-res"/,/<\/figure>/' | grep -m1 "img src" | sed 's/.*src="\(.*\)" alt.*/\1/'
@@ -46,6 +47,8 @@ class BlogPost {
 //function loadSHASums($shasumsCSV) {
 function loadSHASums($shasumsCSV) {
 
+	global $debug;
+
 	$shasums = array();
 	$csvCounter = 0;
 	$file = fopen($shasumsCSV,"r");
@@ -59,22 +62,16 @@ function loadSHASums($shasumsCSV) {
 	return $shasums;
 }
 
-function verifySHA($fullImgPath) {
+//function verifySHA($remoteSHA, $fullImgPath) {
+function verifySHA($remoteSHA) {
 
-	global $shasumsCSV;
-
-//	print "verifySHA fullImgPath: $fullImgPath\n";
-
-	$fileA = explode('/',$fullImgPath);
-	$filename = $fileA[(count($fileA) - 1)];
-//	print_r($fileA);
-//	print "FILE: $filename\n";
+	global $debug, $shasumsCSV;
 
 	$shasums = loadSHASums($shasumsCSV);
-//	print_r($shasums);
 
-	$thisSHA = sha1_file($fullImgPath);
-//	print "thisSHA: $thisSHA\n";
+	$thisSHA = sha1_file($remoteSHA);
+
+	if ($debug) { print "thisSHA: $thisSHA\n"; }
 
 	$saveImage = True;
 
@@ -83,13 +80,13 @@ function verifySHA($fullImgPath) {
 //		print "K: $k || V: ". $v[0] ." -> ". $v[1] ."\n";
 
 		if ($thisSHA == $v[0]) {
-//			print "Skipping $fullImgPath.  $thisSHA == ". $v[0] ." from ". $v[1] ."\n";
+			if ($debug) { print "Skipping $thisSHA == ". $v[0] ." from ". $v[1] ."\n"; }
 			$saveImage = False;
 		}
 	}
 
 	if ($saveImage) {
-//		print "WRITE TO $shasumsCSV\n";
+		if ($debug) { print "$thisSHA is not a duplcate.  Saving...\n"; }
 		fputcsv($shasumsCSV, array($thisSHA,$filename));
 	}
 
@@ -98,12 +95,13 @@ function verifySHA($fullImgPath) {
 
 function getRawRss($rssurl) {
 
+	global $debug;
+
 	try {
 		$rawRSS = file_get_contents("http://thevillaoformen.tumblr.com/rss");
 		$xml_object = simplexml_load_string($rawRSS);
 	} catch (Exception $e) {
 		echo 'file_get_contents Caught exception: ',  $e->getMessage(), "\n";
-//		exit(1);
 		$xml_object = False;
 	}
 
@@ -111,6 +109,8 @@ function getRawRss($rssurl) {
 }
 
 function DumpStuff($post) {
+
+	global $debug;
 
 //	print_r($post);
 
@@ -185,27 +185,21 @@ function getImage($post) {
 	$fullImgPath = $imageRepo."/".$filename;
 
 	if ($debug) { print "fullImgPath: $fullImgPath\n"; }
-//	print "fullImgPath: $fullImgPath\n";
-
-	$saveImage = True;
 
 	if ( ! is_file($fullImgPath) ) {
 
+		if ($debug) { print "I don't have \"$filename\".  Fetching...\n"; }
+
 		file_put_contents($fullImgPath, file_get_contents($post->imgURL));
 
-		$saveImage = verifySHA($fullImgPath);
+		$gotImage = True;
+	} else {
+		$gotImage = False;
 	}
 
-	return array($saveImage,$fullImgPath);
+	return array($gotImage,$fullImgPath);
 }
 
-// Duplicate:
-//$saveImage = verifySHA($imageRepo ."/20171030_233048.jpg");
-
-// OK:
-//$saveImage = verifySHA($imageRepo ."/20171029_152944.jpg");
-//print "saveImage: $saveImage\n";
-//exit();
 
 $xml_object = getRawRss($rssurl);
 
@@ -248,36 +242,44 @@ foreach ($xml_object->channel->item as $item) {
 
 	foreach( $DDoc->getElementsByTagName('img') as $node) {
 
+		$saveImage = False;
+		$gotImage = False;
+
 		if ( ! is_array($node) ) {
 			if ($debug) { print "STRING: \"". $node->getAttribute('src') ."\"\n"; }
 
 			$post->imgURL = $node->getAttribute('src');
 
-			$haveImage = getImage($post);
+			$thisURL = $post->imgURL;
 
-			$saveImage = $haveImage[0];
-			$fullImgPath = $haveImage[1];
-
-//			print "fullImgPath: $fullImgPath\n";
+			$saveImage = verifySHA($thisURL);
 
 			if ($saveImage) {
-				if ($debug) { print "saveImage IF : $saveImage\n"; }
+
+				$fromGetImage = getImage($post);
+
+				print_r($fromGetImage);
+
+				$gotImage = $fromGetImage[0];
+				$fullImgPath = $fromGetImage[1];
+			}
+
+			if ($gotImage) {
+
+				if ($debug) { print "saveImage IF : $saveImage || $fullImgPath is a new image.  Saving...\n"; }
 
 				doSlack($post);
 
 				unset ($haveImage);
-			} else {
-				if ($debug) { print "saveImage ELSE: $saveImage\n"; }
-
-//				print "Already have $fullImgPath.  Removing...\n";
-
-				unlink($fullImgPath);
 			}
 		}
 	}
 
 	if ( $y == $x ) {
-		if ($debug) { print "+++++++++ ($y == $x ) +++++++++\n"; }
+		if ($debug) {
+			DumpStuff($post);
+			print "+++++++++ ($y == $x ) +++++++++\n";
+		}
 		exit();
 	} else {
 		if ($debug) {
