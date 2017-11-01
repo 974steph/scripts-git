@@ -408,15 +408,21 @@ function tagging() {
 	eyeD3 "${THESHOW}"
 	TRAP=$?
 
+	BASENAME=$(basename "${THESHOW}")
 
-	if [[ ! -f "${WEEKLYDIR}/$(basename "${THESHOW}")" && "${WHERENOW}" != $(pwd .) && "${WHERENOW}" != "." && ${TRAP} == 0 ]] ; then
+#	if [[ ! -f "${WEEKLYDIR}/${BASENAME})" && "${WHERENOW}" != $(pwd .) && "${WHERENOW}" != "." && ${TRAP} == 0 ]] ; then
+	if [[ "${WHERENOW}" != $(pwd .) && "${WHERENOW}" != "." && ${TRAP} == 0 ]] ; then
 		unset TRAP
 
-		echo "Copy to ${SYNCTHINGDIR}"
-		cp -a${V} "${THESHOW}" "${SYNCTHINGDIR}"
+		if [ ! -f "${SYNCTHINGDIR}/${BASENAME}" ] ; then
+			echo "Copy to ${SYNCTHINGDIR}/${BASENAME}"
+			cp -a${V} "${THESHOW}" "${SYNCTHINGDIR}/${BASENAME}"
+		fi
 
-		echo "Move to ${WEEKLYDIR}"
-		mv -f${V} "${THESHOW}" "${WEEKLYDIR}"
+		if [ ! -f "${WEEKLYDIR}/${BASENAME}" ] ; then
+			echo "Move to ${WEEKLYDIR}/${BASENAME}"
+			mv -f${V} "${THESHOW}" "${WEEKLYDIR}/${BASENAME}"
+		fi
 	else
 		echo -e "\\veyeD3 exited: ${TRAP}.  Bailing...\\v";
 		exit ${TRAP}
