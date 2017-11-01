@@ -14,6 +14,11 @@ case $1 in
 			DATE=$(date +%Y-%m-%d)
 		fi
 		;;
+	debug)
+		DEBUG=TRUE
+		CHECK=TRUE
+		DATE=$(date +%Y-%m-%d)
+		;;
 	*)
 		DATE=$(date +%Y-%m-%d)
 		;;
