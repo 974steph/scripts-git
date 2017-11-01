@@ -61,7 +61,7 @@ function loadSHASums($shasumsCSV) {
 }
 
 //function verifySHA($remoteSHA, $fullImgPath) {
-function verifySHA($remoteSHA) {
+function verifySHA($remoteSHA, $filename) {
 
 	global $debug, $shasumsCSV;
 
@@ -85,7 +85,9 @@ function verifySHA($remoteSHA) {
 
 	if ($saveImage) {
 		if ($debug) { print "$thisSHA is not a duplcate.  Saving...\n"; }
-		fputcsv($shasumsCSV, array($thisSHA,$filename));
+		$shasumsCSVfh = fopen($shasumsCSV,"a");
+		fputcsv($shasumsCSVfh, array($thisSHA,$filename));
+		fclose($shasumsCSVfh);
 	}
 
 	return $saveImage;
@@ -173,8 +175,8 @@ function doSlack($post) {
 	curl_close($c);
 }
 
-function getImage($post) {
 
+function makeFilename($post) {
 	global $debug, $imageRepo;
 
 	$info = new SplFileInfo($post->imgURL);
@@ -184,11 +186,37 @@ function getImage($post) {
 
 	$fullImgPath = $imageRepo."/".$filename;
 
+//	print "getImage --> fullImgPath: $fullImgPath\n";
+
 	if ($debug) { print "fullImgPath: $fullImgPath\n"; }
+
+	return array($filename, $fullImgPath);
+}
+
+
+function getImage($post) {
+
+	global $debug, $imageRepo, $fullImgPath;
+
+/*
+	$info = new SplFileInfo($post->imgURL);
+
+//	$filename = $post->title ."_". $post->ts .".". $info->getExtension();
+	$filename = date('Ymd_His', $post->ts) .".". $info->getExtension();
+
+	$fullImgPath = $imageRepo."/".$filename;
+
+//	print "getImage --> fullImgPath: $fullImgPath\n";
+
+	if ($debug) { print "fullImgPath: $fullImgPath\n"; }
+*/
 
 	if ( ! is_file($fullImgPath) ) {
 
 		if ($debug) { print "I don't have \"$filename\".  Fetching...\n"; }
+
+//		print "fullImgPath: $fullImgPath\n";
+//		print "post->imgURL: ". $post->imgURL. "\n";
 
 		file_put_contents($fullImgPath, file_get_contents($post->imgURL));
 
@@ -240,6 +268,17 @@ foreach ($xml_object->channel->item as $item) {
 
 //	print "DESC: ". $post->desc ."\n";
 
+//	$filename = makeFilename($post);
+
+
+//	print_r($post);
+////	print "post->imgURL: $post->imgURL\n";
+//	$info = new SplFileInfo($post->imgURL);
+//	print_r($info);
+//	$filename = date('Ymd_His', $post->ts) .".". $info->getExtension();
+//	print "FILENAME: $filename\n";
+
+
 	foreach( $DDoc->getElementsByTagName('img') as $node) {
 
 		$saveImage = False;
@@ -250,13 +289,21 @@ foreach ($xml_object->channel->item as $item) {
 
 			$post->imgURL = $node->getAttribute('src');
 
-			$saveImage = verifySHA($post->imgURL);
+			$fileparts = makeFilename($post);
+			$filename = $fileparts[0];
+			$fullImgPath = $fileparts[1];
+
+//			print "FILENAME: $filename\n";
+//			print "FULL IMG PATH: $fullImgPath\n";
+
+			$saveImage = verifySHA($post->imgURL, $filename);
 
 			if ($saveImage) {
 
 				$fromGetImage = getImage($post);
 
 //				print_r($fromGetImage);
+//				print_r($post);
 
 				$gotImage = $fromGetImage[0];
 				$fullImgPath = $fromGetImage[1];
