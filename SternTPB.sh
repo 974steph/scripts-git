@@ -40,12 +40,14 @@ fi
 
 UA="Mozilla/5.0 (Linux; Android 6.0; XT1585 Build/MCK24.78-13.12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.89 Mobile Safari/537.36"
 
-URL="https://m.thepiratebay.org"
+#URL="https://m.thepiratebay.org"
+URL="https://thepiratebay.org"
 
 SEARCH_URL="${URL}/search/howard+stern/0/3/0"
 #SEARCH_URL="${URL}/search/howard+stern/0/10/0"
 
-[ ${DEBUG} ] && echo -e "\\vcurl -sL \"${SEARCH_URL}\""
+[ ${DEBUG} ] && echo -e "\\vcurl -sL -A \"${UA}\" \"${SEARCH_URL}\""
+#[ ${CHECK} ] && echo -e "\\vcurl -sL -A \"${UA}\" \"${SEARCH_URL}\""
 [ ${CHECK} ] && echo -e "\\vcurl -sL \"${SEARCH_URL}\""
 
 if [ ${DEBUG} ] ; then
@@ -188,12 +190,16 @@ function magstats() {
 		MAG_RAW=${BESTSIZEMAG}
 	fi
 
-	MAG_PRETTY=$(echo "${MAG_RAW}" | sed 's/&amp;tr=.*//g;s/^.*dn=\(.*\)/\1/;s/+/ /g')
+	MAG_PRETTY=$(echo "${MAG_RAW}" | sed 's/+%.*&amp;tr=.*//g;s/^.*dn=\(.*\)/\1/;s/+/ /g')
 
 	echo
-	echo "BEST MAG_RAW_UID: ${MAG_RAW_UID}"
-	echo "BEST MAG_RAW: ${MAG_RAW}"
-	echo "BEST MAG_PRETTY: $MAG_PRETTY"
+	if [ ${DEBUG} ] ; then
+		echo "BEST MAG_RAW_UID: ${MAG_RAW_UID}"
+		echo "BEST MAG_RAW: ${MAG_RAW}"
+		echo "BEST MAG_PRETTY: $MAG_PRETTY"
+	else
+		echo "Using: $MAG_PRETTY"
+	fi
 
 	[ ${DEBUG} ] && echo "========="
 }
