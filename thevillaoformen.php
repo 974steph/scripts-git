@@ -1,48 +1,16 @@
 #!/usr/bin/env php
 <?php
-/*
-$now = time();
-print $now ."\n";
-$nowPretty = date('Ymd_His', $now);
-print $nowPretty ."\n";
-exit();
-*/
 
-include 'secret_stuff.php';
+include 'Sources/scripts-git/secret_stuff.php';
 
 $debug = False;
 //$debug = True;
 
-// MENTIAL NOTE TO SELF
-// curl -sL "https://thevillaoformen.tumblr.com" | awk '/<figure class="post-content high-res"/,/<\/figure>/' | grep -m1 "img src" | sed 's/.*src="\(.*\)" alt.*/\1/'
-
-/*
-try {
-	$rawRSS = file_get_contents("http://thevillaoformen.tumblr.com/rss");
-} catch (Exception $e) {
-	echo 'file_get_contents Caught exception: ',  $e->getMessage(), "\n";
-	exit(1);
-}
-*/
-
 $rssurl = "http://thevillaoformen.tumblr.com/rss";
-
 $imageRepo = $myhome ."/Pictures/thevillaoformen";
-
 $shasumsCSV = $imageRepo ."/shasums.csv";
 
-class BlogPost {
-	var $date;
-	var $ts;
-	var $link;
-	var $title;
-	var $text;
-	var $desc;
-	var $imgURL;
-}
 
-
-//function loadSHASums($shasumsCSV) {
 function loadSHASums($shasumsCSV) {
 
 	global $debug;
@@ -60,37 +28,37 @@ function loadSHASums($shasumsCSV) {
 	return $shasums;
 }
 
-//function verifySHA($remoteSHA, $fullImgPath) {
-function verifySHA($remoteSHA, $filename) {
+function verifySHA($ormenImage) {
 
 	global $debug, $shasumsCSV;
 
-	$shasums = loadSHASums($shasumsCSV);
+	if (! isset($shasums)) { $shasums = loadSHASums($shasumsCSV); }
 
-	$thisSHA = sha1_file($remoteSHA);
+	$ormenImage['shasum'] = sha1_file($ormenImage['imgURL']);
 
-	if ($debug) { print "thisSHA: $thisSHA\n"; }
+	$ormenImage['save'] = False;
 
-	$saveImage = True;
-
-	foreach ($shasums as $k=>$v) {
-
-//		print "K: $k || V: ". $v[0] ." -> ". $v[1] ."\n";
-
-		if ($thisSHA == $v[0]) {
-			if ($debug) { print "Skipping $thisSHA == ". $v[0] ." from ". $v[1] ."\n"; }
-			$saveImage = False;
-		}
+	if (array_search($ormenImage['shasum'], array_column($shasums, 0))) {
+		if ($debug) { print "DUPLICATE: ". $ormenImage['shasum'] ." for ". $ormenImage['filename'] ."\n"; }
+	} else {
+		if ($debug) { print "NO SHASUM: ". $ormenImage['shasum'] ."\n"; }
+		$ormenImage['save'] = True;
 	}
 
-	if ($saveImage) {
-		if ($debug) { print "$thisSHA is not a duplcate.  Saving...\n"; }
-		$shasumsCSVfh = fopen($shasumsCSV,"a");
-		fputcsv($shasumsCSVfh, array($thisSHA,$filename));
-		fclose($shasumsCSVfh);
-	}
+	return $ormenImage;
+}
 
-	return $saveImage;
+function fetchAndUpdate($ormenImage) {
+
+	global $debug, $shasumsCSV;
+
+	if ($debug) { print "Fetching ". $ormenImage['imgURL'] ."\n"; }
+	file_put_contents($ormenImage['fullImgPath'], file_get_contents($ormenImage['imgURL']));
+
+	if ($debug) { print "Recording ". $ormenImage['shasum'] .",". $ormenImage['filename'] ." to $shasumsCSV\n"; }
+	$shasumsCSVfh = fopen($shasumsCSV,"a");
+	fputcsv($shasumsCSVfh, array($ormenImage['shasum'],$ormenImage['filename']));
+	fclose($shasumsCSVfh);
 }
 
 function getRawRss($rssurl) {
@@ -108,38 +76,24 @@ function getRawRss($rssurl) {
 	return $xml_object;
 }
 
-function DumpStuff($post) {
 
-	global $debug;
-
-//	print_r($post);
-
-	print "TITLE: $post->title\n";
-	print "DATE: $post->date\n";
-	print "TS: $post->ts\n";
-	print "LINK: $post->link\n";
-	print "DESC: $post->desc\n";
-	print "TEXT: $post->text\n";
-}
-
-
-function doSlack($post) {
+function doSlack($ormenImage) {
 
 	global $debug, $slackEndPoint;
 
 	if ($debug) { print_r($post); }
 
-	$title = $post->title;
-	$imgURL = $post->imgURL;
-	$desc = $post->desc;
+	$title = $ormenImage['title'];
+	$imgURL = $ormenImage['imgURL'];
+	$desc = $ormenImage['desc'];
 
-/*
+
 	if ($debug) {
 		print "TITLE: $title\n";
 		print "URL: $imgURL\n";
 		print "DESC: $desc\n";
 	}
-*/
+
 
 	// Create a constant to store your Slack URL
 	if ( ! defined('SLACK_WEBHOOK') ) {
@@ -176,57 +130,19 @@ function doSlack($post) {
 }
 
 
-function makeFilename($post) {
+function makeFilename($ormenImage) {
+
 	global $debug, $imageRepo;
 
-	$info = new SplFileInfo($post->imgURL);
+	$info = new SplFileInfo($ormenImage['imgURL']);
+	$ormenImage['filename'] = date('Ymd_His', $ormenImage['ts']) .".". $info->getExtension();
+	$ormenImage['fullImgPath'] = $imageRepo."/". $ormenImage['filename'];
 
-//	$filename = $post->title ."_". $post->ts .".". $info->getExtension();
-	$filename = date('Ymd_His', $post->ts) .".". $info->getExtension();
+	if ($debug) { print "makeFilename --> fullImgPath: ". $ormenImage['fullImgPath'] ."\n"; }
 
-	$fullImgPath = $imageRepo."/".$filename;
-
-//	print "getImage --> fullImgPath: $fullImgPath\n";
-
-	if ($debug) { print "fullImgPath: $fullImgPath\n"; }
-
-	return array($filename, $fullImgPath);
+	return $ormenImage;
 }
 
-
-function getImage($post) {
-
-	global $debug, $imageRepo, $fullImgPath;
-
-/*
-	$info = new SplFileInfo($post->imgURL);
-
-//	$filename = $post->title ."_". $post->ts .".". $info->getExtension();
-	$filename = date('Ymd_His', $post->ts) .".". $info->getExtension();
-
-	$fullImgPath = $imageRepo."/".$filename;
-
-//	print "getImage --> fullImgPath: $fullImgPath\n";
-
-	if ($debug) { print "fullImgPath: $fullImgPath\n"; }
-*/
-
-	if ( ! is_file($fullImgPath) ) {
-
-		if ($debug) { print "I don't have \"$filename\".  Fetching...\n"; }
-
-//		print "fullImgPath: $fullImgPath\n";
-//		print "post->imgURL: ". $post->imgURL. "\n";
-
-		file_put_contents($fullImgPath, file_get_contents($post->imgURL));
-
-		$gotImage = True;
-	} else {
-		$gotImage = False;
-	}
-
-	return array($gotImage,$fullImgPath);
-}
 
 
 $xml_object = getRawRss($rssurl);
@@ -236,103 +152,58 @@ if ( ! $xml_object ) {
 	exit(1);
 }
 
-$post = array();
-
-$x = 1;
-$y = 0;
+$x = 0;
+$ormenImages = array();
 
 foreach ($xml_object->channel->item as $item) {
 
-//	print_r($item);
+	if ($item->title == "Photo") {
 
-	$post = new BlogPost();
-	$post->date  = (string) $item->pubDate;
-	$post->ts    = strtotime($item->pubDate);
-	$post->link  = (string) $item->link;
-//	$post->title = (string) $item->title;
-	$post->title = str_replace(array("\n", "\t", "\r"), ' ', $item->title);
-//	$post->text  = (string) $item->description;
-	$post->text  = str_replace(array("\n", "\t", "\r"), ' ', $item->description);
+//		print_r($item);
 
-//	print_r($post);
+		$DDoc = new DOMDocument();
+		$DDoc->normalizeDocument();
+		$DDoc->loadHTML($item->description);
+		libxml_use_internal_errors(false);
 
-	libxml_use_internal_errors(true);
-	$DDoc = new DOMDocument();
-	$DDoc->loadHTML($post->text);
-	$DDoc->normalizeDocument();
-	libxml_use_internal_errors(false);
+		foreach( $DDoc->getElementsByTagName('img') as $img) {
+			$ormenImages[$x]['imgURL'] = $img->getAttribute('src');
+		}
 
-	$replaceThese = array("thevillaoformen:","\n");
+		$ormenImages[$x]['date'] = (string) trim($item->pubDate);
+		$ormenImages[$x]['ts'] = strtotime($item->pubDate);
+		$ormenImages[$x]['link'] = (string) trim($item->link);
+		$ormenImages[$x]['title'] = trim(str_replace(array("\n", "\t", "\r"), '', strip_tags($item->title)));
+		$ormenImages[$x]['desc'] = trim(str_replace(array("\n", "\t", "\r"), '', strip_tags($item->description)));
+//		$ormenImages[$x]['']
 
-	$post->desc = str_replace($replaceThese,'',$DDoc->documentElement->textContent);
+		$ormenImages[$x] = makeFilename($ormenImages[$x]);
 
-//	print "DESC: ". $post->desc ."\n";
+		if ( ! is_file($ormenImages[$x]['fullImgPath']) ) {
 
-//	$filename = makeFilename($post);
+			if ($debug) { print "NO FILE: ". $ormenImages[$x]['fullImgPath'] ."\n"; }
 
+			$ormenImages[$x] = verifySHA($ormenImages[$x]);
 
-//	print_r($post);
-////	print "post->imgURL: $post->imgURL\n";
-//	$info = new SplFileInfo($post->imgURL);
-//	print_r($info);
-//	$filename = date('Ymd_His', $post->ts) .".". $info->getExtension();
-//	print "FILENAME: $filename\n";
-
-
-	foreach( $DDoc->getElementsByTagName('img') as $node) {
-
-		$saveImage = False;
-		$gotImage = False;
-
-		if ( ! is_array($node) ) {
-			if ($debug) { print "STRING: \"". $node->getAttribute('src') ."\"\n"; }
-
-			$post->imgURL = $node->getAttribute('src');
-
-			$fileparts = makeFilename($post);
-			$filename = $fileparts[0];
-			$fullImgPath = $fileparts[1];
-
-//			print "FILENAME: $filename\n";
-//			print "FULL IMG PATH: $fullImgPath\n";
-
-			$saveImage = verifySHA($post->imgURL, $filename);
-
-			if ($saveImage) {
-
-				$fromGetImage = getImage($post);
-
-//				print_r($fromGetImage);
-//				print_r($post);
-
-				$gotImage = $fromGetImage[0];
-				$fullImgPath = $fromGetImage[1];
+			if ($ormenImages[$x]['save']) {
+				if ($debug) { print "SELECTING ". $ormenImages[$x]['filename'] ."\n"; }
+				$x++;
 			}
-
-			if ($gotImage) {
-
-				if ($debug) { print "saveImage IF : $saveImage || $fullImgPath is a new image.  Slacking...\n"; }
-
-				doSlack($post);
-
-				unset ($haveImage);
-			}
+		} else {
+			unset($ormenImages[$x]);
 		}
 	}
+}
 
-	if ( $y == $x ) {
-		if ($debug) {
-			DumpStuff($post);
-			print "+++++++++ ($y == $x ) +++++++++\n";
-		}
-		exit();
-	} else {
-		if ($debug) {
-			DumpStuff($post);
-			print "+++++++++ ($y != $x ) +++++++++\n";
-		}
-	}
 
-	$y++;
+foreach($ormenImages as $ormenImage) {
+
+	if ($debug) { print_r($ormenImage); }
+
+	fetchAndUpdate($ormenImage);
+
+	doSlack($ormenImage);
+
+	if ($debug) { print "=========\n"; }
 }
 ?>
