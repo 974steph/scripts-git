@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-include 'Sources/scripts-git/secret_stuff.php';
+include 'secret_stuff.php';
 
 $debug = False;
 //$debug = True;
