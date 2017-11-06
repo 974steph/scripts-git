@@ -358,7 +358,7 @@ function tagging() {
 #		--add-lyrics="eng::${RUNDOWN}" \
 
 
-# echo	"/usr/bin/eyeD3 --add-image=\"${FIST_FISTED}\":FRONT_COVER:\"Howard Stern Show\" --add-lyrics=\"${FRIGGIN_DUMP}:Rundown:eng\" --text-frame=\"TPOS:\" -t \"${SHOWTITLE}\" -G Comedy --text-frame=\"TYER:${YEAR}\" -A \"Howard Stern - ${MONTH_YEAR}\" -a \"Howard Stern Show\" -n \"${TRACK}\" \"${THESHOW}\""
+# echo	"/usr/bin/eyeD3 --quiet --add-image=\"${FIST_FISTED}\":FRONT_COVER:\"Howard Stern Show\" --add-lyrics=\"${FRIGGIN_DUMP}:Rundown:eng\" --text-frame=\"TPOS:\" -t \"${SHOWTITLE}\" -G Comedy --text-frame=\"TYER:${YEAR}\" -A \"Howard Stern - ${MONTH_YEAR}\" -a \"Howard Stern Show\" -n \"${TRACK}\" \"${THESHOW}\""
 
  	/usr/bin/eyeD3 \
 		--add-image="${FIST_FISTED}":FRONT_COVER:"Howard Stern Show" \

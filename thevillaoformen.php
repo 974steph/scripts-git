@@ -28,11 +28,12 @@ function loadSHASums($shasumsCSV) {
 	return $shasums;
 }
 
-function verifySHA($ormenImage) {
+function verifySHA($ormenImage,$shasums) {
 
-	global $debug, $shasumsCSV;
+	global $debug;
 
-	if (! isset($shasums)) { $shasums = loadSHASums($shasumsCSV); }
+//	if (! isset($shasums)) { $shasums = loadSHASums($shasumsCSV); }
+//	print_r($shasums);
 
 	$ormenImage['shasum'] = sha1_file($ormenImage['imgURL']);
 
@@ -81,7 +82,7 @@ function doSlack($ormenImage) {
 
 	global $debug, $slackEndPoint;
 
-	if ($debug) { print_r($post); }
+	if ($debug) { print_r($ormenImage); }
 
 	$title = $ormenImage['title'];
 	$imgURL = $ormenImage['imgURL'];
@@ -152,6 +153,7 @@ if ( ! $xml_object ) {
 	exit(1);
 }
 
+$shasums = loadSHASums($shasumsCSV);
 $x = 0;
 $ormenImages = array();
 
@@ -183,13 +185,14 @@ foreach ($xml_object->channel->item as $item) {
 
 			if ($debug) { print "NO FILE: ". $ormenImages[$x]['fullImgPath'] ."\n"; }
 
-			$ormenImages[$x] = verifySHA($ormenImages[$x]);
+			$ormenImages[$x] = verifySHA($ormenImages[$x],$shasums);
 
 			if ($ormenImages[$x]['save']) {
 				if ($debug) { print "SELECTING ". $ormenImages[$x]['filename'] ."\n"; }
 				$x++;
 			}
 		} else {
+			if ($debug) { print "SKIPPING ". $ormenImages[$x]['fullImgPath'] ."\n"; }
 			unset($ormenImages[$x]);
 		}
 	}
