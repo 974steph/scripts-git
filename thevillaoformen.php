@@ -188,16 +188,21 @@ foreach ($xml_object->channel->item as $item) {
 			$ormenImages[$x] = verifySHA($ormenImages[$x],$shasums);
 
 			if ($ormenImages[$x]['save']) {
-				if ($debug) { print "SELECTING ". $ormenImages[$x]['filename'] ."\n"; }
+				if ($debug) { print "SELECTING: ". $ormenImages[$x]['filename'] ."\n"; }
 				$x++;
+			} else {
+				if ($debug) { print "NOT SAVING: ". $ormenImages[$x]['filename'] ."\n"; }
+				unset($ormenImages[$x]);
 			}
 		} else {
-			if ($debug) { print "SKIPPING ". $ormenImages[$x]['fullImgPath'] ."\n"; }
+			if ($debug) { print "HAVE: ". $ormenImages[$x]['fullImgPath'] ."\n"; }
 			unset($ormenImages[$x]);
 		}
 	}
 }
 
+//print_r($ormenImages);
+//exit();
 
 foreach($ormenImages as $ormenImage) {
 
