@@ -47,7 +47,7 @@ echo "${B}Google${N}"
 rsync --exclude .DS_Store --exclude 'Icon*' --exclude 'NoSync' --delete -ai ${HOME}/Google\ Drive palermo@${HOST}:${THERE}/
 
 echo "${B}Git${N}"
-GITS="broom-closet directory_utilities docker-common packer splunk-docker"
+GITS="broom-closet splunk-docker"
 for GIT in ${GITS} ; do
 	rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${GITBASE}/${GIT} palermo@${HOST}:${THERE}/
 done
