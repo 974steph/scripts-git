@@ -227,9 +227,12 @@ function GetPluginPage() {
 
 	[ ${DEBUG} ] && PREFIX="GetPluginPage - "
 
-	PLUGIN_PAGE_RAW=$(curl -A "${UA}" -sL "${PLUGIN_INFO_URL}")
+	PLUGIN_PAGE_RAW=$(curl -A "${UA}" -sL "${PLUGIN_INFO_URL}/files")
+	[ ${DEBUG} ] && echo "PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
 
-	PLUGIN_PAGE=$(echo "${PLUGIN_PAGE_RAW}" | awk '/details-list/,/newest-file/')
+#	PLUGIN_PAGE=$(echo "${PLUGIN_PAGE_RAW}" | awk '/details-list/,/newest-file/')
+	PLUGIN_PAGE=$(echo "${PLUGIN_PAGE_RAW}" | awk '/Release/,/download-button/' | egrep "table__content file__name|standard-datetime|download-file" | head -n3)
+#	PLUGIN_PAGE="${PLUGIN_PAGE_RAW}"
 
 	if [ ! "${PLUGIN_PAGE}" ] ; then
 
@@ -261,16 +264,43 @@ function Plugins() {
 
 	for PLUGIN in ${CURSE_PLUGINS} ; do
 
-		PLUGIN_INFO_URL="http://www.curse.com/addons/wow/${PLUGIN}"
-
+		PLUGIN_INFO_URL="https://www.curseforge.com/wow/addons/${PLUGIN}"
+#		https://www.curseforge.com/wow/addons/
+#		PLUGIN_INFO_URL="http://www.curse.com/projects/${PLUGIN}"
 
 		GetPluginPage
 
-		PLUGIN_DATE_EPOCH=$(echo "${PLUGIN_PAGE}" | grep Updated.*epoch | sed -e 's/.*data-epoch="//;s/">.*//')
+#		echo "${PLUGIN_PAGE}"
+
+#		echo "EPOCH: $(echo ${PLUGIN_PAGE} | grep Updated.*epoch)"
+
+		PLUGIN_DATE_EPOCH=$(echo "${PLUGIN_PAGE}" | grep data-epoch | sed -e 's/.*data-epoch="//;s/">.*//')
 		PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
-		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE}" | grep newest-file | sed "s/.* \(.*\)<.*/\1/g")
+#		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE}" | grep newest-file | sed "s/.* \(.*\)<.*/\1/g")
+		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE}" | grep table__content.*file__name | sed 's/.*".\(.*\)<\/span>/\1/')
 		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/")
-		PLUGIN_FILE_URL=$(curl -A "${UA}" -sL ${PLUGIN_INFO_URL}/download | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
+		PLUGIN_FILE_ID=$(echo "${PLUGIN_PAGE}" | grep ProjectFileID | sed 's/.*ProjectFileID": \([0-9]\+\),.*/\1/')
+
+#		https://addons-origin.cursecdn.com/files/2487/318/AskMrRobot-v54.zip
+		PLUGIN_FILE_ID_URL=$(echo ${PLUGIN_FILE_ID} | sed 's/\([0-9][0-9][0-9][0-9]\)\([0-9][0-9][0-9]\)/\1\/\2/')
+
+#		PLUGIN_FILE_URL=$(curl -A "${UA}" -sL "${PLUGIN_INFO_URL}/files/${PLUGIN_FILE_ID_URL}")
+#		PLUGIN_FILE_URL=$(curl -A "${UA}" -sL "https://addons-origin.cursecdn.com/files/${PLUGIN_FILE_ID_URL}")
+#		curl -v -s https://www.curseforge.com/wow/addons/deadly-boss-mods/download/2497983/file 2>&1 | grep zip | sed 's/.*\/\(.*zip\)/\1/'
+#		curl -v -s https://www.curseforge.com/wow/addons/deadly-boss-mods/download/2497983/file 2>&1 | grep zip | sed 's/.*Location: //'
+		PLUGIN_FILE_URL=$(curl -A "${UA}" -vv -s ${PLUGIN_INFO_URL}/download/${PLUGIN_FILE_ID}/file 2>&1 | grep zip | sed 's/.*Location: //')
+
+# | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
+
+		if [ ${DEBUG} ] ; then
+			echo "PLUGIN_DATE_EPOCH: ${PLUGIN_DATE_EPOCH}"
+			echo "PLUGIN_DATE_PRETTY: ${PLUGIN_DATE_PRETTY}"
+			echo "PLUGIN_VERSION: ${PLUGIN_VERSION}"
+			echo "PLUGIN_TITLE: ${PLUGIN_TITLE}"
+			echo "PLUGIN_FILE_ID: ${PLUGIN_FILE_ID}"
+			echo "PLUGIN_FILE_ID_URL: ${PLUGIN_FILE_ID_URL}"
+			echo "PLUGIN_FILE_URL: ${PLUGIN_FILE_URL}"
+		fi
 
 		unset PLUGIN_PAGE
 
