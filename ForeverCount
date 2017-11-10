@@ -629,7 +629,12 @@ function GetHolidays() {
 ##########################################
 # BIBLE QUOTE
 #
-function GetQuote() {
+function GetQuoteOld() {
+
+#	curl -X GET --header "Accept: application/json" --header "Authorization: Token ${BIBLE_KEY}" "https://api.esv.org/v3/passage/text/?q=*"
+#	https://api.esv.org/v3/docs/#!/text/text_list
+
+	curl -sL www.sandersweb.net/bible/verse.php | grep -A6 '"random-title"' | awk '/<h2>/,/<\/section>/'
 
 	curl -A "${UA}" -sL http://www.esvapi.org/v2/rest/verse?key=IP \
 		-d dailyVerse \
@@ -646,6 +651,27 @@ function GetQuote() {
 	BIBLE_VERSE=$(cat ${QUOTE_DUMP_FILE} | sed -e '1d' -e 's/^[ \t]*//' -e '/^$/d')
 	BIBLE_LOCATION=$(head -n1 ${QUOTE_DUMP_FILE})
 	QUOTE="${BIBLE_VERSE}<br><br>${BIBLE_LOCATION}"
+
+	echo -e "<div style=\"${STYLE_BIBLE_IMAGE}\">" >> ${BODY}
+	echo -e "<p style=\"${STYLE_BIBLE}\">${BIBLE_VERSE}<br><br>${BIBLE_LOCATION}</p></div>" >> ${BODY}
+}
+##########################################
+
+
+
+##########################################
+# BIBLE QUOTE
+#
+function GetQuote() {
+
+	BIBLE_SECTION=$(curl -sL www.sandersweb.net/bible/verse.php | grep -A6 '"random-title"' | awk '/<h2>/,/<\/section>/') 
+
+	BIBLE_VERSE=$(echo ${BIBLE_SECTION} | awk '/esv-text/,/<\/div>/' | sed 's/<[^>]\+>/ /g;s/^ \+[0-9].*&nbsp; //;s/&nbsp/ /g;s/ \+/ /g;s/\t/ /g' | tr -d \\n)
+	BIBLE_LOCATION=$(echo ${BIBLE_SECTION} | grep h2 | sed 's/<h2>\(.*\) <object type="application.*/\1/')
+	QUOTE="${BIBLE_VERSE}<br><br>${BIBLE_LOCATION}"
+
+#	echo "VERSE: ${VERSE}"
+#	echo "LOCATION: ${LOCATION}"
 
 	echo -e "<div style=\"${STYLE_BIBLE_IMAGE}\">" >> ${BODY}
 	echo -e "<p style=\"${STYLE_BIBLE}\">${BIBLE_VERSE}<br><br>${BIBLE_LOCATION}</p></div>" >> ${BODY}
