@@ -12,6 +12,9 @@ ADDON_DIR="/WoW_2014_11_28/AddOns"
 
 ######################################################
 # DON'T TOUCH *ANYTHING* FROM HERE TO THE END OF THE SCRIPT
+
+source $HOME/Sources/scripts-git/secret_stuff.sh
+
 WGET_TRIES=5
 WGET_LOOP=0
 WGET_PAUSE=10
@@ -29,7 +32,8 @@ LAST_TOUCH=0
 
 UPDATE_LIST="${ADDON_DIR}/plugin_updates.txt"
 
-UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36"
+#UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36"
+getUserAgent
 ######################################################
 
 
