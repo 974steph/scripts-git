@@ -10,6 +10,7 @@ CURSE_PLUGINS="askmrrobot auc-stat-wowuction auctionator auctioneer altoholic ba
 ADDON_DIR="/WoW_2014_11_28/AddOns"
 ######################################################
 
+
 ######################################################
 # DON'T TOUCH *ANYTHING* FROM HERE TO THE END OF THE SCRIPT
 
@@ -32,9 +33,8 @@ LAST_TOUCH=0
 
 UPDATE_LIST="${ADDON_DIR}/plugin_updates.txt"
 
-#UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36"
+#UA="Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.79 Safari/537.36"
 getUserAgent
-#echo "UA: $UA"
 ######################################################
 
 
@@ -55,7 +55,7 @@ function outputHead() {
 	OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
 	OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
 #	OUTPUT+="${PREFIX}${PLUGIN_FILE_URL}\\n"
-	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}\\n"
+	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}#t1:changes\\n"
 }
 
 
@@ -135,20 +135,16 @@ function GetPlugin() {
 		echo "${PREFIX}VERSION: $4"
 	fi
 
-#	echo "@@@ wget -q \"${URL}\" -O \"${ADDON_DIR}/${PLUGIN_FILE}\""
-
-	PLUGIN_FILE=$(echo $(basename "${URL}") | tr -d "\r\n")
+	PLUGIN_FILE=$(basename "${URL}")
 	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/Content-Length/ {print $2}' | tail -n1 | tr -d "\r\n")
-#	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/Content-Length/ {print $2}' | tail -n1)
-	#PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/Content-Length/ {print $2}')
+
 	wget -q "${URL}" -O "${ADDON_DIR}/${PLUGIN_FILE}"
 
 	PLUGIN_LOCAL_SIZE=$(du -b "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $1}')
 
-	[ ${DEBUG} ] && OUTPUT+="${PREFIX}THIS_URL: ${URL}\\n"
-	[ ${DEBUG} ] && OUTPUT+="${PREFIX}PLUGIN_FILE: \"${ADDON_DIR}/$PLUGIN_FILE\"\\n"
-
 	if [ ${DEBUG} ] ; then
+		OUTPUT+="${PREFIX}THIS_URL: ${URL}\\n"
+		OUTPUT+="${PREFIX}PLUGIN_FILE: \"${ADDON_DIR}/$PLUGIN_FILE\"\\n"
 		echo "${PREFIX}${ADDON_DIR}/${PLUGIN_FILE}"
 		echo "${PREFIX}PLUGIN_SERVER_SIZE: ${PLUGIN_SERVER_SIZE}"
 		echo "${PREFIX}PLUGIN_LOCAL_SIZE: ${PLUGIN_LOCAL_SIZE}"
@@ -216,14 +212,11 @@ function Freshness() {
 		if [ ${FORCE} ] ;  then
 			OUTPUT+="${PREFIX}Forcing update of ${2}\\n"
 			GetPlugin $1 $2 $3 $4
-			UPDATES="yes"
+#			UPDATES="yes"
 		elif [ ${1} -gt ${LAST_TOUCH} ] ; then
 			OUTPUT+="${PREFIX}${2} will be updated.\\n"
-#			UPDATES="yes"
 
-			[[ ! ${NAME_LOWER} =~ .*goingprice.* ]] && UPDATES="yes"
-
-			[ ! ${SHOW} ] && GetPlugin $1 $2 $3 $4
+#			[[ ! ${NAME_LOWER} =~ .*goingprice.* ]] && UPDATES="yes"
 		else
 			OUTPUT+="${PREFIX}${2} is up to date.\\n"
 			[ ! ${DEBUG} ] && unset OUTPUT
@@ -243,11 +236,8 @@ function GetPluginPage() {
 	[ ${DEBUG} ] && PREFIX="GetPluginPage - "
 
 	PLUGIN_PAGE_RAW=$(curl -A "${UA}" -sL "${PLUGIN_INFO_URL}/files")
-	[ ${DEBUG} ] && echo "PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}/files"
 
-#	PLUGIN_PAGE=$(echo "${PLUGIN_PAGE_RAW}" | awk '/details-list/,/newest-file/')
 	PLUGIN_PAGE=$(echo "${PLUGIN_PAGE_RAW}" | awk '/Release/,/download-button/' | egrep "table__content file__name|standard-datetime|download-file" | head -n3)
-#	PLUGIN_PAGE="${PLUGIN_PAGE_RAW}"
 
 	if [ ! "${PLUGIN_PAGE}" ] ; then
 
@@ -280,42 +270,35 @@ function Plugins() {
 	for PLUGIN in ${CURSE_PLUGINS} ; do
 
 		PLUGIN_INFO_URL="https://www.curseforge.com/wow/addons/${PLUGIN}"
-#		https://www.curseforge.com/wow/addons/
-#		PLUGIN_INFO_URL="http://www.curse.com/projects/${PLUGIN}"
+		[ ${DEBUG} ] && echo "PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}/files"
 
 		GetPluginPage
 
-#		echo "${PLUGIN_PAGE}"
-
-#		echo "EPOCH: $(echo ${PLUGIN_PAGE} | grep Updated.*epoch)"
-
 		PLUGIN_DATE_EPOCH=$(echo "${PLUGIN_PAGE}" | grep data-epoch | sed -e 's/.*data-epoch="//;s/">.*//')
 		PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
-#		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE}" | grep newest-file | sed "s/.* \(.*\)<.*/\1/g")
-#		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE_RAW}" | grep table__content.*file__name | sed 's/.*".\(.*\)<\/span>/\1/' | head -n1)
-		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE_RAW}" | awk '/Release/,/download-button/' | grep table__content.*file__name | head -n1 | sed 's/.*full">\(.*\)<.*/\1/' | tr -d "\r\n")
-		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/" | tr -d "\r\n")
-		PLUGIN_FILE_ID=$(echo "${PLUGIN_PAGE_RAW}" | grep ProjectFileID | sed 's/.*ProjectFileID": \([0-9]\+\),.*/\1/' | head -n1 | tr -d "\r\n")
+#		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE_RAW}" | awk '/Release/,/download-button/' | grep table__content.*file__name | head -n1 | sed 's/.*full">\(.*\)<.*/\1/' | tr -d "\r\n")
+		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE_RAW}" | awk '/table__content.*file__name/ {print $4;exit}' | sed 's/.*full">\(.*\)<.*/\1/')
+#		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title | sed "s/.*content=\"\(.*\)\".*/\1/" | tr -d "\r\n")
+		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | awk '/og:title/ {print $3;exit}' | sed "s/.*content=\"\(.*\)\".*/\1/")
+#		PLUGIN_FILE_ID=$(echo "${PLUGIN_PAGE_RAW}" | grep ProjectFileID | sed 's/.*ProjectFileID": \([0-9]\+\),.*/\1/' | head -n1 | tr -d "\r\n"
+		PLUGIN_FILE_ID=$(echo "${PLUGIN_PAGE_RAW}" | awk '/ProjectFileID/ {print $9;exit}' | sed 's/,.*//')
 
-#		https://addons-origin.cursecdn.com/files/2487/318/AskMrRobot-v54.zip
-		PLUGIN_FILE_ID_URL=$(echo ${PLUGIN_FILE_ID} | sed 's/\([0-9][0-9][0-9][0-9]\)\([0-9][0-9][0-9]\)/\1\/\2/' | tr -d "\r\n")
+#		PLUGIN_FILE_ID_URL=$(echo ${PLUGIN_FILE_ID} | sed 's/\([0-9][0-9][0-9][0-9]\)\([0-9][0-9][0-9]\)/\1\/\2/' | tr -d "\r\n")
+		PLUGIN_FILE_ID_URL=$(echo ${PLUGIN_FILE_ID} | sed 's/\([0-9][0-9][0-9][0-9]\)\([0-9][0-9][0-9]\)/\1\/\2/')
 
-#		PLUGIN_FILE_URL=$(curl -A "${UA}" -sL "${PLUGIN_INFO_URL}/files/${PLUGIN_FILE_ID_URL}")
-#		PLUGIN_FILE_URL=$(curl -A "${UA}" -sL "https://addons-origin.cursecdn.com/files/${PLUGIN_FILE_ID_URL}")
-#		curl -v -s https://www.curseforge.com/wow/addons/deadly-boss-mods/download/2497983/file 2>&1 | grep zip | sed 's/.*\/\(.*zip\)/\1/'
-#		curl -v -s https://www.curseforge.com/wow/addons/deadly-boss-mods/download/2497983/file 2>&1 | grep zip | sed 's/.*Location: //'
-		PLUGIN_FILE_URL=$(curl -A "${UA}" -vv -s ${PLUGIN_INFO_URL}/download/${PLUGIN_FILE_ID}/file 2>&1 | grep zip | sed 's/.*Location: //' | tr -d "\r\n")
+#		PLUGIN_FILE_URL=$(curl -A "${UA}" -vv -s ${PLUGIN_INFO_URL}/download/${PLUGIN_FILE_ID}/file 2>&1 | grep zip | sed 's/.*Location: //' | tr -d "\r\n")
+		PLUGIN_FILE_URL=$(curl -A "${UA}" -vv -s ${PLUGIN_INFO_URL}/download/${PLUGIN_FILE_ID}/file 2>&1 | awk '/Location.*zip/ {print $3}' | tail -n1 | tr -d "\r\n")
 
-# | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
+#		echo "@@@@@ ${PLUGIN_INFO_URL}/download/${PLUGIN_FILE_ID}/file"
 
 		if [ ${DEBUG} ] ; then
-			echo "${PREFIX}PLUGIN_DATE_EPOCH: ${PLUGIN_DATE_EPOCH}"
-			echo "${PREFIX}PLUGIN_DATE_PRETTY: ${PLUGIN_DATE_PRETTY}"
-			echo "${PREFIX}PLUGIN_VERSION: ${PLUGIN_VERSION}"
-			echo "${PREFIX}PLUGIN_TITLE: ${PLUGIN_TITLE}"
-			echo "${PREFIX}PLUGIN_FILE_ID: ${PLUGIN_FILE_ID}"
-			echo "${PREFIX}PLUGIN_FILE_ID_URL: ${PLUGIN_FILE_ID_URL}"
-			echo "${PREFIX}PLUGIN_FILE_URL: ${PLUGIN_FILE_URL}"
+			echo "${PREFIX}PLUGIN_DATE_EPOCH: \"${PLUGIN_DATE_EPOCH}\""
+			echo "${PREFIX}PLUGIN_DATE_PRETTY: \"${PLUGIN_DATE_PRETTY}\""
+			echo "${PREFIX}PLUGIN_VERSION: \"${PLUGIN_VERSION}\""
+			echo "${PREFIX}PLUGIN_TITLE: \"${PLUGIN_TITLE}\""
+			echo "${PREFIX}PLUGIN_FILE_ID: \"${PLUGIN_FILE_ID}\""
+			echo "${PREFIX}PLUGIN_FILE_ID_URL: \"${PLUGIN_FILE_ID_URL}\""
+			echo "${PREFIX}PLUGIN_FILE_URL: \"${PLUGIN_FILE_URL}\""
 		fi
 
 		unset PLUGIN_PAGE
@@ -557,12 +540,6 @@ if [ ! "$TERM" == "dumb" ] ; then
 fi
 
 case $1 in
-	show)
-		DEBUG="yes"
-		SHOW="yes"
-		DoIt
-		exit
-		;;
 # 	wa)
 # 		DEBUG="yes"
 # 		WoWAuction
