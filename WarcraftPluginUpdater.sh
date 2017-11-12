@@ -34,6 +34,7 @@ UPDATE_LIST="${ADDON_DIR}/plugin_updates.txt"
 
 #UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36"
 getUserAgent
+#echo "UA: $UA"
 ######################################################
 
 
@@ -127,8 +128,18 @@ function GetPlugin() {
 
 	[ ${DEBUG} ] && PREFIX="GetPlugin - "
 
-	PLUGIN_FILE=$(basename "${URL}")
-	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | grep Content-Length | awk '{print $2}' | tail -n1 | tr -d "\r\n")
+	if [ ${DEBUG} ] ; then
+		echo "${PREFIX}EPOCH: $1"
+		echo "${PREFIX}NAME: $2"
+		echo "${PREFIX}URL: $URL"
+		echo "${PREFIX}VERSION: $4"
+	fi
+
+#	echo "@@@ wget -q \"${URL}\" -O \"${ADDON_DIR}/${PLUGIN_FILE}\""
+
+	PLUGIN_FILE=$(echo $(basename "${URL}") | tr -d "\r\n")
+	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/Content-Length/ {print $2}' | tail -n1 | tr -d "\r\n")
+#	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/Content-Length/ {print $2}' | tail -n1)
 	#PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/Content-Length/ {print $2}')
 	wget -q "${URL}" -O "${ADDON_DIR}/${PLUGIN_FILE}"
 
@@ -232,7 +243,7 @@ function GetPluginPage() {
 	[ ${DEBUG} ] && PREFIX="GetPluginPage - "
 
 	PLUGIN_PAGE_RAW=$(curl -A "${UA}" -sL "${PLUGIN_INFO_URL}/files")
-	[ ${DEBUG} ] && echo "PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}"
+	[ ${DEBUG} ] && echo "PLUGIN_INFO_URL: ${PLUGIN_INFO_URL}/files"
 
 #	PLUGIN_PAGE=$(echo "${PLUGIN_PAGE_RAW}" | awk '/details-list/,/newest-file/')
 	PLUGIN_PAGE=$(echo "${PLUGIN_PAGE_RAW}" | awk '/Release/,/download-button/' | egrep "table__content file__name|standard-datetime|download-file" | head -n3)
@@ -281,36 +292,38 @@ function Plugins() {
 		PLUGIN_DATE_EPOCH=$(echo "${PLUGIN_PAGE}" | grep data-epoch | sed -e 's/.*data-epoch="//;s/">.*//')
 		PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 #		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE}" | grep newest-file | sed "s/.* \(.*\)<.*/\1/g")
-		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE}" | grep table__content.*file__name | sed 's/.*".\(.*\)<\/span>/\1/')
-		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/")
-		PLUGIN_FILE_ID=$(echo "${PLUGIN_PAGE}" | grep ProjectFileID | sed 's/.*ProjectFileID": \([0-9]\+\),.*/\1/')
+#		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE_RAW}" | grep table__content.*file__name | sed 's/.*".\(.*\)<\/span>/\1/' | head -n1)
+		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE_RAW}" | awk '/Release/,/download-button/' | grep table__content.*file__name | head -n1 | sed 's/.*full">\(.*\)<.*/\1/' | tr -d "\r\n")
+		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/" | tr -d "\r\n")
+		PLUGIN_FILE_ID=$(echo "${PLUGIN_PAGE_RAW}" | grep ProjectFileID | sed 's/.*ProjectFileID": \([0-9]\+\),.*/\1/' | head -n1 | tr -d "\r\n")
 
 #		https://addons-origin.cursecdn.com/files/2487/318/AskMrRobot-v54.zip
-		PLUGIN_FILE_ID_URL=$(echo ${PLUGIN_FILE_ID} | sed 's/\([0-9][0-9][0-9][0-9]\)\([0-9][0-9][0-9]\)/\1\/\2/')
+		PLUGIN_FILE_ID_URL=$(echo ${PLUGIN_FILE_ID} | sed 's/\([0-9][0-9][0-9][0-9]\)\([0-9][0-9][0-9]\)/\1\/\2/' | tr -d "\r\n")
 
 #		PLUGIN_FILE_URL=$(curl -A "${UA}" -sL "${PLUGIN_INFO_URL}/files/${PLUGIN_FILE_ID_URL}")
 #		PLUGIN_FILE_URL=$(curl -A "${UA}" -sL "https://addons-origin.cursecdn.com/files/${PLUGIN_FILE_ID_URL}")
 #		curl -v -s https://www.curseforge.com/wow/addons/deadly-boss-mods/download/2497983/file 2>&1 | grep zip | sed 's/.*\/\(.*zip\)/\1/'
 #		curl -v -s https://www.curseforge.com/wow/addons/deadly-boss-mods/download/2497983/file 2>&1 | grep zip | sed 's/.*Location: //'
-		PLUGIN_FILE_URL=$(curl -A "${UA}" -vv -s ${PLUGIN_INFO_URL}/download/${PLUGIN_FILE_ID}/file 2>&1 | grep zip | sed 's/.*Location: //')
+		PLUGIN_FILE_URL=$(curl -A "${UA}" -vv -s ${PLUGIN_INFO_URL}/download/${PLUGIN_FILE_ID}/file 2>&1 | grep zip | sed 's/.*Location: //' | tr -d "\r\n")
 
 # | grep download-link | sed -e 's/.*data-href="//;s/zip" class=".*/zip/;s/ /%20/g')
 
 		if [ ${DEBUG} ] ; then
-			echo "PLUGIN_DATE_EPOCH: ${PLUGIN_DATE_EPOCH}"
-			echo "PLUGIN_DATE_PRETTY: ${PLUGIN_DATE_PRETTY}"
-			echo "PLUGIN_VERSION: ${PLUGIN_VERSION}"
-			echo "PLUGIN_TITLE: ${PLUGIN_TITLE}"
-			echo "PLUGIN_FILE_ID: ${PLUGIN_FILE_ID}"
-			echo "PLUGIN_FILE_ID_URL: ${PLUGIN_FILE_ID_URL}"
-			echo "PLUGIN_FILE_URL: ${PLUGIN_FILE_URL}"
+			echo "${PREFIX}PLUGIN_DATE_EPOCH: ${PLUGIN_DATE_EPOCH}"
+			echo "${PREFIX}PLUGIN_DATE_PRETTY: ${PLUGIN_DATE_PRETTY}"
+			echo "${PREFIX}PLUGIN_VERSION: ${PLUGIN_VERSION}"
+			echo "${PREFIX}PLUGIN_TITLE: ${PLUGIN_TITLE}"
+			echo "${PREFIX}PLUGIN_FILE_ID: ${PLUGIN_FILE_ID}"
+			echo "${PREFIX}PLUGIN_FILE_ID_URL: ${PLUGIN_FILE_ID_URL}"
+			echo "${PREFIX}PLUGIN_FILE_URL: ${PLUGIN_FILE_URL}"
 		fi
 
 		unset PLUGIN_PAGE
 
 		outputHead
 
-		Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}#t1:changes" "${PLUGIN_VERSION}"
+#		Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}#t1:changes" "${PLUGIN_VERSION}"
+		Freshness ${PLUGIN_DATE_EPOCH} ${PLUGIN} "${PLUGIN_FILE_URL}" "${PLUGIN_VERSION}"
 
 		outputTail
 
