@@ -215,6 +215,7 @@ function Freshness() {
 #			UPDATES="yes"
 		elif [ ${1} -gt ${LAST_TOUCH} ] ; then
 			OUTPUT+="${PREFIX}${2} will be updated.\\n"
+			GetPlugin $1 $2 $3 $4
 
 #			[[ ! ${NAME_LOWER} =~ .*goingprice.* ]] && UPDATES="yes"
 		else
