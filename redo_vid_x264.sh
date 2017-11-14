@@ -50,11 +50,22 @@ else
 #	eval $(mplayer -vo null -ao null -frames 0 -identify "${INFILE}" | egrep "ID_VIDEO_WIDTH|ID_VIDEO_HEIGHT|ID_LENGTH" 2>/dev/null)
 
 	eval $(ffprobe -v 0 -show_streams -select_streams a "${INFILE}" | egrep "channels|sample_rate" | sed 's/channels/ID_AUDIO_NCH/;s/sample_rate/ID_AUDIO_RATE/')
-	eval $(ffprobe -v 0 -show_streams -select_streams v "${INFILE}" | egrep -i "^width|^height|TAG:DURATION" | sed 's/width/ID_VIDEO_WIDTH/;s/height/ID_VIDEO_HEIGHT/;s/TAG:\(.*\)\..*/\1/')
+#	eval $(ffprobe -v 0 -show_streams -select_streams v "${INFILE}" | egrep -i "^width|^height|TAG:DURATION" | sed 's/width/ID_VIDEO_WIDTH/;s/height/ID_VIDEO_HEIGHT/;s/TAG:\(.*\)\..*/\1/')
+#	eval $(ffprobe -show_streams -select_streams v "${INFILE}" 2>&1 | egrep -i "^width|^height|Duration.*start.*bitrate" | sed 's/width/ID_VIDEO_WIDTH/;s/height/ID_VIDEO_HEIGHT/;s/TAG:\(.*\)\..*/\1/;s/.*Duration: \(.*\)\..*start.*/DURATON=\1/')
+	eval $(ffprobe -show_streams -select_streams v "${INFILE}" 2>&1 | egrep -i "^width|^height|Duration.*start.*bitrate" | tr '[:lower:]' '[:upper:]' | sed 's/.*DURATION: \(.*\)\.[0-9].*START.*/DURATION=\1/')
+
+#	ffprobe -show_streams -select_streams v "./Twin.Peaks.S03E01.mkv" 2>&1 | awk '/Duration.*start.*bitrate/ {print $2}' | sed 's/[\.,].*//'
+
+	ID_VIDEO_WIDTH=${WIDTH}
+	ID_VIDEO_HEIGHT=${HEIGHT}
 
 	DURH=$(echo ${DURATION} | awk -F: '{print $1}')
 	DURM=$(echo ${DURATION} | awk -F: '{print $2}')
 	DURS=$(echo ${DURATION} | awk -F: '{print $3}')
+
+#	echo "DURH: $DURH"
+#	echo "DURM: $DURM"
+#	echo "DURS: $DURS"
 
 	ID_LENGTH=$(( ((${DURH} * 60) * 60 ) + ( ${DURM} * 60 ) + ${DURS} ))
 
@@ -70,6 +81,7 @@ else
 		echo "ID_VIDEO_WIDTH: $ID_VIDEO_WIDTH"
 		echo "ID_VIDEO_HEIGHT: $ID_VIDEO_HEIGHT"
 		echo "ID_LENGTH: $ID_LENGTH"
+		echo "DURATION: $DURATION"
 		echo "---------"
 		echo "INFILE: $INFILE"
 		echo "JUSTNAME: $JUSTNAME"
@@ -79,6 +91,8 @@ else
 		echo -e "\\v---------\\v"
 	fi
 fi
+
+#exit
 
 case $2 in
 	auto)
