@@ -4,7 +4,10 @@
 include 'secret_stuff.php';
 
 $debug = False;
-//$debug = True;
+
+if (isset($argv[1])) {
+	if ($argv[1] == "debug") { $debug = True; }
+}
 
 $rssurl = "http://thevillaoformen.tumblr.com/rss";
 $imageRepo = $myhome ."/Pictures/thevillaoformen";
