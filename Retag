@@ -477,8 +477,11 @@ function attemptRename() {
 		THEFILE="${WHERENOW}/${REALDATE}.mp3"
 
 #		echo -e "\\vShould I rename \"${THISFILE}\" to \"${REALDATE}.mp3\"? (y/N)\\v"
-
 #		read DO_RENAME in
+		echo
+		read -n1 -p "Should I rename \"${THISFILE}\" to \"${REALDATE}.mp3\"? (y/N) " DO_RENAME
+		echo -e \\n
+
 
 #		case "${DO_RENAME}" in
 #			[yY])
