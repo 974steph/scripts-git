@@ -227,8 +227,11 @@ if [ "${POSSIBLES}" ] ; then
 
 	[ ${CHECK} ] && cleanup
 
-	echo -e "\\vUse this one? [y|N]"
-	read DOIT in
+#	echo -e "\\vUse this one? [y|N]"
+#	read DOIT in
+	echo
+	read -n1 -p "Use this one? [y|N] " DOIT
+	echo
 
 	case ${DOIT} in
 		[yY])	YES=yes;;
