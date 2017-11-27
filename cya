@@ -24,17 +24,17 @@ N=$(tput sgr0)
 echo "${B}The Villa of Ormen${N}"
 rsync --delete -ai aragorn:/usr/local/palermo/Pictures/thevillaoformen/ ${HOME}/Pictures/thevillaoformen/
 
-echo "${B}Local SSH${N}"
-rsync -ai ${HOME}/.ssh/ "${TANK}/ssh/LOCAL/"
+#echo "${B}Local SSH${N}"
+#rsync -ai ${HOME}/.ssh/ "${TANK}/ssh/LOCAL/"
 
-echo "${B}Jump SSH${N}"
-rsync -ai sshjump:.ssh/ "${TANK}/ssh/JUMP/"
+#echo "${B}Jump SSH${N}"
+#rsync -ai sshjump:.ssh/ "${TANK}/ssh/JUMP/"
 
-echo "${B}Scripts${N}"
-rsync -ai ${HOME}/Scripts/ "${TANK}/SCRIPTS/"
+#echo "${B}Scripts${N}"
+#rsync -ai ${HOME}/Scripts/ "${TANK}/SCRIPTS/"
 
-echo "${B}Bash${N}"
-rsync --exclude .bash_sessions -aqi ${HOME}/.bash* "${TANK}/BASH/"
+#echo "${B}Bash${N}"
+#rsync --exclude .bash_sessions -aqi ${HOME}/.bash* "${TANK}/BASH/"
 ###########################
 
 
@@ -43,12 +43,12 @@ rsync --exclude .bash_sessions -aqi ${HOME}/.bash* "${TANK}/BASH/"
 
 #echo -e "\\n${LB}--- OUT ---${N}"
 
-echo "${B}Google${N}"
-rsync --exclude .DS_Store --exclude 'Icon*' --exclude 'NoSync' --delete -ai ${HOME}/Google\ Drive palermo@${HOST}:${THERE}/
+#echo "${B}Google${N}"
+#rsync --exclude .DS_Store --exclude 'Icon*' --exclude 'NoSync' --delete -ai ${HOME}/Google\ Drive palermo@${HOST}:${THERE}/
 
-echo "${B}Git${N}"
-GITS="broom-closet splunk-docker"
-for GIT in ${GITS} ; do
-	rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${GITBASE}/${GIT} palermo@${HOST}:${THERE}/
-done
+#echo "${B}Git${N}"
+#GITS="broom-closet splunk-docker"
+#for GIT in ${GITS} ; do
+#	rsync --exclude .DS_Store --exclude .git --exclude 'Icon*' --delete -ai ${GITBASE}/${GIT} palermo@${HOST}:${THERE}/
+#done
 ###########################
