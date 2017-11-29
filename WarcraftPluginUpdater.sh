@@ -141,7 +141,7 @@ function GetPlugin() {
 
 	PLUGIN_FILE=$(basename "${URL}")
 #	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/Content-Length/ {print $2}' | tail -n1 | tr -d "\r\n")
-	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/content-length/ {print $2}' | tail -n1 | tr -d "\r\n")
+	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | grep -i content-length | awk '{print $2}' | tail -n1 | tr -d "\r\n")
 
 	wget -q "${URL}" -O "${ADDON_DIR}/${PLUGIN_FILE}"
 
