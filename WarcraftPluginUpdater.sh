@@ -7,7 +7,8 @@ CURSE_PLUGINS="askmrrobot auc-stat-wowuction auctionator auctioneer altoholic ba
 	deadly-boss-mods dejacharacterstats farmhud gathermate2 gathermate2_data handynotes \
 	handynotes_legionrarestreasures pawn postal scrap scrap-cleaner skada tomtom undermine-journal world-quest-tracker"
 
-ADDON_DIR="/WoW_2014_11_28/AddOns"
+#ADDON_DIR="/WoW_2014_11_28/AddOns"
+ADDON_DIR="/WoW_2017_11_28/AddOns"
 ######################################################
 
 
@@ -136,7 +137,8 @@ function GetPlugin() {
 	fi
 
 	PLUGIN_FILE=$(basename "${URL}")
-	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/Content-Length/ {print $2}' | tail -n1 | tr -d "\r\n")
+#	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/Content-Length/ {print $2}' | tail -n1 | tr -d "\r\n")
+	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/content-length/ {print $2}' | tail -n1 | tr -d "\r\n")
 
 	wget -q "${URL}" -O "${ADDON_DIR}/${PLUGIN_FILE}"
 
