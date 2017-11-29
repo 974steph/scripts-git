@@ -36,6 +36,9 @@ UPDATE_LIST="${ADDON_DIR}/plugin_updates.txt"
 
 #UA="Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.79 Safari/537.36"
 getUserAgent
+
+#LAST_MODIFIED="Last-Modified"
+LAST_MODIFIED="last-modified"
 ######################################################
 
 
@@ -334,7 +337,7 @@ function GPDawnbringer() {
 	PLUGIN_TITLE="${PLUGIN}"
 
 	PLUGIN_FILE_URL="http://goingpriceaddon.com/download/us.battle.net/symb/GoingPrice_US_Dawnbringer.zip"
-	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" --head -sL ${PLUGIN_FILE_URL} | grep Last-Modified | cut -d ' ' -f2-)" +%s)
+	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" --head -sL ${PLUGIN_FILE_URL} | grep ${LAST_MODIFIED} | cut -d ' ' -f2-)" +%s)
 	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 	PLUGIN_VERSION=${PLUGIN_DATE_EPOCH}
 
@@ -363,7 +366,7 @@ function WoWPro() {
 
 	PLUGIN_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | awk '/Version/ {print $3}')
 	PLUGIN_FILE_URL="https://s3.amazonaws.com/WoW-Pro/WoWPro+v${PLUGIN_VERSION}.zip"
-	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${PLUGIN_FILE_URL} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
+	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${PLUGIN_FILE_URL} | grep ${LAST_MODIFIED}: | cut -d ' ' -f2-)" +%s)
 	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 
 	outputHead
