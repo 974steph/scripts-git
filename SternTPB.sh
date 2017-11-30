@@ -52,6 +52,7 @@ SEARCH_URL="${URL}/search/howard+stern/0/3/0"
 
 if [ ${DEBUG} ] ; then
 	echo -e "========="
+	echo "TMPFILE: $TMPFILE"
 	echo "MAG_DATE_WORD: $MAG_DATE_WORD"
 	echo "MAG_DATE_LWORD: $MAG_DATE_LWORD"
 	echo "MAG_DATE_NUM: $MAG_DATE_NUM"
