@@ -3,8 +3,9 @@
 ###########################
 # VARS
 HOST="aragorn.fleag.us"
-THERE="Work/Ring"
-TANK="${HOME}/Google Drive/BACKUP"
+THERE="Work/Ring02"
+GOOGLE="${HOME}/Google Drive File Stream/My Drive"
+TANK="${GOOGLE}/BACKUP"
 GITBASE="${HOME}/GIT"
 
 B=$(tput bold)
@@ -24,17 +25,17 @@ N=$(tput sgr0)
 echo "${B}The Villa of Ormen${N}"
 rsync --delete -ai aragorn:/usr/local/palermo/Pictures/thevillaoformen/ ${HOME}/Pictures/thevillaoformen/
 
-#echo "${B}Local SSH${N}"
-#rsync -ai ${HOME}/.ssh/ "${TANK}/ssh/LOCAL/"
+echo "${B}Local SSH${N}"
+rsync -ai ${HOME}/.ssh/ "${TANK}/ssh/LOCAL/"
 
 #echo "${B}Jump SSH${N}"
 #rsync -ai sshjump:.ssh/ "${TANK}/ssh/JUMP/"
 
-#echo "${B}Scripts${N}"
-#rsync -ai ${HOME}/Scripts/ "${TANK}/SCRIPTS/"
+echo "${B}Scripts${N}"
+rsync -ai ${HOME}/Scripts/ "${TANK}/SCRIPTS/"
 
-#echo "${B}Bash${N}"
-#rsync --exclude .bash_sessions -aqi ${HOME}/.bash* "${TANK}/BASH/"
+echo "${B}Bash${N}"
+rsync --exclude .bash_sessions -aqi ${HOME}/.bash* "${TANK}/BASH/"
 ###########################
 
 
@@ -43,8 +44,8 @@ rsync --delete -ai aragorn:/usr/local/palermo/Pictures/thevillaoformen/ ${HOME}/
 
 #echo -e "\\n${LB}--- OUT ---${N}"
 
-#echo "${B}Google${N}"
-#rsync --exclude .DS_Store --exclude 'Icon*' --exclude 'NoSync' --delete -ai ${HOME}/Google\ Drive palermo@${HOST}:${THERE}/
+echo "${B}Google${N}"
+rsync --exclude .DS_Store --exclude 'Icon*' --exclude 'NoSync' --delete -ai "${GOOGLE}" palermo@${HOST}:${THERE}
 
 #echo "${B}Git${N}"
 #GITS="broom-closet splunk-docker"
