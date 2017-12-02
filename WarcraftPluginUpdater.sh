@@ -59,7 +59,7 @@ function outputHead() {
 	OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
 	OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
 #	OUTPUT+="${PREFIX}${PLUGIN_FILE_URL}\\n"
-	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}#t1:changes\\n"
+	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}/changes\\n"
 }
 
 
