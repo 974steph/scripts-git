@@ -285,7 +285,7 @@ function Plugins() {
 #		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE_RAW}" | awk '/Release/,/download-button/' | grep table__content.*file__name | head -n1 | sed 's/.*full">\(.*\)<.*/\1/' | tr -d "\r\n")
 		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE_RAW}" | awk '/table__content.*file__name/ {print $4;exit}' | sed 's/.*full">\(.*\)<.*/\1/')
 #		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title | sed "s/.*content=\"\(.*\)\".*/\1/" | tr -d "\r\n")
-		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | awk '/og:title/ {print $3;exit}' | sed "s/.*content=\"\(.*\)\".*/\1/")
+		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/")
 #		PLUGIN_FILE_ID=$(echo "${PLUGIN_PAGE_RAW}" | grep ProjectFileID | sed 's/.*ProjectFileID": \([0-9]\+\),.*/\1/' | head -n1 | tr -d "\r\n"
 		PLUGIN_FILE_ID=$(echo "${PLUGIN_PAGE_RAW}" | awk '/ProjectFileID/ {print $9;exit}' | sed 's/,.*//')
 
