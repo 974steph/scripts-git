@@ -20,8 +20,8 @@ THREADS=0
 #ENCODER_V="libx264"
 ENCODER_V="h264_nvenc"
 
-#ENCODER_A="aac"
-ENCODER_A="libfdk_aac"
+ENCODER_A="aac"
+#ENCODER_A="libfdk_aac"
 
 DIR_TEMP="TempFiles"
 DIR_FINAL="Final"
@@ -226,8 +226,12 @@ function allinone() {
 
 	[ ! -d "${DIR_FINAL}" ] && mkdir -p "${DIR_FINAL}"
 
-	[ ${DEBUG} ] && echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -cbr 1 -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} -an -f mp4 \"${OUTFILE_V}\""
-	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -cbr 1 -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} "${OUTFILE_FINAL}"
+#	[ ${DEBUG} ] && echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -cbr 1 -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} -an -f mp4 \"${OUTFILE_V}\""
+#	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -cbr 1 -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} "${OUTFILE_FINAL}"
+
+	[ ${DEBUG} ] && echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -cbr 1 -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} \"${OUTFILE_FINAL}\""
+	ffmpeg -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -cbr 1 -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} "${OUTFILE_FINAL}"
+
 
 	TRAP=$?
 
@@ -265,6 +269,7 @@ function dumpstats() {
 
 
 #echo
+[ ! -d "${DIR_TEMP}" ] && mkdir -p "${DIR_TEMP}"
 
 if [ ${ACTION} == "auto" ] ; then
 #	BITRATE_VIDEO=$(echo "(${WANT_SIZE} * 8192) / ${ID_LENGTH}" | bc)
@@ -276,8 +281,6 @@ if [ ${ACTION} == "auto" ] ; then
 	[ ${DEBUG} ] && echo -e "\\v---------\\v"
 
 else
-
-	[ ! -d "${DIR_TEMP}" ] && mkdir -p "${DIR_TEMP}"
 	[ -f "${DIR_TEMP}/ffmpeg2pass-0.log" ] && rm -f${V} "${DIR_TEMP}/ffmpeg2pass-0.log"
 	[ -f "${DIR_TEMP}/ffmpeg2pass-0.log.mbtree" ] && rm -f${V} "${DIR_TEMP}/ffmpeg2pass-0.log.mbtree"
 
