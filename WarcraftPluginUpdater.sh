@@ -3,10 +3,10 @@
 
 ######################################################
 # EDIT THIS STUFF FOR YOUR SYSTEM / SETUP
-CURSE_PLUGINS="askmrrobot auc-stat-wowuction auctionator auctioneer altoholic bagnon datastore datastore_achievements \
-	datastore_auctions datastore_agenda datastore_characters \
-	deadly-boss-mods dejacharacterstats farmhud gathermate2 gathermate2_data handynotes \
-	handynotes_legionrarestreasures pawn postal scrap scrap-cleaner skada tomtom undermine-journal world-quest-tracker"
+CURSE_PLUGINS="askmrrobot auctionator auctioneer altoholic bagnon datastore datastore_achievements \
+	datastore_auctions datastore_characters deadly-boss-mods dejacharacterstats \
+	farmhud gathermate2 gathermate2_data handynotes handynotes_legionrarestreasures pawn postal \
+	scrap scrap-cleaner skada tomtom undermine-journal world-quest-tracker"
 
 #ADDON_DIR="/WoW_2014_11_28/AddOns"
 ADDON_DIR="/WoW_2017_11_28/AddOns"
