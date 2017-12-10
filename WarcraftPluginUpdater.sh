@@ -57,10 +57,13 @@ function outputHead() {
 	fi
 
 	[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
-	OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
+	OUTPUT+="${PREFIX}Update Time: $(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")\\n"
 	OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
-#	OUTPUT+="${PREFIX}${PLUGIN_FILE_URL}\\n"
-	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}/changes\\n"
+
+	case ${PLUGIN} in
+		wowpro)	OUTPUT+="${PREFIX}${PLUGIN_FILE_URL}\\n";;
+		*)	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}/changes\\n";;
+	esac
 }
 
 
@@ -68,6 +71,8 @@ function outputTail() {
 #	 ${DEBUG} ] && PREFIX="outputTail - "
 
  	if [ "${OUTPUT}" ] ; then
+
+		OUTPUT+="${PREFIX}SHA: ${SHASUM}\\n"
 
 		if [ ${DEBUG} ] ; then
 			if [ ${NOTDUMB} ] ; then
@@ -105,6 +110,8 @@ function UpdateStamp() {
 	fi
 
 	echo "$2" > "${STAMP_FILE}"
+	SHASUM=$(sha1sum "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $1}')
+	echo ${SHASUM} >> "${STAMP_FILE}"
 	unzip -l "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $4}' | egrep -v "^$|Name|-+" >> "${STAMP_FILE}"
 
 	[ ${DEBUG} ] && echo "${PREFIX}${STAMP_FILE} || ${PLUGIN_FILE}"
@@ -282,7 +289,7 @@ function Plugins() {
 		GetPluginPage
 
 		PLUGIN_DATE_EPOCH=$(echo "${PLUGIN_PAGE}" | grep data-epoch | sed -e 's/.*data-epoch="//;s/">.*//')
-		PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
+#		PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 #		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE_RAW}" | awk '/Release/,/download-button/' | grep table__content.*file__name | head -n1 | sed 's/.*full">\(.*\)<.*/\1/' | tr -d "\r\n")
 		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE_RAW}" | awk '/table__content.*file__name/ {print $4;exit}' | sed 's/.*full">\(.*\)<.*/\1/')
 #		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title | sed "s/.*content=\"\(.*\)\".*/\1/" | tr -d "\r\n")
@@ -300,7 +307,7 @@ function Plugins() {
 
 		if [ ${DEBUG} ] ; then
 			echo "${PREFIX}PLUGIN_DATE_EPOCH: \"${PLUGIN_DATE_EPOCH}\""
-			echo "${PREFIX}PLUGIN_DATE_PRETTY: \"${PLUGIN_DATE_PRETTY}\""
+#			echo "${PREFIX}PLUGIN_DATE_PRETTY: \"${PLUGIN_DATE_PRETTY}\""
 			echo "${PREFIX}PLUGIN_VERSION: \"${PLUGIN_VERSION}\""
 			echo "${PREFIX}PLUGIN_TITLE: \"${PLUGIN_TITLE}\""
 			echo "${PREFIX}PLUGIN_FILE_ID: \"${PLUGIN_FILE_ID}\""
@@ -339,7 +346,7 @@ function GPDawnbringer() {
 
 	PLUGIN_FILE_URL="http://goingpriceaddon.com/download/us.battle.net/symb/GoingPrice_US_Dawnbringer.zip"
 	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" --head -sL ${PLUGIN_FILE_URL} | grep ${LAST_MODIFIED} | cut -d ' ' -f2-)" +%s)
-	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
+#	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 	PLUGIN_VERSION=${PLUGIN_DATE_EPOCH}
 
 	outputHead
@@ -362,13 +369,13 @@ function WoWPro() {
 	[ ${DEBUG} ] && PREFIX="WoWPro - "
 
 	PLUGIN="wowpro"
-	PLUGIN_INFO_URL="http://www.wow-pro.com/blog"
 	PLUGIN_TITLE="${PLUGIN}"
+	PLUGIN_INFO_URL="http://www.wow-pro.com/blog"
 
 	PLUGIN_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | awk '/Version/ {print $3}')
 	PLUGIN_FILE_URL="https://s3.amazonaws.com/WoW-Pro/WoWPro+v${PLUGIN_VERSION}.zip"
-	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${PLUGIN_FILE_URL} | grep ${LAST_MODIFIED}: | cut -d ' ' -f2-)" +%s)
-	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
+	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${PLUGIN_FILE_URL} | grep -i ${LAST_MODIFIED}: | cut -d ' ' -f2-)" +%s)
+#	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 
 	outputHead
 
