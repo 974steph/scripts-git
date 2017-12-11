@@ -26,13 +26,13 @@ echo "${B}The Villa of Ormen${N}"
 rsync --delete -ai aragorn:/usr/local/palermo/Pictures/thevillaoformen/ ${HOME}/Pictures/thevillaoformen/
 
 echo "${B}Local SSH${N}"
-rsync -ai ${HOME}/.ssh/ "${TANK}/ssh/LOCAL/"
+rsync -rltgoDi ${HOME}/.ssh/ "${TANK}/ssh/LOCAL/"
 
 echo "${B}Jump SSH${N}"
-rsync -ai sshjump:.ssh/ "${TANK}/ssh/JUMP/"
+rsync -rltgoDi sshjump:.ssh/ "${TANK}/ssh/JUMP/"
 
 echo "${B}Scripts${N}"
-rsync -ai ${HOME}/Scripts/ "${TANK}/SCRIPTS/"
+rsync -rltgoDi ${HOME}/Scripts/ "${TANK}/SCRIPTS/"
 
 echo "${B}Bash${N}"
 rsync --exclude .bash_sessions -aqi ${HOME}/.bash* "${TANK}/BASH/"
