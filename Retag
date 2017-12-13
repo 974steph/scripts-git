@@ -538,17 +538,17 @@ if [ ! -f "${THEFILE}" ] ; then
 	exit 1
 fi
 
-if [ ! -O "$(dirname "${THEFILE}")" ] ; then
-	[ ${DEBUG} ] && echo "DIRECTORY NOT OWNED BY $(whoami).  Fixing..."
-	sudo chown -R${V} $(whoami):$(id | sed 's/.*gid=[0-9]\+(\([a-zA-Z]\+\)).*/\1/') "$(dirname "${THEFILE}")"
-
-	TRAP=$?
-
-	if [ $TRAP -ne 0 ] ; then
-		echo "chown failed: $TRAP"
-		exit $TRAP
-	fi
-fi
+#if [ ! -O "$(dirname "${THEFILE}")" ] ; then
+#	[ ${DEBUG} ] && echo "DIRECTORY NOT OWNED BY $(whoami).  Fixing..."
+#	sudo chown -R${V} $(whoami):$(id | sed 's/.*gid=[0-9]\+(\([a-zA-Z]\+\)).*/\1/') "$(dirname "${THEFILE}")"
+#
+#	TRAP=$?
+#
+#	if [ $TRAP -ne 0 ] ; then
+#		echo "chown failed: $TRAP"
+#		exit $TRAP
+#	fi
+#fi
 
 #if [ ! -w "$(dirname "${THEFILE}")" ] ; then
 #	echo "DIRECTORY NOT WRITABLE BY $(whoami).  Fixing..."
