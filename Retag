@@ -2,7 +2,7 @@
 
 ###################################
 #
-#  DEBUG=yes
+  DEBUG=yes
 #  DUMPINFO=yes
 #
 ###################################
@@ -483,20 +483,21 @@ function attemptRename() {
 		echo -e \\n
 
 
-#		case "${DO_RENAME}" in
-#			[yY])
-#				[ ${DEBUG} ] && echo "${THFILE} --> ${WHERENOW}/${REALDATE}.mp3"
-#				mv -i${V} "${THEFILE}" "${WHERENOW}/${REALDATE}.mp3"
-#				THEFILE="${WHERENOW}/${REALDATE}.mp3"
-#				;;
-#			[nN])
-#				echo "DON'T RENAME"
-#				exit 0
-#				;;
-#			*)
-#				echo "DEFAULT DON'T RENAME"
-#				;;
-#		esac
+		case "${DO_RENAME}" in
+			[yY])
+				[ ${DEBUG} ] && echo "${THFILE} --> ${WHERENOW}/${REALDATE}.mp3"
+				mv -i${V} "${THEFILE}" "${WHERENOW}/${REALDATE}.mp3"
+				THEFILE="${WHERENOW}/${REALDATE}.mp3"
+				;;
+			[nN])
+				echo "DON'T RENAME"
+				exit 0
+				;;
+			*)
+				echo "DEFAULT DON'T RENAME"
+				exit 0
+				;;
+		esac
 	else
 		[ ${DEBUG} ] && echo "Manual intervention required: ${THISFILE}"
 		echo -e "\\vGive me a new name for \"$THISFILE\"\\v"
@@ -562,6 +563,18 @@ if [ ! -w "${THEFILE}" ] ; then
 
 	sudo chown $(whoami):$(id | sed 's/.*gid=[0-9]\+(\([a-zA-Z]\+\)).*/\1/') "${THEFILE}"
 	chmod 0644 "${THEFILE}"
+
+	sudo mv -i$V "${THEFILE}" "/tmp/$(basename "${THEFILE}")"
+
+	THEFILE="/tmp/$(basename "${THEFILE}")"
+
+	[ ${DEBUG} ] && echo "NEW THEFILE: $THEFILE"
+else
+	[ ${DEBUG} ] && echo -e "\\vFile permissions are supposedly OK:"
+
+	ls -l "${THEFILE}"
+
+	[ ${DEBUG} ] && echo -e \\v
 fi
 
 
