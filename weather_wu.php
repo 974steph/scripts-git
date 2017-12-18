@@ -47,6 +47,7 @@ if (count($_GET) > 0) {
 						"longitude" => "$lon"
 					)
 				);
+//				print_r($weatherArray);
 			} else {
 				bail();
 			}
@@ -166,7 +167,9 @@ function getWeather($lat, $lon, $weatherArray) {
 
 	$sdate = date('md');
 	$edate = $sdate + 1;
+
 	$purl = "planner_". $sdate ."". $sdate ."";
+//	print "1: purl: $purl\n";
 	$planner = doCurl($lat, $lon, $purl);
 
 	$precipAvgToday = $planner['trip']['precip']['avg']['in'];
@@ -175,6 +178,7 @@ function getWeather($lat, $lon, $weatherArray) {
 
 	$purl = "planner_". $edate ."". $edate ."";
 	$planner = doCurl($lat, $lon, $purl);
+//	print "2: purl: $purl\n";
 
 	$precipAvgTomorrow = $planner['trip']['precip']['avg']['in'];
 	$coRainTomorrow = $planner['trip']['chance_of']['chanceofrainday']['percentage'];
