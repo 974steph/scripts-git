@@ -3,11 +3,13 @@
 
 ######################################################
 # EDIT THIS STUFF FOR YOUR SYSTEM / SETUP
-CURSE_PLUGINS="askmrrobot auc-stat-wowuction auctionator auctioneer altoholic bagnon datastore datastore_achievements datastore_agenda datastore_characters \
-	deadly-boss-mods dejacharacterstats farmhud gathermate2 gathermate2_data handynotes \
-	handynotes_legionrarestreasures pawn postal scrap scrap-cleaner skada tomtom undermine-journal world-quest-tracker"
+CURSE_PLUGINS="askmrrobot auctionator auctioneer altoholic bagnon datastore datastore_achievements \
+	datastore_auctions datastore_characters deadly-boss-mods dejacharacterstats \
+	farmhud gathermate2 gathermate2_data handynotes handynotes_legionrarestreasures pawn postal \
+	scrap scrap-cleaner skada tomtom undermine-journal world-quest-tracker"
 
-ADDON_DIR="/WoW_2014_11_28/AddOns"
+#ADDON_DIR="/WoW_2014_11_28/AddOns"
+ADDON_DIR="/WoW_2017_11_28/AddOns"
 ######################################################
 
 
@@ -35,6 +37,9 @@ UPDATE_LIST="${ADDON_DIR}/plugin_updates.txt"
 
 #UA="Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.79 Safari/537.36"
 getUserAgent
+
+#LAST_MODIFIED="Last-Modified"
+LAST_MODIFIED="last-modified"
 ######################################################
 
 
@@ -52,10 +57,13 @@ function outputHead() {
 	fi
 
 	[ ! ${DEBUG} ] && OUTPUT+="${PREFIX}Title: ${PLUGIN_TITLE}\\n"
-	OUTPUT+="${PREFIX}Update Time: ${PLUGIN_DATE_PRETTY}\\n"
+	OUTPUT+="${PREFIX}Update Time: $(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")\\n"
 	OUTPUT+="${PREFIX}Current Version: ${PLUGIN_VERSION}\\n"
-#	OUTPUT+="${PREFIX}${PLUGIN_FILE_URL}\\n"
-	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}#t1:changes\\n"
+
+	case ${PLUGIN} in
+		wowpro)	OUTPUT+="${PREFIX}${PLUGIN_FILE_URL}\\n";;
+		*)	OUTPUT+="${PREFIX}${PLUGIN_INFO_URL}/changes\\n";;
+	esac
 }
 
 
@@ -63,6 +71,8 @@ function outputTail() {
 #	 ${DEBUG} ] && PREFIX="outputTail - "
 
  	if [ "${OUTPUT}" ] ; then
+
+		OUTPUT+="${PREFIX}SHA: ${SHASUM}\\n"
 
 		if [ ${DEBUG} ] ; then
 			if [ ${NOTDUMB} ] ; then
@@ -100,6 +110,8 @@ function UpdateStamp() {
 	fi
 
 	echo "$2" > "${STAMP_FILE}"
+	SHASUM=$(sha1sum "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $1}')
+	echo ${SHASUM} >> "${STAMP_FILE}"
 	unzip -l "${ADDON_DIR}/${PLUGIN_FILE}" | awk '{print $4}' | egrep -v "^$|Name|-+" >> "${STAMP_FILE}"
 
 	[ ${DEBUG} ] && echo "${PREFIX}${STAMP_FILE} || ${PLUGIN_FILE}"
@@ -136,7 +148,8 @@ function GetPlugin() {
 	fi
 
 	PLUGIN_FILE=$(basename "${URL}")
-	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/Content-Length/ {print $2}' | tail -n1 | tr -d "\r\n")
+#	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | awk '/Content-Length/ {print $2}' | tail -n1 | tr -d "\r\n")
+	PLUGIN_SERVER_SIZE=$(curl -A "${UA}" -sLI "${URL}" | grep -i content-length | awk '{print $2}' | tail -n1 | tr -d "\r\n")
 
 	wget -q "${URL}" -O "${ADDON_DIR}/${PLUGIN_FILE}"
 
@@ -276,11 +289,11 @@ function Plugins() {
 		GetPluginPage
 
 		PLUGIN_DATE_EPOCH=$(echo "${PLUGIN_PAGE}" | grep data-epoch | sed -e 's/.*data-epoch="//;s/">.*//')
-		PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
+#		PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 #		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE_RAW}" | awk '/Release/,/download-button/' | grep table__content.*file__name | head -n1 | sed 's/.*full">\(.*\)<.*/\1/' | tr -d "\r\n")
 		PLUGIN_VERSION=$(echo "${PLUGIN_PAGE_RAW}" | awk '/table__content.*file__name/ {print $4;exit}' | sed 's/.*full">\(.*\)<.*/\1/')
 #		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title | sed "s/.*content=\"\(.*\)\".*/\1/" | tr -d "\r\n")
-		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | awk '/og:title/ {print $3;exit}' | sed "s/.*content=\"\(.*\)\".*/\1/")
+		PLUGIN_TITLE=$(echo "${PLUGIN_PAGE_RAW}" | grep "og:title" | sed "s/.*content=\"\(.*\)\".*/\1/")
 #		PLUGIN_FILE_ID=$(echo "${PLUGIN_PAGE_RAW}" | grep ProjectFileID | sed 's/.*ProjectFileID": \([0-9]\+\),.*/\1/' | head -n1 | tr -d "\r\n"
 		PLUGIN_FILE_ID=$(echo "${PLUGIN_PAGE_RAW}" | awk '/ProjectFileID/ {print $9;exit}' | sed 's/,.*//')
 
@@ -294,7 +307,7 @@ function Plugins() {
 
 		if [ ${DEBUG} ] ; then
 			echo "${PREFIX}PLUGIN_DATE_EPOCH: \"${PLUGIN_DATE_EPOCH}\""
-			echo "${PREFIX}PLUGIN_DATE_PRETTY: \"${PLUGIN_DATE_PRETTY}\""
+#			echo "${PREFIX}PLUGIN_DATE_PRETTY: \"${PLUGIN_DATE_PRETTY}\""
 			echo "${PREFIX}PLUGIN_VERSION: \"${PLUGIN_VERSION}\""
 			echo "${PREFIX}PLUGIN_TITLE: \"${PLUGIN_TITLE}\""
 			echo "${PREFIX}PLUGIN_FILE_ID: \"${PLUGIN_FILE_ID}\""
@@ -332,8 +345,8 @@ function GPDawnbringer() {
 	PLUGIN_TITLE="${PLUGIN}"
 
 	PLUGIN_FILE_URL="http://goingpriceaddon.com/download/us.battle.net/symb/GoingPrice_US_Dawnbringer.zip"
-	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" --head -sL ${PLUGIN_FILE_URL} | grep Last-Modified | cut -d ' ' -f2-)" +%s)
-	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
+	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" --head -sL ${PLUGIN_FILE_URL} | grep ${LAST_MODIFIED} | cut -d ' ' -f2-)" +%s)
+#	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 	PLUGIN_VERSION=${PLUGIN_DATE_EPOCH}
 
 	outputHead
@@ -356,13 +369,13 @@ function WoWPro() {
 	[ ${DEBUG} ] && PREFIX="WoWPro - "
 
 	PLUGIN="wowpro"
-	PLUGIN_INFO_URL="http://www.wow-pro.com/blog"
 	PLUGIN_TITLE="${PLUGIN}"
+	PLUGIN_INFO_URL="http://www.wow-pro.com/blog"
 
 	PLUGIN_VERSION=$(curl -A "${UA}" -sL "https://raw.githubusercontent.com/Ludovicus/WoW-Pro-Guides/master/WoWPro/WoWPro.toc" | awk '/Version/ {print $3}')
 	PLUGIN_FILE_URL="https://s3.amazonaws.com/WoW-Pro/WoWPro+v${PLUGIN_VERSION}.zip"
-	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${PLUGIN_FILE_URL} | grep Last-Modified: | cut -d ' ' -f2-)" +%s)
-	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
+	PLUGIN_DATE_EPOCH=$(date -d "$(curl -A "${UA}" -sL --head ${PLUGIN_FILE_URL} | grep -i ${LAST_MODIFIED}: | cut -d ' ' -f2-)" +%s)
+#	PLUGIN_DATE_PRETTY=$(date -d @${PLUGIN_DATE_EPOCH} "+%Y-%m-%d %-I:%M:%S %p")
 
 	outputHead
 

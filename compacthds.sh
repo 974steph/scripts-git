@@ -11,6 +11,24 @@ N=$(tput sgr0)
 SAVEIFS=${IFS}
 IFS=$(echo -en "\n\b")
 
+#OSNAME=$(uname -s)
+#echo "OSNAME: \"${OSNAME}\""
+
+#case ${OSNAME} in
+#	Linux)
+#		SED=$(which sed)
+#		echo "${OSNAME} uses \"sed\"
+#		;;
+#	Darwin)
+#		SED=$(which gsed)
+#		echo "${OSNAME} uses \"gsed\"
+#		;;
+#	*)	echo -e "\\vYour OS is ${OSNAME}.  I don't know what sed to use.  Bailing...\\v"
+#		exit
+#		;;
+#esac
+#exit
+
 if [ "${Apple_PubSub_Socket_Render}" ] ; then
 	SED=$(which gsed)
 else

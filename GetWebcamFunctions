@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 TANK_BASE="$HOME/Pictures"
 
@@ -508,15 +508,15 @@ UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrom
 
 HOST=$(hostname | cut -d. -f1)
 
-case ${HOST} in
-
-	aragorn)
-		DO_HTML="yes"
-		;;
-	*)
-		unset DO_HTML
-		;;
-esac
+#case ${HOST} in
+#
+#	aragorn)
+#		DO_HTML="yes"
+#		;;
+#	*)
+#		unset DO_HTML
+#		;;
+#esac
 ####################
 
 

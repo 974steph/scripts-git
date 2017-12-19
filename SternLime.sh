@@ -112,6 +112,7 @@ if [ "${MAG_URL}" ] ; then
 
 	if [ ${CHECK} ] ; then
 		echo -e "\\vShow for ${DATE} available!\\v"
+		echo "MAG_URL: ${MAG_URL}"
 		exit
 	fi
 

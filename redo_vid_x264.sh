@@ -4,6 +4,8 @@ DEBUG="yes"
 
 trap ctrl_c INT
 
+# ffmpeg -h encoder=h264_nvenc
+
 ###########################
 # VARS
 #PRESET_V="slow"
@@ -20,8 +22,8 @@ THREADS=0
 #ENCODER_V="libx264"
 ENCODER_V="h264_nvenc"
 
-#ENCODER_A="aac"
-ENCODER_A="libfdk_aac"
+ENCODER_A="aac"
+#ENCODER_A="libfdk_aac"
 
 DIR_TEMP="TempFiles"
 DIR_FINAL="Final"
@@ -63,10 +65,6 @@ else
 	DURM=$(echo ${DURATION} | awk -F: '{print $2}')
 	DURS=$(echo ${DURATION} | awk -F: '{print $3}')
 
-#	echo "DURH: $DURH"
-#	echo "DURM: $DURM"
-#	echo "DURS: $DURS"
-
 	ID_LENGTH=$(( ((${DURH} * 60) * 60 ) + ( ${DURM} * 60 ) + ${DURS} ))
 
 	JUSTNAME="$(echo ${INFILE} | sed 's/\.[a-zA-Z]\+$//')"
@@ -81,6 +79,9 @@ else
 		echo "ID_VIDEO_WIDTH: $ID_VIDEO_WIDTH"
 		echo "ID_VIDEO_HEIGHT: $ID_VIDEO_HEIGHT"
 		echo "ID_LENGTH: $ID_LENGTH"
+		echo "DURH: $DURH ($(( ((${DURH} * 60) * 60 ) ))s)"
+		echo "DURM: $DURM ($(( ${DURM} * 60 ))s)"
+		echo "DURS: $DURS"
 		echo "DURATION: $DURATION"
 		echo "---------"
 		echo "INFILE: $INFILE"
@@ -97,13 +98,15 @@ fi
 case $2 in
 	auto)
 		ACTION=auto
-		WANT_SIZE=$(du -k "${INFILE}" | awk '{print $1}')
+		WANT_SIZE=$(du -b "${INFILE}" | awk '{print $1}')
+#		WANT_SIZE=$(du -k "${INFILE}" | awk '{print $1}')
 #		WANT_SIZE=$(du -m "${INFILE}" | awk '{print $1}')
 		WIDTH_MAX=${ID_VIDEO_WIDTH}
 		;;
 	*)
 		ACTION=redo
-		WANT_SIZE=$(( $2 * 1024 ))
+		WANT_SIZE=$(( ($2 * 1024) * 1024 ))
+#		WANT_SIZE=$(( $2 * 1024 ))
 #		WANT_SIZE=$2
 #		VBR=3
 		VBR=2
@@ -185,8 +188,8 @@ function dovideo1() {
 #	[ ${DEBUG} ] &&  echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cq 0 -an -pass 1 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 /dev/null"
 #	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cq 0 -an -pass 1 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 /dev/null
 
-	[ ${DEBUG} ] &&  echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 1 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 /dev/null"
-	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 1 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 /dev/null
+	[ ${DEBUG} ] &&  echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 1 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 /dev/null"
+	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 1 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 /dev/null
 
 	TRAP=$?
 
@@ -208,8 +211,8 @@ function dovideo2() {
 #	[ ${DEBUG} ] && echo "ffmpeg -v 3 -stats -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cq 0 -an -pass 2 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 \"${OUTFILE_V}\""
 #	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -preset:v ${PRESET_V} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cq 0 -an -pass 2 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 "${OUTFILE_V}"
 
-	[ ${DEBUG} ] && echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 2 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 \"${OUTFILE_V}\""
-	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO}k -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 2 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 "${OUTFILE_V}"
+	[ ${DEBUG} ] && echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 2 -passlogfile \"${DIR_TEMP}/ffmpeg2pass\" -threads ${THREADS} -f mp4 \"${OUTFILE_V}\""
+	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -s ${VIDEO_WIDTH_FINAL}:${VIDEO_HEIGHT_FINAL} -cbr 1 -an -pass 2 -passlogfile "${DIR_TEMP}/ffmpeg2pass" -threads ${THREADS} -f mp4 "${OUTFILE_V}"
 
 	TRAP=$?
 
@@ -226,8 +229,15 @@ function allinone() {
 
 	[ ! -d "${DIR_FINAL}" ] && mkdir -p "${DIR_FINAL}"
 
-	[ ${DEBUG} ] && echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -cbr 1 -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} -an -f mp4 \"${OUTFILE_V}\""
-	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -cbr 1 -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} "${OUTFILE_FINAL}"
+#	[ ${DEBUG} ] && echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -cbr 1 -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} -an -f mp4 \"${OUTFILE_V}\""
+#	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -cbr 1 -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} "${OUTFILE_FINAL}"
+
+# WORKS
+#	[ ${DEBUG} ] && echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -cbr 1 -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} \"${OUTFILE_FINAL}\""
+#	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -b:v ${BITRATE_VIDEO} -cbr 1 -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} "${OUTFILE_FINAL}"
+
+	[ ${DEBUG} ] && echo "ffmpeg -y -i \"${INFILE}\" -c:v ${ENCODER_V} -coder auto -b:v ${BITRATE_VIDEO} -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} \"${OUTFILE_FINAL}\""
+	ffmpeg -v 3 -stats -y -i "${INFILE}" -c:v ${ENCODER_V} -coder auto -b:v ${BITRATE_VIDEO} -c:a ${ENCODER_A} -vbr ${VBR} -threads ${THREADS} "${OUTFILE_FINAL}"
 
 	TRAP=$?
 
@@ -265,6 +275,7 @@ function dumpstats() {
 
 
 #echo
+[ ! -d "${DIR_TEMP}" ] && mkdir -p "${DIR_TEMP}"
 
 if [ ${ACTION} == "auto" ] ; then
 #	BITRATE_VIDEO=$(echo "(${WANT_SIZE} * 8192) / ${ID_LENGTH}" | bc)
@@ -276,8 +287,6 @@ if [ ${ACTION} == "auto" ] ; then
 	[ ${DEBUG} ] && echo -e "\\v---------\\v"
 
 else
-
-	[ ! -d "${DIR_TEMP}" ] && mkdir -p "${DIR_TEMP}"
 	[ -f "${DIR_TEMP}/ffmpeg2pass-0.log" ] && rm -f${V} "${DIR_TEMP}/ffmpeg2pass-0.log"
 	[ -f "${DIR_TEMP}/ffmpeg2pass-0.log.mbtree" ] && rm -f${V} "${DIR_TEMP}/ffmpeg2pass-0.log.mbtree"
 

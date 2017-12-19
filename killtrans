@@ -30,8 +30,10 @@ REMAINING=$(sudo /usr/bin/transmission-remote -l | grep "^ \+[0-9].*")
 if [ ! "${REMAINING}" ] ; then
 	echo -e "No running Torrents remaining.  Stopping..."
 	echo -e "No running Torrents remaining.  Stopping..." >> ${TRANS_LOG}
-	echo 'sudo /etc/init.d/transmission-daemon stop'
-	sudo /etc/init.d/transmission-daemon stop
+#	echo 'sudo /etc/init.d/transmission-daemon stop'
+#	sudo /etc/init.d/transmission-daemon stop
+	echo 'sudo systemctl stop transmission'
+	sudo systemctl stop transmission
 fi
 
 echo "---------" >> ${TRANS_LOG}

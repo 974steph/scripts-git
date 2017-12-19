@@ -812,7 +812,8 @@ function FinishMail() {
 		echo \"${SUBJECT}\"
 	fi
 
-	${MAILER} -s "${SUBJECT}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+#	${MAILER} -s "${SUBJECT}" -a "Content-Type: text/html" "${EMAILS}" < ${BODY}
+	${MAILER} -s "${SUBJECT}" -M "text/html" "${EMAILS}" < ${BODY}
 }
 
 

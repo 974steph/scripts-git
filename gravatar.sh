@@ -32,7 +32,7 @@ case $2 in
 	retro) STYLE=$2;;
 	wavatar) STYLE=$2;;
 	all) EMAIL=$(echo "${EMAIL}" | tr '[:upper:]' '[:lower:]');;
-#	*) DumpHelp;;
+	*) DumpHelp;;
 esac
 
 HASH=$(echo "${EMAIL}" | tr '[:upper:]' '[:lower:]' | md5)

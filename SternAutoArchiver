@@ -116,7 +116,7 @@ function doArchive() {
 
 	# Make wavs
 	[ ${DEBUG} ] && echo "Make wavs"
-	ionice -c3 sox -V1 ${SOX_V} "$1" "$MONTH_REPO/$JUST_DATE.wav"
+	ionice -c3 sox -V1 --multi-threaded ${SOX_V} "$1" "$MONTH_REPO/$JUST_DATE.wav"
 
 	# Make mp3
 	[ ${DEBUG} ] && echo "Make mp3"
