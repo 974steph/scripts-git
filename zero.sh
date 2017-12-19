@@ -139,6 +139,9 @@ function cleanGentoo() {
 	echo -e "${B}${LB}Clean ${PORT_LOGDIR}${N}\\v"
 	sudo find "${PORT_LOGDIR}" -mtime +14 -type f -exec rm -f "{}" \;
 
+	echo -e "${B}${LB}Clean ${PORTAGE_TMPDIR}${N}\\v"
+	sudo find "${PORTAGE_TMPDIR}" -mindepth 1 -maxdepth 1 -exec rm -rf "{}" \;
+
 	CACHES="${HOME}/.cache"
 
 	cleanCaches
